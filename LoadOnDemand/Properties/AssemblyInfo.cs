@@ -5,11 +5,11 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("OnDemandLoading")]
+[assembly: AssemblyTitle("LoadOnDemand")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("OnDemandLoading")]
+[assembly: AssemblyProduct("LoadOnDemand")]
 [assembly: AssemblyCopyright("Copyright ©  2014")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
@@ -20,7 +20,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("b3c4852a-94b6-4267-9350-9b0491f55891")]
+[assembly: Guid("5a60196a-9ef3-4d14-b37b-108adad739bf")]
 
 // Version information for an assembly consists of the following four values:
 //

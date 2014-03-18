@@ -1,0 +1,40 @@
+﻿
+
+
+Blocking: Find coding standard!
+Todo: Freeze on KSP shutdown. It seems to be related to be related with reverse-pInvoke. Not doing anything in Net4.ManagedBridge helps, not doing anything on the other side keeps the same issue. Those calls come from net4-threads... or GC?
+Todo: DXT, resizing and stuff like that (especially DXT should be easy, since we can cache them on disk. Generate either via unity or sth like squidlib)
+
+Issues in the KSP runtime part of this mod:
+
+Todo1: Editor's currently tracked parts are left panel, picked item and build rocket. Everything detatched but not picked is currently missed.
+Todo2: Don't loop though all parts ever frame... this shouldn't be neccessary.
+Todo3: Leaving the Editor and GCing doesn't free all parts for unknown reason. Investigate! (should be EditorPages related)
+Todo4: No UI as of yet... some reasons are: Display format & conversion errors, show long-running background work (preperation, e.g.) or texture stats
+Todo5: Startup currently loads the other library. Should be moved to NativeBridge's constructor but also use dynamic delegates we can bind by methodPtr, to support non-LoadLibrary in the future (perf should be about equal)
+Todo6: Make sure no Interop between KSP & Net4 is leaking!
+Todo7: NetWrapper currently only supports DirectX 9.0c... OpenGL, DX10, etc?
+Todo8: Do we need a string callback for net4->Ksp? Its currently unused...
+Todo9: File date of the unpacked net4 dll doesn't change as expected.. sometimes even after full recompile its still sth from earlier. Investigate.
+Todo10: Iterate and clean up "Startup"...
+Todo11: GetNativeTexturePtr seems to be rather expensive... try to make TextureManager use it less frequent.
+Todo12: TextureManagement. Currently every thumb is created as same X*Y*ARGB and HighRes are loaded as saved. Texture-Specific threatment would be nice, though difficult since only Net4 handels the actual file
+Todo13: Create a Copy&Paste code that interfaces with this project, so other mods can ref textures as they like.
+Todo14: A small optimization to TextureManager's exposed methods
+Todo15: Resource management was meant to blend into KSP perfectly by freeing up textures on GC. Well, that doesn't seem to work due to threading issues. We better re-think memory management
+Todo16: Support TGAs...
+Todo17: Support MODEL nodes...
+Todo18: Load events for Resources
+Todo19: The cache directory might end up with lods of dead files. Find a way to clean up...
+Todo20: Fix Logger.Log(Exception)
+Todo21: Evil edge-case on duplicate file name + different extension. Cant currently handle it...
+Todo22: Had some parts on the panel in Editor not loaded... it was grey. (Was it managed anyway?)
+
+Issues in the net4 part of this mod:
+
+Todo1: Analye in general, especially what causes bad frame rates. DiskIO? BG-Work? Unthrottelt GPU copy?
+Todo2: We might rly want some kind of throttle on the KSP thread and for GPU copy...
+Todo3: Currently, textures are loaded and unloaded as requested from ksp-rt. It might be stupid, though... some kinda caching would be nice.
+Todo7: Improve Logger
+
+

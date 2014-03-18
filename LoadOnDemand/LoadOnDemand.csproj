@@ -4,23 +4,25 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{49058F6C-B9B1-4FE8-A755-836203215385}</ProjectGuid>
+    <ProjectGuid>{4DC33053-9308-4F8E-A97A-0E4CB2459B1A}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>OnDemandLoading</RootNamespace>
-    <AssemblyName>OnDemandLoading</AssemblyName>
+    <RootNamespace>LoadOnDemand</RootNamespace>
+    <AssemblyName>LoadOnDemand</AssemblyName>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
-    <TargetFrameworkProfile />
+    <TargetFrameworkProfile>Unity Full v3.5</TargetFrameworkProfile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>..\..\..\..\..\..\..\ksp_rtLOD\GameData\</OutputPath>
+    <OutputPath>..\..\..\..\..\..\..\ksp_rtLodNew\GameData\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <PlatformTarget>x86</PlatformTarget>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -29,6 +31,7 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <PlatformTarget>x86</PlatformTarget>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Assembly-CSharp">
@@ -51,17 +54,28 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CustomInternalManager.cs" />
-    <Compile Include="CustomManagers.cs" />
-    <Compile Include="CustomPartManager.cs" />
-    <Compile Include="CustomRefCountManagerTemplate.cs" />
-    <Compile Include="CustomTextureManager.cs" />
-    <Compile Include="InEditor.cs" />
-    <Compile Include="InFlightVesselManager.cs" />
-    <Compile Include="Loaders\CustomMBMLoader.cs" />
-    <Compile Include="Startup.cs" />
-    <Compile Include="Loaders\CustomPrimitiveLoader.cs" />
+    <Compile Include="Config.cs" />
+    <Compile Include="Logic\DevStuff.cs" />
+    <Compile Include="Logic\Editor.cs" />
+    <Compile Include="Logic\Flight.cs" />
+    <Compile Include="Logic\Startup.cs" />
+    <Compile Include="Logic\StartupDelayed.cs" />
+    <Compile Include="Logic\WorkQueue.cs" />
+    <Compile Include="Managers\InternalManager.cs" />
+    <Compile Include="Managers\PartManager.cs" />
+    <Compile Include="Managers\TextureManager.cs" />
+    <Compile Include="NativeBridge.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Resources\IResource.cs" />
+    <Compile Include="Resources\ResourceCollection.cs" />
+    <Compile Include="Stuff.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="EmbededResources\NetWrapper.dll" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="About.txt" />
+    <Content Include="KnownIssues.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

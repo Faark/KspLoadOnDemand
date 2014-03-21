@@ -112,9 +112,10 @@ private:
 			return Recognizer(file, bytes);
 		}
 	};
-public:
+
+ public:
 	generic<class TTexture> where TTexture : ITextureBase
-	static void AddRecognition(Func<System::IO::FileInfo^, array<Byte>^, TTexture>^ recognizer)
+	static void AddRecognition(Func<FileInfo^, array<Byte>^, TTexture>^ recognizer)
 	{
 		if ((TTexture::typeid)->IsAbstract || (TTexture::typeid)->IsInterface)
 		{
@@ -124,5 +125,6 @@ public:
 	}
 
 private:
+	static BitmapFormat^ RecognizeTGA(FileInfo^ file, array<Byte>^ data);
 	static FormatDatabase();
 };

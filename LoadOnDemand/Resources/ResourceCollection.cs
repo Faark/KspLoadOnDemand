@@ -36,5 +36,12 @@ namespace LoadOnDemand.Resources
             }
             Resources = resources.ToArray();
         }
+
+        public override string ToString()
+        {
+            return "Resource Collection: "
+                + Environment.NewLine + "  "
+                + String.Join(Environment.NewLine + "  ", String.Join(Environment.NewLine, Resources.Select(res => res.ToString()).ToArray()).Split(new[] { Environment.NewLine }, StringSplitOptions.None));
+        }
     }
 }

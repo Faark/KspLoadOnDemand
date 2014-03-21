@@ -12,7 +12,7 @@ namespace LoadOnDemand.Managers
             public string Name;
             public GameDatabase.TextureInfo[] Textures;
         }
-        static Dictionary<string, InternalData> iManagedInternals = new Dictionary<string, InternalData>();
+        internal static Dictionary<string, InternalData> iManagedInternals = new Dictionary<string, InternalData>();
         public static IEnumerable<string> ManagedInternals
         {
             get

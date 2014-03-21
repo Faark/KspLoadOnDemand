@@ -13,5 +13,9 @@ namespace LoadOnDemand.Resources
     public sealed class ResourceDummy: IResource
     {
         public bool Loaded { get { return true; } }
+        public override string ToString()
+        {
+            return "Dummy Resource";
+        }
     }
 }

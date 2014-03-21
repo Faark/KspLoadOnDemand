@@ -14,7 +14,7 @@ namespace LoadOnDemand.Managers
             public GameDatabase.TextureInfo[] Textures;
             public string[] Internals;
         }
-        static Dictionary</*AvailablePart*/ string, PartData> iManagedParts = new Dictionary<string, PartData>();
+        internal static Dictionary</*AvailablePart*/ string, PartData> iManagedParts = new Dictionary<string, PartData>();
         /// <summary>
         /// A collection of all parts currently known to PartManager.
         /// </summary>

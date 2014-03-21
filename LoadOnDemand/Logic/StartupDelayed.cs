@@ -34,6 +34,25 @@ namespace LoadOnDemand.Logic
             Config.Current.CommitChanges();
             PartsToManage = null;
             ("LoadOnDemand.StartupDelayed done.").Log();
+#if DEBUG
+            ("Dumping collected informations! ").Log();
+            foreach(var i in Managers.InternalManager.iManagedInternals){
+                ("Internal: " + i.Key).Log();
+                foreach (var t in i.Value.Textures)
+                {
+                    ("  - " + t.name).Log();
+                }
+            }
+            foreach (var p in Managers.PartManager.iManagedParts)
+            {
+                ("Part: " + p.Key + ", " + p.Value.Part.partPath).Log();
+                ("  - Internals: " + String.Join(", ", p.Value.Internals)).Log();
+                foreach (var t in p.Value.Textures)
+                {
+                    ("  - " + t.name).Log();
+                }
+            }
+#endif
         }
     }
 }

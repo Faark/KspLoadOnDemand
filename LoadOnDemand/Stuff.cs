@@ -59,7 +59,7 @@ namespace LoadOnDemand
     }
     public static class Logger
     {
-        /*
+#if DEBUG
         const bool Async = false;
         struct LogItem { public String Text; public DateTime Time;  }
         static Queue<LogItem> QueuedMessages = new Queue<LogItem>();
@@ -124,7 +124,9 @@ namespace LoadOnDemand
             // Todo20: Make sure this error log is actually written to disc before continuing...
             // Todo20: comment...
             Log(self.ToString());
-        }*/
+        }
+
+#else
 
         public static void Log(this String self)
         {
@@ -134,12 +136,13 @@ namespace LoadOnDemand
         {
             if (comment != null)
             {
-                Log(comment + ": " + self.ToString());
+                Log(comment + " " + self.ToString());
             }
             else
             {
                 Log(self.ToString());
             }
         }
+#endif
     }
 }

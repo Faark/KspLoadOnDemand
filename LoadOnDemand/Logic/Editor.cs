@@ -35,7 +35,7 @@ namespace LoadOnDemand.Logic
                 {
                     RefAllFrom(EditorLogic.startPod, usedParts);
                 }
-                HashSet<AvailablePart> unusedParts = new HashSet<AvailablePart>();
+                HashSet<AvailablePart> unusedParts = new HashSet<AvailablePart>(referencedResources.Keys);
                 foreach (var part in usedParts)
                 {
                     if (!unusedParts.Remove(part))

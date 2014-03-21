@@ -10,10 +10,15 @@ using namespace System::Text;
 
 ref class Logger{
 	static String^ logFile = "LoadOnDemand.log";
+#if _DEBUG
+	static const bool Async = false;
+#else
 	static const bool Async = true;
+#endif
 	static ConcurrentQueue<Object^>^ MessageQueue = gcnew ConcurrentQueue<Object^>();
 public:
 
+	
 	static property String^ LogFile{ String^ get(){ return logFile; } }
 	static void Setup(String^ cache_directory){
 		logFile = System::IO::Path::Combine(cache_directory, LogFile);
@@ -104,7 +109,9 @@ public:
 		}
 	}
 	static void LogTrace(String^ text){
+#if _DEBUG
 		LogText(text);
+#endif
 	}
 
 

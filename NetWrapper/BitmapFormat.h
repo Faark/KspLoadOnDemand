@@ -30,7 +30,9 @@ public:
 	BitmapFormat^ SetAlpha(Byte new_alpha);
 
 	static BitmapFormat^ LoadUnknownFile(FileInfo^ file, array<Byte>^ data);
-
+	static bool FileNameIndicatesTextureShouldBeNormal(FileInfo^ file){
+		return Path::GetFileNameWithoutExtension(file->FullName)->ToUpper()->EndsWith("NRM");
+	}
 	
 	virtual  AssignableFormat^ GetAssignableFormat() override;
 private:

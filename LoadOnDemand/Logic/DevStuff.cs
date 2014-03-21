@@ -31,6 +31,7 @@ namespace LoadOnDemand.Logic
     {
         int winId = UnityEngine.Random.Range(0, int.MaxValue);
         static Rect pos = new Rect(100, 100, 80, 160);
+        string ResourceText;
         public void OnGUI()
         {
             pos = GUI.Window(winId, pos, WinFunc, "LOD");
@@ -55,6 +56,29 @@ namespace LoadOnDemand.Logic
                 {
                     refRes = null;
                 }
+            }
+            if (GUILayout.RepeatButton("Info"))
+            {
+                if (ResourceText == null)
+                {
+                    ResourceText = String.Join(Environment.NewLine, Managers.TextureManager.iManagedTextures
+                        .Where(el => el.Value.LoadedTextureRef != null && el.Value.LoadedTextureRef.IsAlive)
+                        .Select(el => el.Value.LoadedTextureRef.Target.ToString())
+                        .ToArray());
+                    ResourceText.Log();
+                    pos.width = 560;
+                    pos.height = 640;
+                }
+            }
+            else if (Event.current.type == EventType.Repaint)
+            {
+                pos.width = 80;
+                pos.height = 160;
+                ResourceText = null;
+            }
+            if (ResourceText != null)
+            {
+                GUILayout.Label(ResourceText);
             }
             GUILayout.Label(Status);
             if (GUILayout.Button("GC"))

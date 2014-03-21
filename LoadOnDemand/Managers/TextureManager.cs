@@ -32,6 +32,9 @@ namespace LoadOnDemand.Managers
         private class TextureResource : Resources.IResource
         {
             public Managers.TextureManager.TextureData Data { get; private set; }
+#if DEBUG
+            public List<String> ReferencedBy = new List<string>();
+#endif
             public bool Loaded
             {
                 get
@@ -53,6 +56,26 @@ namespace LoadOnDemand.Managers
                 {
                     ("Texture referenced, highdetail still loaded: " + data.NativeId).Log();
                 }
+            }
+            public void Reference()
+            {
+#if DEBUG
+                ReferencedBy.Add(String.Join(Environment.NewLine + "  ", Environment.StackTrace.Split(new[] { Environment.NewLine }, StringSplitOptions.None)));
+#endif
+            }
+            public override string ToString()
+            {
+#if DEBUG
+                var sb = new StringBuilder(Data.Info.name);
+                sb.AppendLine(", Lifetime references:");
+                foreach(var currentRef in ReferencedBy){
+                    sb.AppendLine("  ----------------------------------------");
+                    sb.AppendLine(currentRef);
+                }
+                return sb.ToString();
+#else
+                return Data.Info.name;
+#endif
             }
             ~TextureResource()
             {
@@ -77,7 +100,7 @@ namespace LoadOnDemand.Managers
             TextureData textureData;
             if (iManagedTextures.TryGetValue(textureObject, out textureData))
             {
-                Resources.IResource textureReference;
+                TextureResource textureReference;
                 if (textureData.LoadedTextureRef == null || !textureData.LoadedTextureRef.IsAlive)
                 {
                     textureReference = new TextureResource(textureData);
@@ -88,6 +111,7 @@ namespace LoadOnDemand.Managers
                     // Todo: Potential race condition. Hope we asap get .net 4 and thus WeakRef.TryGet... don't see another way to fix that if-else
                     textureReference = (TextureResource)textureData.LoadedTextureRef.Target;
                 }
+                textureReference.Reference();
                 return textureReference;
             }
             else
@@ -142,12 +166,15 @@ namespace LoadOnDemand.Managers
                      * KSPs own file format... got a custom loader
                      */
                 case "MBM":
-            /*
-             * For legacy files do we use Image.FromStream, that should recognize pretty much every thing in system.drawing.imaging.imageformat
-             * ( http://msdn.microsoft.com/en-us/library/system.drawing.imaging.imageformat%28v=vs.110%29.aspx )
-             * 
-             * Lets add a few extensions for now... hope they work
-             */
+                // God bless http://www.codeproject.com/Articles/31702/NET-Targa-Image-Reader for doing the heavy lifting,
+                // though i would have prefered KSP to never support TGAs
+                case "TGA":
+                /*
+                 * For legacy files do we use Image.FromStream, that should recognize pretty much every thing in system.drawing.imaging.imageformat
+                 * ( http://msdn.microsoft.com/en-us/library/system.drawing.imaging.imageformat%28v=vs.110%29.aspx )
+                 * 
+                 * Lets add a few extensions for now... hope they work
+                 */
                 case "PNG":
                 case "BMP":
                 case "EMF":
@@ -158,7 +185,6 @@ namespace LoadOnDemand.Managers
                 case "TIFF":
                 case "TIF":
                 case "WMF":
-                //case "TGA": Todo16: Well, it doesn't support TGA :)
                     return true;
                 default:
                     ("LOD Unsupported Texture: " + file.fullPath).Log();

@@ -1,6 +1,14 @@
 ﻿
 
 
+next: todo perf-test on reverse pinvoke plus attempt to fix freeze
+
+
+- texture meta info for texture creations... atm we predict defaults
+- compression
+- use actual model resources instead of "all file in directory"
+
+
 Blocking: Find coding standard!
 Todo: Freeze on KSP shutdown. It seems to be related to be related with reverse-pInvoke. Not doing anything in Net4.ManagedBridge helps, not doing anything on the other side keeps the same issue. Those calls come from net4-threads... or GC?
 Todo: DXT, resizing and stuff like that (especially DXT should be easy, since we can cache them on disk. Generate either via unity or sth like squidlib)
@@ -22,13 +30,12 @@ Todo12: TextureManagement. Currently every thumb is created as same X*Y*ARGB and
 Todo13: Create a Copy&Paste code that interfaces with this project, so other mods can ref textures as they like.
 Todo14: A small optimization to TextureManager's exposed methods
 Todo15: Resource management was meant to blend into KSP perfectly by freeing up textures on GC. Well, that doesn't seem to work due to threading issues. We better re-think memory management
-Todo16: Support TGAs...
-Todo17: Support MODEL nodes...
 Todo18: Load events for Resources
 Todo19: The cache directory might end up with lods of dead files. Find a way to clean up...
 Todo20: Fix Logger.Log(Exception)
 Todo21: Evil edge-case on duplicate file name + different extension. Cant currently handle it...
 Todo22: Had some parts on the panel in Editor not loaded... it was grey. (Was it managed anyway?)
+Todo23: TLS-Large flat foot container ingame doesn't properly replace the texture. LOD does. Investigate, since we are at least out of sync.
 
 Issues in the net4 part of this mod:
 

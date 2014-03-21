@@ -124,7 +124,7 @@ BitmapFormat^ BitmapFormat::LoadUnknownFile(FileInfo^ file, array<Byte>^ data)
 	{
 		ms = gcnew MemoryStream(data);
 		BitmapFormat^ bmp = gcnew BitmapFormat(gcnew Drawing::Bitmap(Image::FromStream(ms)), false, gcnew TextureDebugInfo(file->FullName));
-		if (System::IO::Path::GetFileNameWithoutExtension(file->FullName)->ToUpper()->EndsWith("NRM"))
+		if (FileNameIndicatesTextureShouldBeNormal(file))
 			return bmp->ToNormal();
 		return bmp;
 	}

@@ -92,9 +92,10 @@ BitmapFormat^ BitmapFormat::SetAlpha(Byte new_alpha){
 
 	int w = Bitmap->Width;
 	int h = Bitmap->Height;
-	auto srcData = Bitmap->LockBits(Drawing::Rectangle(0, 0, w, h), ImageLockMode::ReadWrite, PixelFormat::Format32bppArgb);
-	auto trgBmp = gcnew Drawing::Bitmap(w, h, Bitmap->PixelFormat);
+	auto fmt = Bitmap->PixelFormat;
+	auto trgBmp = gcnew Drawing::Bitmap(w, h, fmt);
 	auto trgData = trgBmp->LockBits(Drawing::Rectangle(0, 0, w, h), ImageLockMode::WriteOnly, PixelFormat::Format32bppArgb);
+	auto srcData = Bitmap->LockBits(Drawing::Rectangle(0, 0, w, h), ImageLockMode::ReadWrite, PixelFormat::Format32bppArgb);
 
 	auto srcLine = (unsigned char*)srcData->Scan0.ToPointer();
 	auto trgLine = (unsigned char*)trgData->Scan0.ToPointer();

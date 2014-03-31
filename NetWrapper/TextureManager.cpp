@@ -146,7 +146,8 @@ int TextureManager::RegisterTexture(String^ file, String^ cache, IDirect3DTextur
 void TextureManager::RequestTextureLoad(int textureId){
 	TextureData^ texData = textures[textureId];
 	if (texData->IsRequested){
-		return; // this can happen in case of Get[Texture]->RequestLoad, Release, Get->RequestLoad (Still loading). Atm not caught on KSP runtime, thus ignoring it for now.
+		// Cant happen anymore since we have Requested at other level. IsRequested here shouldn't be necessary anymore...
+		//return; // this can happen in case of Get[Texture]->RequestLoad, Release, Get->RequestLoad (Still loading). Atm not caught on KSP runtime, thus ignoring it for now.
 		throw gcnew NotImplementedException("Was already requested. Todo: Do we actually want to support this? Kinda same as HighResTexture check, btw");
 	}
 	texData->IsRequested = true;// Todo: Possible race condition with OnTexturePreperationCompleted, though i don't just want to lock this method.
@@ -185,5 +186,8 @@ void TextureManager::RequestTextureUnload(int textureId){
 		// Todo: Caching, not just releasing!
 		texData->HighResTexture->Release();
 		texData->HighResTexture = NULL;
+	}
+	else{
+		throw gcnew Exception("Todo/Debug: This shouldn't be possible anymore, i guess");
 	}
 }

@@ -41,7 +41,7 @@ void TextureInitialization::ThumbTryLoadFromDisk_OnLoaded(array<Byte>^ loaded_da
 	try{
 		thumb = gcnew ThumbnailTexture(loaded_data, isNormal, gcnew TextureDebugInfo(thumbFile));
 		if (thumb->Width != thumbWidth || thumb->Height != thumbHeight || thumb->Format != thumbFormat){
-			throw gcnew FormatException("Loaded format (" + thumb->Width + "x" + thumb->Height + ", FMT" + ((int)thumb->Format).ToString() + ") does not match expected format (" + thumbWidth + "x" + thumbHeight + ", FMT" + ((int)thumbFormat).ToString() + ")");
+			throw gcnew FormatException("Loaded format (" + thumb->Width + "x" + thumb->Height + ", " + AssignableFormat::StringFromD3DFormat(thumb->Format) + ") does not match expected format (" + thumbWidth + "x" + thumbHeight + ", " + AssignableFormat::StringFromD3DFormat(thumbFormat) + ")");
 		}
 	}
 	catch (Exception^ err){
@@ -51,7 +51,7 @@ void TextureInitialization::ThumbTryLoadFromDisk_OnLoaded(array<Byte>^ loaded_da
 		return;
 	}
 	Logger::LogText("Thumb cache hit, loading " + thumbFile + " to " + textureId);
-	GPU::AssignDataToThumbnailAsync(thumb, thumbTexture);
+	GPU::AssignDataToThumbnailAsync(thumb, thumbTexture, textureId);
 	CompressionInitialize();
 }
 
@@ -69,7 +69,7 @@ void TextureInitialization::ThumbGenerate_OnLoaded(ITextureBase^ loaded_texture)
 	ThumbnailTexture^ thumb = ThumbnailTexture::ConvertFromBitmap(FormatDatabase::ConvertTo<BitmapFormat^>(loaded_texture)->MayToNormal(isNormal), thumbWidth, thumbHeight, thumbFormat);
 	Logger::LogText("Writing cache: " + thumbFile + (thumb->IsNormal ? " (Normal)" : " (Texture)"));
 	Disk::WriteFile(thumbFile, thumb->GetFileBytes());
-	GPU::AssignDataToThumbnailAsync(thumb, thumbTexture);
+	GPU::AssignDataToThumbnailAsync(thumb, thumbTexture, textureId);
 	CompressionInitialize();
 }
 

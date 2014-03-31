@@ -22,3 +22,9 @@ NetWrapper/Release/NetWrapper.log
 *.opensdf
 *.suo
 *.sdf
+*.etl
+*.vsp
+*.psess
+*.psess
+*.log
+*.vspx

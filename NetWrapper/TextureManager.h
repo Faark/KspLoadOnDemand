@@ -15,7 +15,7 @@ private:
 	ref class TextureData{
 	public:
 		bool IsNormal;
-		bool IsRequested = false;
+		bool IsRequested = false;// Todo: This flag shouldn't be required anymore. See usage for details
 		IDirect3DTexture9* HighResTexture = NULL;
 		String^ HighResFile;
 	};

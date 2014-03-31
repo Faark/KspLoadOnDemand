@@ -11,7 +11,8 @@ namespace LoadOnDemand.Managers
         // Todo11: GetNativeTexturePtr seems to be rather expensive... think about using it less frequent?!
         internal class TextureData
         {
-            public WeakReference LoadedTextureRef = null;
+            public bool Requested;
+            public WeakReference LoadedTextureResource = null;
             public IntPtr UnloadedTexture;
             public GameDatabase.TextureInfo Info;
             public UrlDir.UrlFile File;
@@ -21,20 +22,20 @@ namespace LoadOnDemand.Managers
             {
                 File = file;
                 Info = new GameDatabase.TextureInfo(CreateEmptyThumbnailTexture(), false, true, false);
-
-                Info.name = file.url;
+                Info.texture.name = Info.name = file.url;
             }
         }
+
         /// <summary>
+        /// This object represents a loaded texture. It should be ref-counted, but GC'ed in case someone fcks it up...
+        /// 
+        /// 
+        /// 
         /// This is a singelton-per-texture class. It is not allowed to exist more than once per Texture/TextureData!
-        /// All existing instance have to be referenced via corresponding LoadedTextureRef WeakRefs.
+        /// All existing instance have to be referenced via "live" resource references or corresponding LoadedTextureRef WeakRefs.
         /// </summary>
-        private class TextureResource : Resources.IResource
+        private class TextureResource
         {
-            public Managers.TextureManager.TextureData Data { get; private set; }
-#if DEBUG
-            public List<String> ReferencedBy = new List<string>();
-#endif
             public bool Loaded
             {
                 get
@@ -44,45 +45,144 @@ namespace LoadOnDemand.Managers
                     return Data.Info.texture.GetNativeTexturePtr() != Data.UnloadedTexture;
                 }
             }
-            public TextureResource(Managers.TextureManager.TextureData data)
-            {
-                Data = data;
-                if (data.Info.texture.GetNativeTexturePtr() == data.UnloadedTexture)
-                {
-                    ("Texture referenced, requesting load: " + data.NativeId).Log();
-                    NativeBridge.RequestTextureLoad(data.NativeId);
-                }
-                else
-                {
-                    ("Texture referenced, highdetail still loaded: " + data.NativeId).Log();
-                }
-            }
-            public void Reference()
-            {
+            public TextureData Data { get; private set; }
+            public int RefCount;
 #if DEBUG
-                ReferencedBy.Add(String.Join(Environment.NewLine + "  ", Environment.StackTrace.Split(new[] { Environment.NewLine }, StringSplitOptions.None)));
+            public List<WeakReference> ReferencedBy = new List<WeakReference>();
 #endif
+            public void Ref(TextureReference r)
+            {
+                RefCount++;
+#if DEBUG
+                ReferencedBy.Add(new WeakReference(r));
+#endif
+            }
+            public void Dec(TextureReference r)
+            {
+                RefCount--;
+#if DEBUG
+                ReferencedBy.RemoveAll(el => !el.IsAlive || (el.Target == r));
+#endif
+                if (RefCount == 0)
+                {
+                    // Todo15: This was supposed to free memory as required, ideally on GC, instantly so more can be used.
+                    // Atm it's done delayed (since GC thread can't do shit), thus killing that initial concept. revive it think about dealing with it.
+                    // It at least makes it harder to get close to the memory limit.
+                    ReleaseTextureDelayed(Data);
+                }
             }
             public override string ToString()
             {
 #if DEBUG
                 var sb = new StringBuilder(Data.Info.name);
+                sb.Append(", Active references: ").Append(RefCount);
                 sb.AppendLine(", Lifetime references:");
-                foreach(var currentRef in ReferencedBy){
-                    sb.AppendLine("  ----------------------------------------");
-                    sb.AppendLine(currentRef);
+                var any = false;
+                foreach (var currentRef in ReferencedBy)
+                {
+                    if (currentRef.IsAlive)
+                    {
+                        any = true;
+                        sb.AppendLine("  ----------------------------------------");
+                        sb.AppendLine(((TextureReference)currentRef.Target).CreationLog);
+                    }
+                }
+                if (!any)
+                {
+                    sb.AppendLine("  NONE!");
                 }
                 return sb.ToString();
 #else
                 return Data.Info.name;
 #endif
             }
+            public TextureResource(TextureData data)
+            {
+                Data = data;
+                if (!data.Requested)
+                {
+                    if (data.Info.texture.GetNativeTexturePtr() == data.UnloadedTexture)
+                    {
+                        ("Texture referenced, requesting load: " + data.NativeId).Log();
+                        data.Requested = true;
+                        Logic.ActivityGUI.HighResStarting();
+                        NativeBridge.RequestTextureLoad(data.NativeId);
+                    }
+                    else
+                    {
+                        ("Texture referenced, highdetail still loaded: " + data.NativeId).Log();
+                    }
+                }
+                else
+                {
+                    ("Texture referenced, but highdetails seems already requested: " + data.NativeId).Log();
+                }
+            }
             ~TextureResource()
             {
-                // Todo15: This was supposed to free memory as required, ideally on GC, instantly so more can be used.
-                // Atm it's done delayed (since GC thread can't do shit), thus killing that initial concept. revive it think about dealing with it.
-                // It at least makes it harder to get close to the memory limit.
-                ReleaseTextureDelayed(Data);
+                if (RefCount > 0)
+                {
+                    // someone fck up releasing resources...
+                    RefCount = 0;
+                    ReleaseTextureDelayed(Data);
+                }
+            }
+        }
+        /// <summary>
+        /// A public reference to a texture resource. Should be released once you don't need it anymore!
+        /// </summary>
+        private class TextureReference : Resources.IResource
+        {
+            public TextureResource Resource { get; private set; }
+            public bool Loaded
+            {
+                get
+                {
+                    return Resource.Loaded;
+                }
+            }
+#if DEBUG
+            public string CreationLog;
+#endif
+
+            public void Release()
+            {
+                if (Resource != null)
+                {
+                    Resource.Dec(this);
+                    Resource = null;
+                }
+            }
+            public Resources.IResource Clone(bool throwIfDead)
+            {
+                if (Resource == null && throwIfDead)
+                {
+                    throw new InvalidOperationException();
+                }
+                return new TextureReference(Resource);
+            }
+            public override string ToString()
+            {
+                if (Resource == null)
+                {
+                    return "Released Texture";
+                }
+                else
+                {
+                    return "Reference to " + Resource.ToString();
+                }
+            }
+
+            public TextureReference(TextureResource fromResource)
+            {
+                var res = Resource = fromResource;
+                if (res != null)
+                {
+#if DEBUG
+                    CreationLog = String.Join(Environment.NewLine + "  ", Environment.StackTrace.Split(new[] { Environment.NewLine }, StringSplitOptions.None));
+#endif
+                    Resource.Ref(this);
+                }
             }
         }
         internal static Dictionary<GameDatabase.TextureInfo, TextureData> iManagedTextures = new Dictionary<GameDatabase.TextureInfo, TextureData>();
@@ -100,19 +200,18 @@ namespace LoadOnDemand.Managers
             TextureData textureData;
             if (iManagedTextures.TryGetValue(textureObject, out textureData))
             {
-                TextureResource textureReference;
-                if (textureData.LoadedTextureRef == null || !textureData.LoadedTextureRef.IsAlive)
+                TextureResource textureResource;
+                if (textureData.LoadedTextureResource == null || !textureData.LoadedTextureResource.IsAlive)
                 {
-                    textureReference = new TextureResource(textureData);
-                    textureData.LoadedTextureRef = new WeakReference(textureReference);
+                    textureResource = new TextureResource(textureData);
+                    textureData.LoadedTextureResource = new WeakReference(textureResource);
                 }
                 else
                 {
                     // Todo: Potential race condition. Hope we asap get .net 4 and thus WeakRef.TryGet... don't see another way to fix that if-else
-                    textureReference = (TextureResource)textureData.LoadedTextureRef.Target;
+                    textureResource = (TextureResource)textureData.LoadedTextureResource.Target;
                 }
-                textureReference.Reference();
-                return textureReference;
+                return new TextureReference(textureResource);
             }
             else
             {
@@ -137,23 +236,27 @@ namespace LoadOnDemand.Managers
         {
             Logic.WorkQueue.AddJob(() =>
             {
-                if (data.LoadedTextureRef.IsAlive)
+                if (data.LoadedTextureResource != null && data.LoadedTextureResource.IsAlive)
                 {
-                    // object was revived before this one was killed... unload request can be scrapped?!
+                    var currentResource = (TextureResource)data.LoadedTextureResource.Target;
+                    if (currentResource.RefCount > 0)
+                    {
+                        // obj seems alive again, probably ref'ed again?
+                        return;
+                    }
+                }
+                data.LoadedTextureResource = null; // lets call it dead...
+
+                var currentNative = data.Info.texture.GetNativeTexturePtr();
+                if (currentNative == data.UnloadedTexture)
+                {
+                    ("Texture reference " + data.NativeId + " dropped! (not loaded anyway, doing nothing)").Log();
                 }
                 else
                 {
-                    var currentNative = data.Info.texture.GetNativeTexturePtr();
-                    if (currentNative == data.UnloadedTexture)
-                    {
-                        ("Texture reference " + data.NativeId + " dropped! (not loaded anyway, doing nothing)").Log();
-                    }
-                    else
-                    {
-                        ("Texture reference " + data.NativeId + " dropped, unloading texture!").Log();
-                        data.Info.texture.UpdateExternalTexture(data.UnloadedTexture);
-                        NativeBridge.RequestTextureUnload(data.NativeId);
-                    }
+                    ("Texture reference " + data.NativeId + " dropped, unloading texture!").Log();
+                    data.Info.texture.UpdateExternalTexture(data.UnloadedTexture);
+                    NativeBridge.RequestTextureUnload(data.NativeId);
                 }
             });
         }
@@ -162,9 +265,9 @@ namespace LoadOnDemand.Managers
         {
             switch (file.fileExtension.ToUpper())
             {
-                    /*
-                     * KSPs own file format... got a custom loader
-                     */
+                /*
+                 * KSPs own file format... got a custom loader
+                 */
                 case "MBM":
                 // God bless http://www.codeproject.com/Articles/31702/NET-Targa-Image-Reader for doing the heavy lifting,
                 // though i would have prefered KSP to never support TGAs
@@ -193,12 +296,10 @@ namespace LoadOnDemand.Managers
         }
         static TextureManager()
         {
-            var cfg = Config.Current;
-            if (cfg.ThumbnailFormat != TextureFormat.ARGB32)
+            if (Config.Current.ThumbnailFormat != TextureFormat.ARGB32)
                 throw new NotSupportedException("Currnet thumbnails have to be ARGB32!");
-            NativeBridge.Setup(cfg.GetCacheDirectory());
             NativeBridge.OnTextureLoaded += NativeBridge_OnTextureLoaded;
-            //NativeBridge.OnThumbnailLoaded += NativeBridge_OnThumbnailLoaded;
+            NativeBridge.OnThumbnailLoaded += NativeBridge_OnThumbnailLoaded;
         }
         /*
         static void NativeBridge_OnThumbnailLoaded(int nativeId, IntPtr loadedTexturePtr)
@@ -206,10 +307,16 @@ namespace LoadOnDemand.Managers
             // Todo: setPtr? Or do we assign it from native to the actual tmp texture?
             // nativeIdToDataLookup[nativeId].ThumbLoaded = true;
         }*/
+        static void NativeBridge_OnThumbnailLoaded(int nativeId)
+        {
+            Logic.ActivityGUI.ThumbFinished();
+        }
         static void NativeBridge_OnTextureLoaded(int nativeId, IntPtr loadedTexturePtr)
         {
+            Logic.ActivityGUI.HighResFinished();
             var textureData = nativeIdToDataLookup[nativeId];
-            if (textureData.LoadedTextureRef.IsAlive)
+            textureData.Requested = false;
+            if ((textureData.LoadedTextureResource != null) && textureData.LoadedTextureResource.IsAlive && (((TextureResource)textureData.LoadedTextureResource.Target).RefCount > 0))
             {
                 //NativeBridge.DumpTextureNative(textureData.Info.texture, "TexEx_" + DateTime.Now.Ticks + "_" + nativeId + "_ORIGINAL.png");
                 //textureData.Info.texture.UpdateExternalTexture(textureData.Info.texture.GetNativeTexturePtr());
@@ -238,6 +345,7 @@ namespace LoadOnDemand.Managers
                 (texture.Info.texture.format.ToString()).Log();
                 texture.Info.texture.width.ToString().Log();
             }*/
+            Logic.ActivityGUI.ThumbStarting();
             texture.UnloadedTexture = texture.Info.texture.GetNativeTexturePtr();
             texture.NativeId = NativeBridge.RegisterTextureAndRequestThumbLoad(
                 new System.IO.FileInfo(texture.File.fullPath).FullName,
@@ -314,6 +422,7 @@ namespace LoadOnDemand.Managers
             tex.Apply(true, false);
             return tex;
         }
+
 
     }
 }

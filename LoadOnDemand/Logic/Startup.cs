@@ -12,47 +12,6 @@ namespace LoadOnDemand.Logic
     [KSPAddon(KSPAddon.Startup.Instantly, true)]
     public class Startup: MonoBehaviour
     {
-
-        [System.Runtime.InteropServices.DllImport("kernel32", SetLastError = true, CharSet = System.Runtime.InteropServices.CharSet.Unicode)]
-        static extern IntPtr LoadLibrary(string lpFileName);
-
-
-
-
-        static void LoadNativeDll()
-        {
-            var tmpDir = Config.Current.GetCacheDirectory();
-            if (!System.IO.Directory.CreateDirectory(tmpDir).Exists)
-            {
-                throw new Exception("Failed to create tmp dir!");
-            }
-
-            var path = System.IO.Path.Combine(tmpDir, "NetWrapper.native");
-            /*
-             * Todo9: Date of the created file seems wrong (hasn't changed for more than 1h, even after i deleted the file it was re-created with the wrong date)... Investiage?!
-             * 
-             * 
-            System.IO.File.Exists(path).ToString().Log();
-            System.IO.File.Delete(path);
-            System.IO.File.Exists(path).ToString().Log();
-            path.Log();
-             * 
-             */
-            var data = System.Reflection.Assembly.GetExecutingAssembly().GetManifestResourceStream("LoadOnDemand.EmbededResources.NetWrapper.dll");
-            System.IO.File.WriteAllBytes(path, new System.IO.BinaryReader(data).ReadBytes((int)data.Length));
-            IntPtr lib = LoadLibrary(path);
-            if (lib == IntPtr.Zero)
-                throw new Exception("LoadOnDemand failed loaded its native library:" + path);
-            else
-                ("LoadOnDemand has loaded its native library: "+ path).Log();
-        }
-        static Startup()
-        {
-            LoadNativeDll();
-        }
-
-
-
         HashSet<UrlDir.UrlFile> createdTextures = new HashSet<UrlDir.UrlFile>();
         HashSet<string> createdInternals = new HashSet<string>();
 
@@ -229,6 +188,18 @@ namespace LoadOnDemand.Logic
         }
         public void Awake()
         {
+            NativeBridge.Setup(Config.Current.GetCacheDirectory());
+#if DEBUG
+            foreach(var file in System.IO.Directory.GetFiles(Config.Current.GetCacheDirectory()))
+            {
+                try
+                {
+                    System.IO.File.Delete(file);
+                }
+                catch (Exception) { }
+            }
+#endif
+
             Managers.InternalManager.Setup(processAndGetInternals());
             StartupDelayed.PartsToManage = processAndGetParts().ToList();
 

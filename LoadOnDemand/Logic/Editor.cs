@@ -14,7 +14,7 @@ namespace LoadOnDemand.Logic
     {
         Dictionary<AvailablePart, Resources.IResource> referencedResources = new Dictionary<AvailablePart, Resources.IResource>();
 
-        public void RefAllFrom(Part startPart, HashSet<AvailablePart> usedParts)
+        void RefAllFrom(Part startPart, HashSet<AvailablePart> usedParts)
         {
             usedParts.Add(startPart.partInfo);
             foreach (var sub in startPart.children)
@@ -22,7 +22,7 @@ namespace LoadOnDemand.Logic
                 RefAllFrom(sub, usedParts);
             }
         }
-        public void Update()
+        void Update()
         {
             if (EditorLogic.fetch != null)
             {
@@ -45,9 +45,25 @@ namespace LoadOnDemand.Logic
                 }
                 foreach (var part in unusedParts)
                 {
+                    referencedResources[part].Release();
                     referencedResources.Remove(part);
                 }
             }
+        }
+        void Awake()
+        {
+            if (Config.Disabled)
+            {
+                enabled = false;
+            }
+        }
+        void OnDestroy()
+        {
+            foreach (var el in referencedResources)
+            {
+                el.Value.Release();
+            }
+            referencedResources = null;
         }
     }
 
@@ -99,6 +115,7 @@ namespace LoadOnDemand.Logic
             foreach (var part in unusedParts)
             {
                 ("EditorPages: Dropping " + part.name).Log();
+                referencedResources[part].Release();
                 referencedResources.Remove(part);
             }
             PartQueueToProcess.Clear();
@@ -106,8 +123,15 @@ namespace LoadOnDemand.Logic
         }
         void Awake()
         {
-            ("EditorPages: Awake").Log();
-            SetupNew();
+            if (Config.Disabled)
+            {
+                enabled = false;
+            }
+            else
+            {
+                ("EditorPages: Awake").Log();
+                SetupNew();
+            }
         }
         void Update()
         {
@@ -116,7 +140,8 @@ namespace LoadOnDemand.Logic
                 ConsumeQueue();
             }
         }
-        void OnDestroy(){
+        void OnDestroy()
+        {
             if (EditorPartList.Instance != null && EditorPartList.Instance.GreyoutFilters != null)
             {
                 EditorPartList.Instance.GreyoutFilters.RemoveFilter(myPseudoFilter);
@@ -124,8 +149,12 @@ namespace LoadOnDemand.Logic
             }
             myPseudoFilter = null;
 
-            // all above didn't help... last resort:
-            referencedResources.Clear();
+            foreach (var el in referencedResources)
+            {
+                el.Value.Release();
+            }
+            referencedResources = null;
+            // all above didn't help... last resort (".clear()") was removed for now thanks to manual "release"
             // Todo: Find the actual ref that keeps this alive.
             ("EditorPages: OnDestroy").Log();
         }

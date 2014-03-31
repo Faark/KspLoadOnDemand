@@ -30,12 +30,14 @@ Todo12: TextureManagement. Currently every thumb is created as same X*Y*ARGB and
 Todo13: Create a Copy&Paste code that interfaces with this project, so other mods can ref textures as they like.
 Todo14: A small optimization to TextureManager's exposed methods
 Todo15: Resource management was meant to blend into KSP perfectly by freeing up textures on GC. Well, that doesn't seem to work due to threading issues. We better re-think memory management
-Todo18: Load events for Resources
+Todo18: Load events for Resources? Though that might fck up automatic GC fallbacks...?!
 Todo19: The cache directory might end up with lods of dead files. Find a way to clean up...
 Todo20: Fix Logger.Log(Exception)
 Todo21: Evil edge-case on duplicate file name + different extension. Cant currently handle it...
 Todo22: Had some parts on the panel in Editor not loaded... it was grey. (Was it managed anyway?)
 Todo23: TLS-Large flat foot container ingame doesn't properly replace the texture. LOD does. Investigate, since we are at least out of sync.
+Todo24: LOD doesn't like changing texture resolution ingame to half/quater/eights...
+Todo: Config.Enabled = false; is nice, but doens't actually shut down LOD until the next sceene is loaded....
 
 Issues in the net4 part of this mod:
 
@@ -43,5 +45,19 @@ Todo1: Analye in general, especially what causes bad frame rates. DiskIO? BG-Wor
 Todo2: We might rly want some kind of throttle on the KSP thread and for GPU copy...
 Todo3: Currently, textures are loaded and unloaded as requested from ksp-rt. It might be stupid, though... some kinda caching would be nice.
 Todo7: Improve Logger
+Todo: Just had a crash that was likly due to cleaning up resources during  closing the game?!
+3/25/2014 3:53:22 PM: System.ArgumentException: Parameter is not valid.
+   at System.Drawing.Image.get_RawFormat()
+   at System.Drawing.Graphics.DrawImage(Image image, Int32 x, Int32 y, Int32 width, Int32 height)
+   at System.Drawing.Bitmap..ctor(Image original, Int32 width, Int32 height)
+   at System.Drawing.Bitmap..ctor(Image original)
+   at FormatDatabase.RecognizeTGA(FileInfo file, Byte[] data)
+   at FormatDatabase.AddRecognitionScope`1.Recognize(FileInfo file, Byte[] bytes)
+   at FormatDatabase.Recognize(String file, Byte[] data)
+   at TextureInitialization.GetOrLoadSourceFileScope.OnLoaded(Byte[] loaded_data)
+   at Disk.RequestFileScope.RunProcessor()
+   at Work.WorkThread()
+
+Todo: Prevent the loader from queueing up similar load requests. Its especially obvious when LOD is still preparing and your are switching though Editor pages...
 
 

@@ -41,6 +41,7 @@ using namespace System::Drawing;
 using namespace System::Drawing::Imaging;
 using namespace System::Runtime::InteropServices;
 
+
 namespace Paloma
 {
 	private ref class TargaConstants

@@ -25,8 +25,10 @@ private:
 	static void WorkThread(){
 		while (true)
 		{
+#if NDEBUG
 			try
 			{
+#endif
 				Action^ currentJob;
 				if (!PriorityQueue->TryTake(currentJob)){
 					if (!ProcessingQueue->TryTake(currentJob))
@@ -40,6 +42,7 @@ private:
 					}
 				}
 				currentJob();
+#if NDEBUG
 			}
 			catch (ThreadAbortException^){
 				return;
@@ -50,6 +53,7 @@ private:
 				Logger::crashGame = true;
 				throw;
 			}
+#endif
 		}
 	}
 
@@ -78,4 +82,5 @@ public:
 			return false;
 		}
 	}
+
 };

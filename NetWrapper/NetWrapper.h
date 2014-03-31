@@ -28,22 +28,22 @@ extern "C" __declspec(dllexport) void NlodDebug_DumpTexture(void* texturePtr, co
 		bmp->UnlockBits(bmpData);
 		bmp->Save(gcnew String(file_name), ImageFormat::Png);
 	}
-	catch(Exception^ err){
+	catch (Exception^ err){
 		Logger::LogException(err);
 		throw;
 	}
 	Logger::MayCrash();
 }
-extern "C" __declspec(dllexport) void NlodSetup(const char* cache_directory, void* thumbUpdateCallback, void*textureLoadedCallback, void* statusUpdatedCallback, void* requestUpdateFromKspThreadCallback){
+extern "C" __declspec(dllexport) void NlodSetup(const char* cache_directory, void* thumbUpdateCallback, void*textureLoadedCallback, void* statusUpdatedCallback, void* requestUpdateFromKspThreadCallback, void* onSignalThreadIdlleCallback){
 	/*array<String^, 1> ^ names = System::Reflection::Assembly::GetExecutingAssembly()->GetManifestResourceNames();
 	for (int i = 0; i < names->Length; i++){
-		System::IO::File::AppendAllText("C:\\ksp_rtLodNew\\bridgeNet.txt", names[i]);
-		System::IO::File::AppendAllText("C:\\ksp_rtLodNew\\bridgeNet.txt", Environment::NewLine);
+	System::IO::File::AppendAllText("C:\\ksp_rtLodNew\\bridgeNet.txt", names[i]);
+	System::IO::File::AppendAllText("C:\\ksp_rtLodNew\\bridgeNet.txt", Environment::NewLine);
 	}*/
 	try{
 		String^ cacheDirectory = gcnew String(cache_directory);
 		Logger::Setup(cacheDirectory);
-		ManagedBridge::Setup(thumbUpdateCallback, textureLoadedCallback, statusUpdatedCallback, requestUpdateFromKspThreadCallback);
+		ManagedBridge::Setup(thumbUpdateCallback, textureLoadedCallback, statusUpdatedCallback, requestUpdateFromKspThreadCallback, onSignalThreadIdlleCallback);
 		TextureManager::Setup(cacheDirectory);
 	}
 	catch (Exception^ err){
@@ -118,6 +118,21 @@ extern "C" __declspec(dllexport) bool NlodRequestedUpdate(void* deviceRefTexture
 	}
 	finally{
 		Logger::LogTrace("Leave RequestedUpdate");
+	}
+	Logger::MayCrash();
+}
+extern "C" __declspec(dllexport) void NlodStartSignalMessages()
+{
+	try{
+		Logger::LogTrace("Enter StartSignalMessages");
+		ManagedBridge::StartMessageLoop();
+	}
+	catch (Exception^err){
+		Logger::LogException(err);
+		throw;
+	}
+	finally{
+		Logger::LogTrace("Leave StartSignalMessages");
 	}
 	Logger::MayCrash();
 }

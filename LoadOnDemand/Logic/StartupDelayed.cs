@@ -17,6 +17,10 @@ namespace LoadOnDemand.Logic
         
         public void Awake()
         {
+            if (Config.Disabled)
+            {
+                return;
+            }
             // Finds loaded instances and remove all models that were not properly loaded on the fly...
             foreach (var partData in PartsToManage)
             {
@@ -51,6 +55,16 @@ namespace LoadOnDemand.Logic
                 {
                     ("  - " + t.name).Log();
                 }
+            }
+            "Dumping missed texture informations.".Log();
+            foreach (var imgs in GameDatabase.Instance.root.AllFiles.Where(f => f.fileType == UrlDir.FileType.Texture))
+            {
+                try
+                {
+                    var tex = GameDatabase.Instance.GetTexture(imgs.url, false);
+                    ("MISSED TEXTURE: " + imgs.fullPath + " (" + tex.width + "x" + tex.height + "@" + tex.format.ToString() + ")").Log();
+                }
+                catch (Exception) { }
             }
 #endif
         }

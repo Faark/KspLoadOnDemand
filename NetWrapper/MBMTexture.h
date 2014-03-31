@@ -14,7 +14,7 @@ public:
 	property int Height;
 	property bool IsNormal;
 
-	MBMTexture(array<Byte>^ data, TextureDebugInfo^ tdi):IAssignableTexture(tdi) {
+	MBMTexture(array<Byte>^ data, TextureDebugInfo^ tdi) :IAssignableTexture(tdi) {
 		System::IO::MemoryStream^ ms = nullptr;
 		System::IO::BinaryReader^ bs = nullptr;
 		int data_offset = 0;
@@ -48,6 +48,7 @@ public:
 				delete ms;
 		}
 		RawData = gcnew array<Byte>(Width * Height * 4);
+
 		pin_ptr<unsigned char> srcPinPtr = &data[data_offset];
 		pin_ptr<unsigned char> trgPinPtr = &RawData[0];
 		unsigned char* srcPtr = srcPinPtr;
@@ -112,12 +113,15 @@ public:
 	}
 
 	BitmapFormat^ ToBitmap(){
-		auto bmp = gcnew Bitmap(Width, Height, PixelFormat::Format32bppArgb);
-		auto bmpData = bmp->LockBits(Drawing::Rectangle(0, 0, Width, Height), ImageLockMode::WriteOnly, PixelFormat::Format32bppArgb);
+		auto w = Width;
+		auto h = Height;
+		auto fmt = PixelFormat::Format32bppArgb;
+		auto bmp = gcnew Bitmap(w, h, fmt);
+		auto bmpData = bmp->LockBits(Drawing::Rectangle(0, 0, w, h), ImageLockMode::WriteOnly, fmt);
 		pin_ptr<unsigned char> srcPinPtr = &RawData[0];
-		
+
 		int lineSize = Width * 4;
-		GPU::CopyBufferInverted(srcPinPtr, lineSize, (unsigned char*)bmpData->Scan0.ToPointer(), bmpData->Stride, lineSize, Height);
+		GPU::CopyBufferInverted(srcPinPtr, lineSize, (unsigned char*)bmpData->Scan0.ToPointer(), bmpData->Stride, lineSize, h);
 		bmp->UnlockBits(bmpData);
 		return gcnew BitmapFormat(bmp, IsNormal, DebugInfo->Modify("ToBitmap"));
 	}
@@ -132,4 +136,5 @@ public:
 		}
 		return nullptr;
 	}
+
 };

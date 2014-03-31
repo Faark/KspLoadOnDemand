@@ -15,6 +15,8 @@ namespace LoadOnDemand
     }
     class Config
     {
+        public static bool Disabled { get; set; }
+
         public static Config Current { get; private set; }
         System.IO.FileInfo cfgFileLocation;
         private Config() {
@@ -24,6 +26,9 @@ namespace LoadOnDemand
             ThumbnailWidth = 32;
             ThumbnailHeight = 32;
             ThumbnailFormat = TextureFormat.ARGB32;
+
+            UI_DelayBeforeHidingActivityUI = TimeSpan.FromSeconds(3);
+            UI_DelayBeforeShowingActivityUI = TimeSpan.FromSeconds(3);
 
             CompressTextures = true;
         }
@@ -59,7 +64,7 @@ namespace LoadOnDemand
             Current = new Config();
             var gameData = System.IO.Path.Combine(UrlDir.ApplicationRootPath, "GameData");
             var lodDir = System.IO.Path.Combine(gameData, "LoadOnDemand");
-            System.IO.Directory.CreateDirectory(lodDir);
+            System.IO.Directory.CreateDirectory(lodDir); // todo: is this enought to verify the directory exists?
             Current.cfgFileLocation = new System.IO.FileInfo(System.IO.Path.Combine(lodDir, "LoadOnDemand.cfg"));
 
             if (!Current.cfgFileLocation.Exists)
@@ -68,44 +73,7 @@ namespace LoadOnDemand
             }
             else
             {
-                var cfgNode = ConfigNode.Load(Current.cfgFileLocation.FullName);
-                if (cfgNode.HasNode("Thumbnail"))
-                {
-                    var thumbNode = cfgNode.GetNode("Thumbnail");
-                    Current.ThumbnailEnabled = thumbNode.GetValue("Enabled", s => bool.Parse(s), Current.ThumbnailEnabled);
-                    Current.ThumbnailWidth = thumbNode.GetValue("Width", s => int.Parse(s), Current.ThumbnailWidth);
-                    Current.ThumbnailHeight = thumbNode.GetValue("Height", s => int.Parse(s), Current.ThumbnailHeight);
-                    Current.ThumbnailFormat = thumbNode.GetValue("Format", s =>
-                    {
-                        switch (s)
-                        {
-                            case "DXT5":
-                                return TextureFormat.DXT5;
-                            case "ARGB32":
-                            default:
-                                return TextureFormat.ARGB32;
-                        }
-                    }, Current.ThumbnailFormat);
-                }
-
-                Current.CompressTextures = cfgNode.GetValue("CompressTextures", s => bool.Parse(s), Current.CompressTextures);
-
-                if (cfgNode.HasNode("Cache"))
-                {
-                    var cache = cfgNode.GetNode("Cache");
-                    foreach (ConfigNode node in cache.nodes)
-                    {
-                        var el = new CacheItem()
-                        {
-                            Key = node.name,
-                            Url = node.GetValue("Url"),
-                            FileSize = long.Parse(node.GetValue("Size")),
-                            LastChanged = DateTime.Parse(node.GetValue("Date"))
-                        };
-                        Current.CachedDataPerKey[el.Key] = el;
-                        Current.CachedDataPerResUrl[el.Url] = el;
-                    }
-                }
+                Current.Load(ConfigNode.Load(Current.cfgFileLocation.FullName));
             }
 
 
@@ -120,6 +88,10 @@ namespace LoadOnDemand
             thumb.AddValue("Width", ThumbnailWidth.ToString());
             thumb.AddValue("Height", ThumbnailHeight.ToString());
             thumb.AddValue("Format", ThumbnailFormat.ToString());
+
+            var ui = cfg.AddNode("ActivityInterface");
+            ui.AddValue("SecondsBeforeShowing", UI_DelayBeforeShowingActivityUI.TotalSeconds.ToInt().ToString());
+            ui.AddValue("SecondsBeforeHiding", UI_DelayBeforeHidingActivityUI.TotalSeconds.ToInt().ToString());
 
             cfg.AddValue("CompressTextures", CompressTextures.ToString());
 
@@ -136,6 +108,57 @@ namespace LoadOnDemand
             cfg.Save(cfgFileLocation.FullName);
             IsDirty = false;
         }
+        void Load(ConfigNode cfgNode)
+        {
+
+            if (cfgNode.HasNode("Thumbnail"))
+            {
+                var thumbNode = cfgNode.GetNode("Thumbnail");
+                Current.ThumbnailEnabled = thumbNode.GetValue("Enabled", s => bool.Parse(s), Current.ThumbnailEnabled);
+                Current.ThumbnailWidth = thumbNode.GetValue("Width", s => int.Parse(s), Current.ThumbnailWidth);
+                Current.ThumbnailHeight = thumbNode.GetValue("Height", s => int.Parse(s), Current.ThumbnailHeight);
+                Current.ThumbnailFormat = thumbNode.GetValue("Format", s =>
+                {
+                    switch (s)
+                    {
+                        case "DXT5":
+                            return TextureFormat.DXT5;
+                        case "ARGB32":
+                        default:
+                            return TextureFormat.ARGB32;
+                    }
+                }, Current.ThumbnailFormat);
+
+            }
+            if (cfgNode.HasNode("ActivityInterface"))
+            {
+                var uiNode = cfgNode.GetNode("ActivityInterface");
+                Current.UI_DelayBeforeShowingActivityUI = uiNode.GetValue("SecondsBeforeShowing", s => TimeSpan.FromSeconds(int.Parse(s)), Current.UI_DelayBeforeShowingActivityUI);
+                Current.UI_DelayBeforeHidingActivityUI = uiNode.GetValue("SecondsBeforeHiding", s => TimeSpan.FromSeconds(int.Parse(s)), Current.UI_DelayBeforeHidingActivityUI);
+            }
+
+            Current.CompressTextures = cfgNode.GetValue("CompressTextures", s => bool.Parse(s), Current.CompressTextures);
+
+            if (cfgNode.HasNode("Cache"))
+            {
+                var cache = cfgNode.GetNode("Cache");
+                foreach (ConfigNode node in cache.nodes)
+                {
+                    var el = new CacheItem()
+                    {
+                        Key = node.name,
+                        Url = node.GetValue("Url"),
+                        FileSize = long.Parse(node.GetValue("Size")),
+                        LastChanged = DateTime.Parse(node.GetValue("Date"))
+                    };
+                    Current.CachedDataPerKey[el.Key] = el;
+                    Current.CachedDataPerResUrl[el.Url] = el;
+                }
+            }
+        }
+
+        public TimeSpan UI_DelayBeforeShowingActivityUI { get; private set; }
+        public TimeSpan UI_DelayBeforeHidingActivityUI { get; private set; }
 
         public bool ThumbnailEnabled { get; private set; }
         public int ThumbnailWidth { get; private set; }

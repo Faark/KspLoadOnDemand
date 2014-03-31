@@ -30,14 +30,18 @@ namespace LoadOnDemand.Logic
     public class DevStuff : MonoBehaviour
     {
         int winId = UnityEngine.Random.Range(0, int.MaxValue);
-        static Rect pos = new Rect(100, 100, 80, 160);
+        static Rect pos = new Rect(100, 100, 100, 200);
         string ResourceText;
         public void OnGUI()
         {
-            pos = GUI.Window(winId, pos, WinFunc, "LOD");
+            if (!closed)
+            {
+                pos = GUI.Window(winId, pos, WinFunc, "LOD");
+            }
         }
         public static string Status;
         Resources.ResourceCollection refRes;
+        static bool closed = false;
         void WinFunc(int id)
         {
             if (refRes == null)
@@ -54,6 +58,7 @@ namespace LoadOnDemand.Logic
                 //Temp: Disabled for perf?! GUILayout.Label(refRes.Resources.Count(el => el.Loaded) + "/" + refRes.Resources.Count() + " loaded");
                 if (GUILayout.Button("Drop Ref"))
                 {
+                    refRes.Release();
                     refRes = null;
                 }
             }
@@ -62,8 +67,8 @@ namespace LoadOnDemand.Logic
                 if (ResourceText == null)
                 {
                     ResourceText = String.Join(Environment.NewLine, Managers.TextureManager.iManagedTextures
-                        .Where(el => el.Value.LoadedTextureRef != null && el.Value.LoadedTextureRef.IsAlive)
-                        .Select(el => el.Value.LoadedTextureRef.Target.ToString())
+                        .Where(el => el.Value.LoadedTextureResource != null && el.Value.LoadedTextureResource.IsAlive)
+                        .Select(el => el.Value.LoadedTextureResource.Target.ToString())
                         .ToArray());
                     ResourceText.Log();
                     pos.width = 560;
@@ -72,8 +77,8 @@ namespace LoadOnDemand.Logic
             }
             else if (Event.current.type == EventType.Repaint)
             {
-                pos.width = 80;
-                pos.height = 160;
+                pos.width = 100;
+                pos.height = 200;
                 ResourceText = null;
             }
             if (ResourceText != null)
@@ -85,7 +90,13 @@ namespace LoadOnDemand.Logic
             {
                 System.GC.Collect(System.GC.MaxGeneration, GCCollectionMode.Forced);
             }
-            GUILayout.Label(Managers.TextureManager.iManagedTextures.Count(el => el.Value.LoadedTextureRef != null && el.Value.LoadedTextureRef.IsAlive) + "/" + Managers.TextureManager.iManagedTextures.Count + " alive");
+            GUILayout.Label(Managers.TextureManager.iManagedTextures.Count(el => el.Value.LoadedTextureResource != null && el.Value.LoadedTextureResource.IsAlive) + "/" + Managers.TextureManager.iManagedTextures.Count + " alive");
+            GUILayout.Label("p:" + ActivityGUI.FinishedThumbnailRequests + "/" + ActivityGUI.ActiveThumbnailRequests
+                + Environment.NewLine + "l:" + ActivityGUI.FinishedHighResLoadRequests + "/" + ActivityGUI.ActiveHighResLoadRequests);
+            if (GUI.Button(new Rect(pos.width - 22, 0, 22, 18), "x"))
+            {
+                closed = true;
+            }
             GUI.DragWindow();
         }
 

@@ -35,7 +35,7 @@ public:
 	array<Byte>^ GetFileBytes(){
 		return byteData;
 	}
-	ThumbnailTexture(array<Byte>^ data, bool has_to_be_normal, TextureDebugInfo^ debug_info):IAssignableTexture(debug_info){
+	ThumbnailTexture(array<Byte>^ data, bool has_to_be_normal, TextureDebugInfo^ debug_info) :IAssignableTexture(debug_info){
 		if (data->Length < ByteDataHeaderOffset)
 		{
 			throw gcnew FormatException("Given thumbnail data is invalid. It doesn't even have the " + ByteDataHeaderOffset + " bytes for the header (length: " + data->Length + ")");
@@ -74,7 +74,7 @@ public:
 		Log(this);
 	}
 private:
-	ThumbnailTexture(int thumb_width, int thumb_height, D3DFORMAT thumb_format, bool is_normal, TextureDebugInfo^ debug_info): IAssignableTexture(debug_info){
+	ThumbnailTexture(int thumb_width, int thumb_height, D3DFORMAT thumb_format, bool is_normal, TextureDebugInfo^ debug_info) : IAssignableTexture(debug_info){
 		if (thumb_format != D3DFORMAT::D3DFMT_A8R8G8B8){
 			throw gcnew NotSupportedException("Thumbnails currently have to be in ARGB32 format.");
 		}
@@ -105,7 +105,13 @@ private:
 public:
 	static ThumbnailTexture^ ConvertFromBitmap(BitmapFormat^ source){
 
-		auto newThumb = gcnew ThumbnailTexture(source->Bitmap->Width, source->Bitmap->Height, AssignableFormat::D3DFormatFromPixelFormat(source->Bitmap->PixelFormat), source->IsNormal, source->DebugInfo->Modify("ToThumb"));
+		auto newThumb = gcnew ThumbnailTexture(
+			source->Bitmap->Width,
+			source->Bitmap->Height,
+			AssignableFormat::D3DFormatFromPixelFormat(source->Bitmap->PixelFormat),
+			source->IsNormal,
+			source->DebugInfo->Modify("ToThumb")
+			);
 		array<Byte>^ bytes = newThumb->byteData;
 		int pos = newThumb->ByteDataHeaderOffset;
 		// Todo: With correct locking i should be able to this pretty much a memcpy?!
@@ -126,7 +132,7 @@ public:
 		/*
 		Todo: I skipped this "recommendation" check for now and just ignore the format... it would make sense, though, to create them in the designed format!
 		if (format != D3DFORMAT::D3DFMT_A8R8G8B8){
-			throw gcnew NotSupportedException("TextureFormat has to be ARGB32 atm. Requested format is:" + AssignableFormat::StringFomD3DFormat(format));
+		throw gcnew NotSupportedException("TextureFormat has to be ARGB32 atm. Requested format is:" + AssignableFormat::StringFomD3DFormat(format));
 		}*/
 		// Todo: First thing we do is venting the alpha channel, since parts seem to ignore it anyway even with junk in it but it makes colors go lost on processing... Find out what this breaks and how to prevent it from breaking/ any better solution
 
@@ -144,7 +150,7 @@ public:
 		Logger::LogText("Start con to bmp");
 		sb->Append("Raw Data: {");
 		for (int x = 0; x < bytes->Length; x++){
-			sb->Append(bytes[x])->Append(",");
+		sb->Append(bytes[x])->Append(",");
 		}
 		sb->Append("done}");
 		Logger::LogText(sb->ToString());*/
@@ -178,4 +184,5 @@ public:
 		}
 		return gcnew ByteArrayAssignableData(GetAssignableFormat(), byteData, Width * BytesPerPixel, ByteDataHeaderOffset, DebugInfo);
 	}
+
 };

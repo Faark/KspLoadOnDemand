@@ -68,5 +68,12 @@ namespace LoadOnDemand.Logic
             }
              */
         }
+        void Awake()
+        {
+            if (Config.Disabled)
+            {
+                this.enabled = false;
+            }
+        }
     }
 }

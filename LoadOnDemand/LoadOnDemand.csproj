@@ -57,6 +57,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Config.cs" />
+    <Compile Include="Logic\ActivityGUI.cs" />
     <Compile Include="Logic\DevStuff.cs" />
     <Compile Include="Logic\Editor.cs" />
     <Compile Include="Logic\Flight.cs" />

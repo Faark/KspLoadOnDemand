@@ -20,7 +20,7 @@
       <PdhCountersRate>500</PdhCountersRate>
       <PdhCounters>
         <PdhCounter>\Arbeitsspeicher\Seiten/s</PdhCounter>
-        <PdhCounter>\Physikalischer Datentr&amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;#228;ger(_Total)\Durchschnittl. Warteschlangenl&amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;#228;nge des Datentr&amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;#228;gers</PdhCounter>
+        <PdhCounter>\Physikalischer Datentr&amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;#228;ger(_Total)\Durchschnittl. Warteschlangenl&amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;#228;nge des Datentr&amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;#228;gers</PdhCounter>
         <PdhCounter>\Prozessor(_Total)\Prozessorzeit (%)</PdhCounter>
       </PdhCounters>
     </PdhSettings>
@@ -65,6 +65,11 @@
       </PostinstrumentEvent>
     </Binary>
   </Binaries>
+  <Reports>
+    <Report>
+      <Path>KSP140331.vspx</Path>
+    </Report>
+  </Reports>
   <Launches>
     <Binary>
       <Path>..\..\..\..\..\ksp_rtLodNew\KSP.exe</Path>

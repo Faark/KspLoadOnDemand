@@ -13,6 +13,7 @@ using namespace System::Runtime::InteropServices;
 ref class GPU{
 public:
 	static void CopyBuffer(unsigned char* src_buffer, int src_pitch, unsigned char* trg_buffer, int trg_pitch, int line_size_in_bytes, int height){
+
 		if (src_pitch == trg_pitch && src_pitch == line_size_in_bytes){
 			memcpy(trg_buffer, src_buffer, line_size_in_bytes*height);
 		}
@@ -27,56 +28,59 @@ public:
 	// Unity textures seem to be upside down... we should be able to handle it easily, though...
 	// https://developer.oculusvr.com/forums/viewtopic.php?f=37&t=896
 	static void CopyBufferInverted(unsigned char* src_buffer, int src_pitch, unsigned char* trg_buffer, int trg_pitch, int line_size_in_bytes, int height){
-		CopyBuffer(src_buffer + ((height-1)*src_pitch), -src_pitch, trg_buffer, trg_pitch, line_size_in_bytes, height);
+
+		CopyBuffer(src_buffer + ((height - 1)*src_pitch), -src_pitch, trg_buffer, trg_pitch, line_size_in_bytes, height);
 	}
+	/*
 	static String^ Debug_FristBytesToText(unsigned char* data, int bytes){
-		auto sb = gcnew System::Text::StringBuilder();
-		bool isFirst = true;
-		for (int x = 0; x < bytes; x++){
-			if (isFirst){
-				isFirst = false;
-			}
-			else{
-				sb->Append(",");
-			}
-			sb->Append(*data);
-			data++;
-		}
-		return sb->ToString();
+	auto sb = gcnew System::Text::StringBuilder();
+	bool isFirst = true;
+	for (int x = 0; x < bytes; x++){
+	if (isFirst){
+	isFirst = false;
 	}
+	else{
+	sb->Append(",");
+	}
+	sb->Append(*data);
+	data++;
+	}
+	return sb->ToString();
+	}*/
 	static void CopyRawBytesTo(AssignableTarget^ trg, unsigned char* src_buffer, int src_pitch, int line_size_in_bytes, int height, bool srcIsUpsideDown, TextureDebugInfo^ info){
+
 		/*
 		auto sb = gcnew System::Text::StringBuilder();
 		unsigned char* srcPtr = src_buffer;
 		for (int x = src_pitch * height; x > 0; x--){
-			sb->AppendLine((*srcPtr).ToString());
-			srcPtr++;
+		sb->AppendLine((*srcPtr).ToString());
+		srcPtr++;
 		}
 		System::IO::File::WriteAllText(info->File + "_DUMP1.txt", sb->ToString());
 
 		sb = gcnew System::Text::StringBuilder();
 		if (trg->Inverted != srcIsUpsideDown){
-			unsigned char* linePtr = trg->Bits + ((height - 1)*trg->Pitch);
-			for (int y = 0; y < height; y++){
-				unsigned char* pixelPtr = linePtr;
-				for (int x = 0; x < trg->Pitch; x++){
-					sb->AppendLine((*pixelPtr).ToString());
-					pixelPtr++;
-				}
-				linePtr = linePtr - trg->Pitch;
-			}
+		unsigned char* linePtr = trg->Bits + ((height - 1)*trg->Pitch);
+		for (int y = 0; y < height; y++){
+		unsigned char* pixelPtr = linePtr;
+		for (int x = 0; x < trg->Pitch; x++){
+		sb->AppendLine((*pixelPtr).ToString());
+		pixelPtr++;
+		}
+		linePtr = linePtr - trg->Pitch;
+		}
 		}
 		else{
-			unsigned char* trgPtr = trg->Bits;
-			for (int x = trg->Pitch * height; x > 0; x--){
-				sb->AppendLine((*trgPtr).ToString());
-				trgPtr++;
-			}
+		unsigned char* trgPtr = trg->Bits;
+		for (int x = trg->Pitch * height; x > 0; x--){
+		sb->AppendLine((*trgPtr).ToString());
+		trgPtr++;
+		}
 		}
 		System::IO::File::WriteAllText(info->File + "_DUMP2.txt", sb->ToString());*/
 		/*
 		for (int x = 0; x < 50; x++){
-			sb->AppendLine();
+		sb->AppendLine();
 		}*/
 
 		//Logger::LogText(sb->ToString());
@@ -92,11 +96,11 @@ public:
 		/*
 
 		//auto file = "C:\\ksp_rtLodNew\\" + "LOD_DEBUG_" + ->Replace(":", "")->Replace(" ", "") + ".png";
-		
+
 		Logger::LogText(
-			Environment::NewLine
-			+ Environment::NewLine + "  Copying to GPU: " + info->File + info->Modifiers
-			+ Environment::NewLine + "  Saving img copy to " + info->LogFileBaseName);
+		Environment::NewLine
+		+ Environment::NewLine + "  Copying to GPU: " + info->File + info->Modifiers
+		+ Environment::NewLine + "  Saving img copy to " + info->LogFileBaseName);
 		auto bmp = gcnew Drawing::Bitmap(trg->Format->Width, trg->Format->Height, AssignableFormat::PixelFormatFromD3DFormat(trg->Format->Format));
 		auto bmpData = bmp->LockBits(Drawing::Rectangle(0, 0, bmp->Width, bmp->Height), ImageLockMode::WriteOnly, bmp->PixelFormat);
 		auto sourceBytes = Debug_FristBytesToText(src_buffer, 50);
@@ -127,10 +131,10 @@ public:
 
 
 		Logger::LogText("Content comparison:"
-			+ Environment::NewLine + "SRC: " + sourceBytes
-			+ Environment::NewLine + "TRG: " + targetBytes
-			+ Environment::NewLine + "WRT: " + writtenBytes
-			);
+		+ Environment::NewLine + "SRC: " + sourceBytes
+		+ Environment::NewLine + "TRG: " + targetBytes
+		+ Environment::NewLine + "WRT: " + writtenBytes
+		);
 		*/
 	}
 
@@ -188,7 +192,7 @@ private:
 			else{
 				KSPThread::EnqueueJob(gcnew Action<IntPtr>(this, &CreateHighResTextureAsyncScope::RunDelayedSuccessful));
 			}
-			
+
 		}
 		void Run(IntPtr devicePtr){
 			auto device = (IDirect3DDevice9*)devicePtr.ToPointer();
@@ -224,9 +228,10 @@ public:
 private:
 	ref class AssignDataToThumbnailAsyncScope{
 	public:
+		int textureId;
 		IAssignableTexture^ assignableTexture;
 		IDirect3DTexture9* targetTexture;
-		AssignDataToThumbnailAsyncScope(IAssignableTexture^ assignable, IDirect3DTexture9* target){
+		AssignDataToThumbnailAsyncScope(IAssignableTexture^ assignable, IDirect3DTexture9* target, int textureId){
 			assignableTexture = assignable;
 			targetTexture = target;
 		}
@@ -248,13 +253,15 @@ private:
 			}
 			else{
 				CopyToTexture(targetTexture, assignableData, format);
-				Logger::LogText("success reporting?");
+				ManagedBridge::ThumbnailUpdated(textureId);
+				//Logger::LogText("success reporting?");
 			}
 
 		}
 	};
 public:
-	static void AssignDataToThumbnailAsync(IAssignableTexture^ self, IDirect3DTexture9* texture){
-		KSPThread::EnqueueJob(gcnew Action<IntPtr>(gcnew AssignDataToThumbnailAsyncScope(self, texture), &AssignDataToThumbnailAsyncScope::Run));
+	static void AssignDataToThumbnailAsync(IAssignableTexture^ self, IDirect3DTexture9* texture, int textureId){
+		KSPThread::EnqueueJob(gcnew Action<IntPtr>(gcnew AssignDataToThumbnailAsyncScope(self, texture, textureId), &AssignDataToThumbnailAsyncScope::Run));
 	}
+
 };

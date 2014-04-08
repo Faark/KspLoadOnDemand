@@ -8,6 +8,7 @@ using namespace System::Collections::Concurrent;
 
 #include "Logger.h"
 #include "Work.h"
+#include "ThreadPriority.h"
 /*
 This is the much more convinient C# version of that class.
 
@@ -132,53 +133,59 @@ private:
 	}
 	static void LoadThread()
 	{
+		LodNative::ThreadPriority::SetCurrentToBackground();
 		//"disk worker started".Log();
-		while (true)
-		{
-			Func<Func<bool>^>^ currentJob;
-			if (!WriteJobs->TryTake(currentJob))
+		try{
+			while (true)
 			{
-				if (!PriorityJobs->TryTake(currentJob))
+				Func<Func<bool>^>^ currentJob;
+				if (!WriteJobs->TryTake(currentJob))
 				{
-					//"disk waiting for any job".Log();
-					BlockingCollection<Func<Func<bool>^>^>::TakeFromAny(AllJobs, currentJob);
-					//"disk took any job".Log();
+					if (!PriorityJobs->TryTake(currentJob))
+					{
+						//"disk waiting for any job".Log();
+						BlockingCollection<Func<Func<bool>^>^>::TakeFromAny(AllJobs, currentJob);
+						//"disk took any job".Log();
+					}
+					else
+					{
+						//"disk took priority job".Log();
+					}
 				}
 				else
 				{
-					//"disk took priority job".Log();
+					//"disk took write job".Log();
 				}
-			}
-			else
-			{
-				//"disk took write job".Log();
-			}
 #if NDEBUG
-			try
-			{
-#endif
-				Func<bool>^ resultWriter = currentJob();
-				while (!resultWriter())
+				try
 				{
-					//"cannot submit job, waiting".Log();
-					if (WriteJobs->TryTake(currentJob, TimeSpan::FromMilliseconds(200)))// Todo: any better solution than sleeping 200 ms?
+#endif
+					Func<bool>^ resultWriter = currentJob();
+					while (!resultWriter())
 					{
-						//"disk took unblock write job".Log();
-						currentJob()();
+						//"cannot submit job, waiting".Log();
+						if (WriteJobs->TryTake(currentJob, TimeSpan::FromMilliseconds(200)))// Todo: any better solution than sleeping 200 ms?
+						{
+							//"disk took unblock write job".Log();
+							currentJob()();
+						}
 					}
-				}
 #if NDEBUG
-			}
-			catch (ThreadAbortException^){
-				return;
-			}
-			catch (Exception^ err)
-			{
+				}
+				catch (ThreadAbortException^){
+					return;
+				}
+				/*catch (Exception^ err)
+				{
 				Logger::LogException(err);
 				Logger::crashGame = true;
 				throw;
-			}
+				}*/
 #endif
+			}
+		}
+		finally{
+			LodNative::ThreadPriority::ResetCurrentToNormal();
 		}
 	}
 
@@ -234,11 +241,11 @@ private:
 			return Work::TryScheduleDataProcessing(gcnew Action(this, &RequestFileScope::RunProcessor));
 		}
 		void RunProcessor(){
-#if NDEBUG
+#if _DISABLED_NDEBUG
 			try{
 #endif
 				dataProcessor(loadedData);
-#if NDEBUG
+#if _DISABLED_NDEBUG
 			}
 			catch (Exception^ err){
 				throw gcnew Exception("Failed processing data from file: " + File, err);

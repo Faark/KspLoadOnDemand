@@ -101,6 +101,23 @@ public:
 		OnRequestKspUpdate = (OnRequestKspUpdateDelegate^)Marshal::GetDelegateForFunctionPointer(IntPtr(requestKspUpdateCallback), OnRequestKspUpdateDelegate::typeid);
 		OnSignalThreadIdle = (OnSignalThreadIdleDelegate^)Marshal::GetDelegateForFunctionPointer(IntPtr(onSignalThreadIdlleCallback), OnSignalThreadIdleDelegate::typeid);
 
+
+		System::AppDomain::CurrentDomain->UnhandledException += gcnew System::UnhandledExceptionEventHandler(&ManagedBridge::OnUnhandledException);
 	}
 
+	static bool firstException = true;
+	static void ManagedBridge::OnUnhandledException(System::Object ^sender, System::UnhandledExceptionEventArgs ^e)
+	{
+		if (firstException){
+			firstException = false;
+			auto err = dynamic_cast<Exception^>(e->ExceptionObject);
+			if (err != nullptr){
+				Logger::LogText("Unhandled exception!");
+				Logger::LogException(err);
+				Logger::crashGame = true;
+			}
+		}
+	}
 };
+
+

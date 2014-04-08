@@ -32,6 +32,7 @@ extern "C" __declspec(dllexport) void NlodDebug_DumpTexture(void* texturePtr, co
 		Logger::LogException(err);
 		throw;
 	}
+
 	Logger::MayCrash();
 }
 extern "C" __declspec(dllexport) void NlodSetup(const char* cache_directory, void* thumbUpdateCallback, void*textureLoadedCallback, void* statusUpdatedCallback, void* requestUpdateFromKspThreadCallback, void* onSignalThreadIdlleCallback){
@@ -43,6 +44,9 @@ extern "C" __declspec(dllexport) void NlodSetup(const char* cache_directory, voi
 	try{
 		String^ cacheDirectory = gcnew String(cache_directory);
 		Logger::Setup(cacheDirectory);
+		// This will hopefully add enough pressure to our GC to make it occure frequently...
+		System::GC::AddMemoryPressure(0x7FFFFFFF /*Int32::MaxValue, 2gb*/);
+		System::GC::AddMemoryPressure((long long)1024 * (long long)1024 * (long long)1500 /*1.2/1.35/1.5gb*/);
 		ManagedBridge::Setup(thumbUpdateCallback, textureLoadedCallback, statusUpdatedCallback, requestUpdateFromKspThreadCallback, onSignalThreadIdlleCallback);
 		TextureManager::Setup(cacheDirectory);
 	}

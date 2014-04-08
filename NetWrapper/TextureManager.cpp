@@ -8,6 +8,20 @@
 void TextureManager::Setup(String^ cache_directory)
 {
 	mCacheDir = cache_directory;
+
+	/*
+	// Crash on gcnew Bitmap... a ParameterException though its outa mem?
+	auto dump = gcnew array<Drawing::Bitmap^>(1024 * 10);
+	for (int x = 0; x < dump->Length; x++){
+		Logger::LogText("Created " + x);
+		dump[x] = gcnew Bitmap(1024 * 1, 1024 * 1, PixelFormat::Format32bppArgb);
+	}
+	for (int x = 0; x < dump->Length; x++){
+		dump[x]->SetPixel(10, 12, Color::FromArgb(1, 2, 3));
+		delete dump[x];
+	}
+	delete dump;
+	/**/
 }
 
 

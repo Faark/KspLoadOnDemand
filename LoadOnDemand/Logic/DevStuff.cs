@@ -101,7 +101,7 @@ namespace LoadOnDemand.Logic
         }
 
 
-
+#if UNUSED_STUFF
         static void WaitForContinuation(System.Collections.IEnumerator state)
         {
             var stack = new Stack<System.Collections.IEnumerator>();
@@ -432,5 +432,6 @@ namespace LoadOnDemand.Logic
                 throw new Exception("error...");
             return loader.obj;
         }
+#endif
     }
 }

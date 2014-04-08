@@ -6,6 +6,7 @@ using namespace System::Threading;
 using namespace System::Collections::Concurrent;
 
 #include "Logger.h"
+#include "ThreadPriority.h"
 
 
 ref class Work{
@@ -23,37 +24,44 @@ private:
 		worker->Start();
 	}
 	static void WorkThread(){
-		while (true)
-		{
-#if NDEBUG
-			try
+		LodNative::ThreadPriority::SetCurrentToBackground();
+		try{
+
+			while (true)
 			{
+#if NDEBUG
+				try
+				{
 #endif
-				Action^ currentJob;
-				if (!PriorityQueue->TryTake(currentJob)){
-					if (!ProcessingQueue->TryTake(currentJob))
-					{
-						//"work wait for any job".Log();
-						BlockingCollection<Action^>::TakeFromAny(AnyJob, currentJob);
+					Action^ currentJob;
+					if (!PriorityQueue->TryTake(currentJob)){
+						if (!ProcessingQueue->TryTake(currentJob))
+						{
+							//"work wait for any job".Log();
+							BlockingCollection<Action^>::TakeFromAny(AnyJob, currentJob);
+						}
+						else
+						{
+							//"work took process job".Log();
+						}
 					}
-					else
-					{
-						//"work took process job".Log();
-					}
-				}
-				currentJob();
+					currentJob();
 #if NDEBUG
-			}
-			catch (ThreadAbortException^){
-				return;
-			}
-			catch (Exception^ err)
-			{
+				}
+				catch (ThreadAbortException^){
+					return;
+				}
+				/*catch (Exception^ err)
+				{
 				Logger::LogException(err);
 				Logger::crashGame = true;
 				throw;
-			}
+				}*/
 #endif
+			}
+		}
+		finally{
+			LodNative::ThreadPriority::ResetCurrentToNormal();
 		}
 	}
 

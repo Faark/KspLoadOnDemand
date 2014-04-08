@@ -1,5 +1,14 @@
 ﻿
 
+// working set? but likely only for processes, thus useless to me. Also AddMemoryPressure, but thats already in testing... http://stackoverflow.com/questions/2860917/how-do-i-get-net-to-garbage-collect-aggressively
+
+// GC LOH Compaction, net4.5.1: http://dailydotnettips.com/2013/08/26/largeobjectheapcomapaction-in-net-garbage-collection/
+// GC LatencyMode: http://msdn.microsoft.com/library/system.runtime.gclatencymode%28v=vs.110%29.aspx
+// Used memory: http://msdn.microsoft.com/en-us/library/ms683219.aspx http://msdn.microsoft.com/en-us/library/windows/desktop/aa366589%28v=vs.85%29.aspx System::AppDomain::Monitor...
+
+// Unity command line arguments: https://docs.unity3d.com/Documentation/Manual/CommandLineArguments.html
+
+THREAD PRIORITY!
 
 next: todo perf-test on reverse pinvoke plus attempt to fix freeze
 

@@ -1,4 +1,6 @@
-﻿
+﻿// transparency issue + blacklisting!
+// Cancelable queues in Net4 for Prep and Load...
+
 
 // working set? but likely only for processes, thus useless to me. Also AddMemoryPressure, but thats already in testing... http://stackoverflow.com/questions/2860917/how-do-i-get-net-to-garbage-collect-aggressively
 
@@ -8,10 +10,10 @@
 
 // Unity command line arguments: https://docs.unity3d.com/Documentation/Manual/CommandLineArguments.html
 
-THREAD PRIORITY!
 
-next: todo perf-test on reverse pinvoke plus attempt to fix freeze
+// Unity Plugins: http://docs.unity3d.com/Documentation/Manual/Plugins.html http://docs.unity3d.com/Documentation/Manual/NativePluginInterface.html http://docs.unity3d.com/Documentation/ScriptReference/GL.IssuePluginEvent.html
 
+// System.Drawing on Unity: http://answers.unity3d.com/questions/53170/using-drawing-package-like-systemdrawing.html http://answers.unity3d.com/questions/428295/could-not-load-file-or-assembly-systemdrawing.html
 
 - texture meta info for texture creations... atm we predict defaults
 - compression
@@ -54,19 +56,10 @@ Todo1: Analye in general, especially what causes bad frame rates. DiskIO? BG-Wor
 Todo2: We might rly want some kind of throttle on the KSP thread and for GPU copy...
 Todo3: Currently, textures are loaded and unloaded as requested from ksp-rt. It might be stupid, though... some kinda caching would be nice.
 Todo7: Improve Logger
-Todo: Just had a crash that was likly due to cleaning up resources during  closing the game?!
-3/25/2014 3:53:22 PM: System.ArgumentException: Parameter is not valid.
-   at System.Drawing.Image.get_RawFormat()
-   at System.Drawing.Graphics.DrawImage(Image image, Int32 x, Int32 y, Int32 width, Int32 height)
-   at System.Drawing.Bitmap..ctor(Image original, Int32 width, Int32 height)
-   at System.Drawing.Bitmap..ctor(Image original)
-   at FormatDatabase.RecognizeTGA(FileInfo file, Byte[] data)
-   at FormatDatabase.AddRecognitionScope`1.Recognize(FileInfo file, Byte[] bytes)
-   at FormatDatabase.Recognize(String file, Byte[] data)
-   at TextureInitialization.GetOrLoadSourceFileScope.OnLoaded(Byte[] loaded_data)
-   at Disk.RequestFileScope.RunProcessor()
-   at Work.WorkThread()
-
-Todo: Prevent the loader from queueing up similar load requests. Its especially obvious when LOD is still preparing and your are switching though Editor pages...
+Todo25: Check whether DxResource->PreLoad has any positive / not negative effect
 
 
+
+
+- Flags
+- Props

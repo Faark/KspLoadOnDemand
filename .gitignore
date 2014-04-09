@@ -28,3 +28,9 @@ NetWrapper/Release/NetWrapper.log
 *.psess
 *.log
 *.vspx
+LoadOnDemand/EmbededResources/NetWrapper.dll.metagen
+LoadOnDemand/EmbededResources/NetWrapper.exp
+LoadOnDemand/EmbededResources/NetWrapper.lib
+LoadOnDemand/EmbededResources/NetWrapper.pdb
+LoadOnDemand/EmbededResources/NetWrapper.exp
+LoadOnDemand/EmbededResources/NetWrapper.dll.metagen

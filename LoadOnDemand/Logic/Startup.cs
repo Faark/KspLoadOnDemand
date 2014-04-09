@@ -189,7 +189,7 @@ namespace LoadOnDemand.Logic
         public void Awake()
         {
             NativeBridge.Setup(Config.Current.GetCacheDirectory());
-#if DEBUG
+#if DISABLED_DEBUG
             foreach(var file in System.IO.Directory.GetFiles(Config.Current.GetCacheDirectory()))
             {
                 try

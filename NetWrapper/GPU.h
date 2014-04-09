@@ -153,6 +153,8 @@ private:
 				throw gcnew NotImplementedException("Todo: Implement error handling (UnlockRect failed).");
 			}
 		}
+		// Todo25: Check whether this has a [positive] effect
+		texture->PreLoad();
 	}
 	ref class CreateHighResTextureAsyncScope{
 	private:

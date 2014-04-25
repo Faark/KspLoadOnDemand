@@ -89,6 +89,7 @@ namespace LoadOnDemand.Logic
         {
             myPseudoFilter = new EditorPartListFilter("LodPseudoFilter", AddPartToList);
             var list = new List<EditorPartListFilter>();
+
             foreach (var current in EditorPartList.Instance.GreyoutFilters)
             {
                 list.Add(current);

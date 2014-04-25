@@ -104,17 +104,26 @@ public:
 
 		System::AppDomain::CurrentDomain->UnhandledException += gcnew System::UnhandledExceptionEventHandler(&ManagedBridge::OnUnhandledException);
 	}
-
-	static bool firstException = true;
+private:
+	static bool gotCrash = false;
+public:
+	static void SetCrash(){
+		gotCrash = true;
+		ManagedBridge::RequestKspUpdate();
+	}
+	static void MayCrash(){
+		if (gotCrash)
+			throw gcnew Exception("There was an error => lets crash ksp. Check log for infos.");
+	}
 	static void ManagedBridge::OnUnhandledException(System::Object ^sender, System::UnhandledExceptionEventArgs ^e)
 	{
-		if (firstException){
-			firstException = false;
+		if (!gotCrash){
+			gotCrash = true;
 			auto err = dynamic_cast<Exception^>(e->ExceptionObject);
 			if (err != nullptr){
 				Logger::LogText("Unhandled exception!");
 				Logger::LogException(err);
-				Logger::crashGame = true;
+				SetCrash();
 			}
 		}
 	}

@@ -21,10 +21,17 @@ namespace LoadOnDemand.Logic
             {
                 if (Managers.TextureManager.IsSupported(file))
                 {
-                    ("Registering texture: " + file.url).Log();
-                    var tex = Managers.TextureManager.Setup(file);
-                    createdTextures.Add(file);
-                    yield return tex;
+                    if (Config.Current.GetImageConfig(file).SkipImage)
+                    {
+                        ("Skipping image due to LOD configuration: " + file.url).Log();
+                    }
+                    else
+                    {
+                        ("Registering texture: " + file.url).Log();
+                        var tex = Managers.TextureManager.Setup(file);
+                        createdTextures.Add(file);
+                        yield return tex;
+                    }
                 }
                 else
                 {

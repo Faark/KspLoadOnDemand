@@ -15,6 +15,7 @@ Think about letting them travel anyway, though for now crashing is kinda nice.
 */
 
 extern "C" __declspec(dllexport) void NlodDebug_DumpTexture(void* texturePtr, const char* file_name){
+	ManagedBridge::MayCrash();
 	try{
 		auto texture = (IDirect3DTexture9*)texturePtr;
 		D3DSURFACE_DESC desc;
@@ -33,7 +34,6 @@ extern "C" __declspec(dllexport) void NlodDebug_DumpTexture(void* texturePtr, co
 		throw;
 	}
 
-	Logger::MayCrash();
 }
 extern "C" __declspec(dllexport) void NlodSetup(const char* cache_directory, void* thumbUpdateCallback, void*textureLoadedCallback, void* statusUpdatedCallback, void* requestUpdateFromKspThreadCallback, void* onSignalThreadIdlleCallback){
 	/*array<String^, 1> ^ names = System::Reflection::Assembly::GetExecutingAssembly()->GetManifestResourceNames();
@@ -41,6 +41,7 @@ extern "C" __declspec(dllexport) void NlodSetup(const char* cache_directory, voi
 	System::IO::File::AppendAllText("C:\\ksp_rtLodNew\\bridgeNet.txt", names[i]);
 	System::IO::File::AppendAllText("C:\\ksp_rtLodNew\\bridgeNet.txt", Environment::NewLine);
 	}*/
+	ManagedBridge::MayCrash();
 	try{
 		String^ cacheDirectory = gcnew String(cache_directory);
 		Logger::Setup(cacheDirectory);
@@ -62,9 +63,9 @@ extern "C" __declspec(dllexport) void NlodSetup(const char* cache_directory, voi
 		}
 		throw;
 	}
-	Logger::MayCrash();
 }
 extern "C" __declspec(dllexport) int NlodRegisterTexture(const char* file, const char* cacheKey, void* thumbTexturePtr, bool isNormalMap){
+	ManagedBridge::MayCrash();
 	try{
 		String^ f = gcnew String(file);
 		String^ ck = gcnew String(cacheKey);
@@ -81,9 +82,9 @@ extern "C" __declspec(dllexport) int NlodRegisterTexture(const char* file, const
 	finally{
 		Logger::LogTrace("Leave RegisterTexture");
 	}
-	Logger::MayCrash();
 }
 extern "C" __declspec(dllexport) void NlodRequestTextureLoad(int nativeId){
+	ManagedBridge::MayCrash();
 	try{
 		Logger::LogTrace(String::Format("Enter TextureLoad({0})", nativeId));
 		TextureManager::RequestTextureLoad(nativeId);
@@ -95,9 +96,9 @@ extern "C" __declspec(dllexport) void NlodRequestTextureLoad(int nativeId){
 	finally{
 		Logger::LogTrace("Leave TextureLoad");
 	}
-	Logger::MayCrash();
 }
 extern "C" __declspec(dllexport) void NlodRequestTextureUnload(int nativeId){
+	ManagedBridge::MayCrash();
 	try{
 		Logger::LogTrace(String::Format("Enter TextureUnload({0})", nativeId));
 		TextureManager::RequestTextureUnload(nativeId);
@@ -109,9 +110,9 @@ extern "C" __declspec(dllexport) void NlodRequestTextureUnload(int nativeId){
 	finally{
 		Logger::LogTrace("Leave TextureUnload");
 	}
-	Logger::MayCrash();
 }
 extern "C" __declspec(dllexport) bool NlodRequestedUpdate(void* deviceRefTexturePtr){
+	ManagedBridge::MayCrash();
 	try{
 		Logger::LogTrace("Enter RequestedUpdate");
 		return KSPThread::RequestedUpdate((IDirect3DTexture9*)deviceRefTexturePtr);
@@ -123,10 +124,9 @@ extern "C" __declspec(dllexport) bool NlodRequestedUpdate(void* deviceRefTexture
 	finally{
 		Logger::LogTrace("Leave RequestedUpdate");
 	}
-	Logger::MayCrash();
 }
-extern "C" __declspec(dllexport) void NlodStartSignalMessages()
-{
+extern "C" __declspec(dllexport) void NlodStartSignalMessages(){
+	ManagedBridge::MayCrash();
 	try{
 		Logger::LogTrace("Enter StartSignalMessages");
 		ManagedBridge::StartMessageLoop();
@@ -138,5 +138,4 @@ extern "C" __declspec(dllexport) void NlodStartSignalMessages()
 	finally{
 		Logger::LogTrace("Leave StartSignalMessages");
 	}
-	Logger::MayCrash();
 }

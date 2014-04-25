@@ -13,6 +13,93 @@ namespace LoadOnDemand
             return self.HasValue(name) ? converter(self.GetValue(name)) : defaultValue;
         }
     }
+    class ImageConfigItem
+    {
+        public string FileUrl { get; private set; }
+        public string CacheKey { get; private set; }
+        public long FileSize { get; private set; }
+        public DateTime LastChanged { get; private set; }
+        public bool SkipImage { get; private set; }
+        public bool isCacheValid(UrlDir.UrlFile file)
+        {
+            if ((file.fileTime - LastChanged).TotalMinutes > 1)
+            {
+                ("Cache miss: " + FileUrl + "; Date [" + file.fileTime.ToString() + "(aka " + file.fileTime.Ticks + ") vs " + LastChanged.ToString() + " (aka " + LastChanged.Ticks + "]").Log();
+            }
+            else if (new System.IO.FileInfo(file.fullPath).Length != FileSize)
+            {
+                ("Cache miss (size): " + FileUrl).Log();
+            }
+            else
+            {
+                return true;
+            }
+            return false;
+        }
+        public void updateVerificationData(UrlDir.UrlFile file)
+        {
+            LastChanged = file.fileTime;
+            FileSize = new System.IO.FileInfo(file.fullPath).Length;
+        }
+        public void clearCache(string directory)
+        {
+            var di = new System.IO.DirectoryInfo(directory);
+            foreach (var oldFile in di.GetFiles(CacheKey + ".*"))
+            {
+                ("Deleting old cache file: " + oldFile.FullName).Log();
+                oldFile.Delete();
+            }
+        }
+        public ImageConfigItem() { }
+        public ImageConfigItem(string cacheKey, UrlDir.UrlFile fromFile)
+        {
+            CacheKey = cacheKey;
+            FileUrl = fromFile.url;
+            updateVerificationData(fromFile);
+        }
+        public static ImageConfigItem FromConfigNode(ConfigNode node)
+        {
+            if (node.HasValue("SkipImage"))
+            {
+                bool skipImage;
+                if (bool.TryParse(node.GetValue("SkipImage"), out skipImage))
+                {
+                    if (skipImage)
+                    {
+                        return new ImageConfigItem() { SkipImage = true, FileUrl = node.name };
+                    }
+                }
+                else
+                {
+                    ("Warning: Invalid SkipImage value [" + node.GetValue("SkipImage") + "] was ignored").Log();
+                }
+            }
+            return new ImageConfigItem()
+            {
+                FileUrl = node.name,
+                CacheKey = node.GetValue("Key"),
+                //Url = node.GetValue("Url"),
+                FileSize = long.Parse(node.GetValue("Size")),
+                LastChanged = DateTime.Parse(node.GetValue("Date"))
+            };
+        }
+        public ConfigNode ToConfigNode()
+        {
+            var node = new ConfigNode(FileUrl);
+            if (SkipImage)
+            {
+                node.AddValue("SkipImage", true.ToString());
+            }
+            else
+            {
+                node.AddValue("Key", CacheKey);
+                //node.AddValue("Url", el.Value.Url);
+                node.AddValue("Size", FileSize.ToString());
+                node.AddValue("Date", LastChanged.ToString());
+            }
+            return node;
+        }
+    }
     class Config
     {
         public static bool Disabled { get; set; }
@@ -99,10 +186,7 @@ namespace LoadOnDemand
 
             foreach (var el in CachedDataPerKey)
             {
-                var node = cache.AddNode(el.Key);
-                node.AddValue("Url", el.Value.Url);
-                node.AddValue("Size", el.Value.FileSize.ToString());
-                node.AddValue("Date", el.Value.LastChanged.ToString());
+                cache.AddNode(el.Value.ToConfigNode());
             }
 
             cfg.Save(cfgFileLocation.FullName);
@@ -144,15 +228,9 @@ namespace LoadOnDemand
                 var cache = cfgNode.GetNode("Cache");
                 foreach (ConfigNode node in cache.nodes)
                 {
-                    var el = new CacheItem()
-                    {
-                        Key = node.name,
-                        Url = node.GetValue("Url"),
-                        FileSize = long.Parse(node.GetValue("Size")),
-                        LastChanged = DateTime.Parse(node.GetValue("Date"))
-                    };
-                    Current.CachedDataPerKey[el.Key] = el;
-                    Current.CachedDataPerResUrl[el.Url] = el;
+                    var el = ImageConfigItem.FromConfigNode(node);
+                    Current.CachedDataPerKey[el.CacheKey] = el;
+                    Current.CachedDataPerResUrl[el.FileUrl] = el;
                 }
             }
         }
@@ -169,52 +247,8 @@ namespace LoadOnDemand
 
         public bool IsDirty { get; private set; }
 
-        class CacheItem
-        {
-            public string Url;
-            public string Key;
-            public long FileSize;
-            public DateTime LastChanged;
-            public bool isCacheValid(UrlDir.UrlFile file)
-            {
-                if ((file.fileTime - LastChanged).TotalMinutes > 1)
-                {
-                    ("Cache miss: " + Url + "; Date [" + file.fileTime.ToString() + "(aka " + file.fileTime.Ticks + ") vs " + LastChanged.ToString() + " (aka " + LastChanged.Ticks + "]").Log();
-                }
-                else if (new System.IO.FileInfo(file.fullPath).Length != FileSize)
-                {
-                    ("Cache miss (size): " + Url).Log();
-                }
-                else
-                {
-                    return true;
-                }
-                return false;
-            }
-            public void updateVerificationData(UrlDir.UrlFile file)
-            {
-                LastChanged = file.fileTime;
-                FileSize = new System.IO.FileInfo(file.fullPath).Length;
-            }
-            public void clearCache(string directory)
-            {
-                var di = new System.IO.DirectoryInfo(directory);
-                foreach (var oldFile in di.GetFiles(Key + ".*"))
-                {
-                    ("Deleting old cache file: " + oldFile.FullName).Log();
-                    oldFile.Delete();
-                }
-            }
-            public CacheItem() { }
-            public CacheItem(string cacheKey, UrlDir.UrlFile fromFile)
-            {
-                Key = cacheKey;
-                Url = fromFile.url;
-                updateVerificationData(fromFile);
-            }
-        }
-        Dictionary<string, CacheItem> CachedDataPerKey = new Dictionary<string, CacheItem>();
-        Dictionary<string, CacheItem> CachedDataPerResUrl = new Dictionary<string, CacheItem>();
+        Dictionary<string, ImageConfigItem> CachedDataPerKey = new Dictionary<string, ImageConfigItem>();
+        Dictionary<string, ImageConfigItem> CachedDataPerResUrl = new Dictionary<string, ImageConfigItem>();
 
         /// <summary>
         /// Path of the image cache directory, ready to slap a cachefile-string onto it.
@@ -225,13 +259,14 @@ namespace LoadOnDemand
             return cfgFileLocation.Directory.FullName;
         }
 
-        void addFileToCache(string key, UrlDir.UrlFile file)
+        ImageConfigItem addFileToCache(string key, UrlDir.UrlFile file)
         {
-            var item = new CacheItem(key, file);
+            var item = new ImageConfigItem(key, file);
             item.clearCache(GetCacheDirectory());
             CachedDataPerKey.Add(key, item);
-            CachedDataPerResUrl.Add(item.Url, item);
+            CachedDataPerResUrl.Add(item.FileUrl, item);
             IsDirty = true;
+            return item;
         }
 
         /// <summary>
@@ -239,9 +274,9 @@ namespace LoadOnDemand
         /// </summary>
         /// <param name="file">file to create the cache key for</param>
         /// <returns>name (neither path, nor extension) of a unique image file</returns>
-        public string GetCacheFileFor(UrlDir.UrlFile file)
+        public ImageConfigItem GetImageConfig(UrlDir.UrlFile file)
         {
-            CacheItem cachedItem;
+            ImageConfigItem cachedItem;
             if (CachedDataPerResUrl.TryGetValue(file.url, out cachedItem))
             {
                 if (!cachedItem.isCacheValid(file))
@@ -250,7 +285,7 @@ namespace LoadOnDemand
                     cachedItem.updateVerificationData(file);
                     IsDirty = true;
                 }
-                return cachedItem.Key;
+                return cachedItem;
             }
             else
             {
@@ -261,8 +296,7 @@ namespace LoadOnDemand
                 var cacheKey = RandomString();
                 if (!CachedDataPerKey.ContainsKey(cacheKey))
                 {
-                    addFileToCache(cacheKey, file);
-                    return cacheKey;
+                    return addFileToCache(cacheKey, file);
                 }
             }
         }

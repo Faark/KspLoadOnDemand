@@ -349,7 +349,7 @@ namespace LoadOnDemand.Managers
             texture.UnloadedTexture = texture.Info.texture.GetNativeTexturePtr();
             texture.NativeId = NativeBridge.RegisterTextureAndRequestThumbLoad(
                 new System.IO.FileInfo(texture.File.fullPath).FullName,
-                Config.Current.GetCacheFileFor(texture.File),
+                Config.Current.GetImageConfig(texture.File).CacheKey,
                 texture.UnloadedTexture,
                 texture.Info.isNormalMap);
             texture.Info.isReadable = false;

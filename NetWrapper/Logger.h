@@ -7,7 +7,6 @@ using namespace System::Text;
 
 #include "Lock.h"
 
-
 ref class Logger{
 	static String^ logFile = "LoadOnDemand.log";
 #if _DEBUG
@@ -114,11 +113,4 @@ public:
 #endif
 	}
 
-
-
-	static bool crashGame = false;
-	static void MayCrash(){
-		if (crashGame)
-			throw gcnew Exception("There was an error => lets crash ksp. Check log for infos.");
-	}
 };

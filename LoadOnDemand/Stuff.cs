@@ -135,8 +135,12 @@ namespace LoadOnDemand
             m_hLibrary = NativeMethods.LoadLibrary(fileName);
             if (m_hLibrary.IsInvalid)
             {
-                int hr = Marshal.GetHRForLastWin32Error();
-                Marshal.ThrowExceptionForHR(hr);
+
+                int dwLastError = Marshal.GetLastWin32Error();
+                ("ERROR: Native load failed with error code " + dwLastError + ".").ForceLog();
+                if ((dwLastError & 0x80000000) != 0x80000000)
+                    dwLastError = (dwLastError & 0x0000FFFF) | unchecked((int)0x80070000);
+                Marshal.ThrowExceptionForHR(dwLastError);
             }
         }
 
@@ -263,7 +267,7 @@ namespace LoadOnDemand
             // Todo20: comment...
             Log(self.ToString());
         }
-
+        public static void ForceLog(this String self)
 #else
 
         public static void Log(this String self)
@@ -280,6 +284,10 @@ namespace LoadOnDemand
             {
                 Log(self.ToString());
             }
+        }
+        public static void ForceLog(this String self)
+        {
+            self.Log();
         }
 #endif
     }

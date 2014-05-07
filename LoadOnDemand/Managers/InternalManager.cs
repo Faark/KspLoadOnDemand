@@ -42,7 +42,6 @@ namespace LoadOnDemand.Managers
             }
             return res;
         }
-
         public static void Setup(IEnumerable<InternalData> data)
         {
             foreach (var id in data)
@@ -50,5 +49,23 @@ namespace LoadOnDemand.Managers
                 iManagedInternals.Add(id.Name, id);
             }
         }
+
+
+        public class TexturesOfObj
+        {
+            public IEnumerable<GameDatabase.TextureInfo> this[string internalName]
+            {
+                get
+                {
+                    return iManagedInternals[internalName].Textures;
+                }
+                set
+                {
+                    // Todo: validation
+                    iManagedInternals[internalName].Textures = value.ToArray();
+                }
+            }
+        }
+        public static readonly TexturesOfObj TexturesOf = new TexturesOfObj();
     }
 }

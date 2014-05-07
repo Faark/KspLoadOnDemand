@@ -433,5 +433,25 @@ namespace LoadOnDemand.Logic
             return loader.obj;
         }
 #endif
+
+
+        ToolbarWrapper.IButton toolbarButton = null;
+        void Awake()
+        {
+            if (Config.Current.UI_DisplayDebugUI)
+            {
+                if ((toolbarButton == null ) && ToolbarWrapper.ToolbarManager.ToolbarAvailable)
+                {
+                    toolbarButton = ToolbarWrapper.ToolbarManager.Instance.add("LoadOnDemand", "DebugUIButton");
+                    toolbarButton.OnClick += e => closed = !closed;
+                    toolbarButton.Text = "LOD";
+                    toolbarButton.ToolTip = "Toggle LODs Debug Menu";
+                }
+            }
+            else
+            {
+                enabled = false;
+            }
+        }
     }
 }

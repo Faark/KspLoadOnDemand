@@ -1,4 +1,6 @@
-﻿// transparency issue + blacklisting!
+﻿
+// http://forum.kerbalspaceprogram.com/threads/73236-WIP-Loading-textures-only-as-required?p=1126134&viewfull=1#post1126134 
+// transparency issue + blacklisting!
 // Cancelable queues in Net4 for Prep and Load...
 
 

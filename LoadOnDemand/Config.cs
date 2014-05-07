@@ -117,6 +117,9 @@ namespace LoadOnDemand
             UI_DelayBeforeHidingActivityUI = TimeSpan.FromSeconds(3);
             UI_DelayBeforeShowingActivityUI = TimeSpan.FromSeconds(3);
 
+            UI_DisplayDebugUI = false;
+            Debug_DontLoadEditorCatalogThumbnailParts = true;
+
             CompressTextures = true;
         }
         /*
@@ -180,7 +183,11 @@ namespace LoadOnDemand
             ui.AddValue("SecondsBeforeShowing", UI_DelayBeforeShowingActivityUI.TotalSeconds.ToInt().ToString());
             ui.AddValue("SecondsBeforeHiding", UI_DelayBeforeHidingActivityUI.TotalSeconds.ToInt().ToString());
 
+            cfg.AddValue("ShowDebugUI", UI_DisplayDebugUI.ToString());
+            cfg.AddValue("DontLoadEditorCatalogParts", Debug_DontLoadEditorCatalogThumbnailParts.ToString());
+
             cfg.AddValue("CompressTextures", CompressTextures.ToString());
+
 
             var cache = cfg.AddNode("Cache");
 
@@ -221,6 +228,10 @@ namespace LoadOnDemand
                 Current.UI_DelayBeforeHidingActivityUI = uiNode.GetValue("SecondsBeforeHiding", s => TimeSpan.FromSeconds(int.Parse(s)), Current.UI_DelayBeforeHidingActivityUI);
             }
 
+
+            UI_DisplayDebugUI = cfgNode.GetValue("ShowDebugUI", text => bool.Parse(text), UI_DisplayDebugUI);
+            Debug_DontLoadEditorCatalogThumbnailParts = cfgNode.GetValue("DontLoadEditorCatalogParts", text => bool.Parse(text), Debug_DontLoadEditorCatalogThumbnailParts);
+
             Current.CompressTextures = cfgNode.GetValue("CompressTextures", s => bool.Parse(s), Current.CompressTextures);
 
             if (cfgNode.HasNode("Cache"))
@@ -238,6 +249,8 @@ namespace LoadOnDemand
         public TimeSpan UI_DelayBeforeShowingActivityUI { get; private set; }
         public TimeSpan UI_DelayBeforeHidingActivityUI { get; private set; }
 
+        public bool UI_DisplayDebugUI { get; private set; }
+        public bool Debug_DontLoadEditorCatalogThumbnailParts { get; private set; }
         public bool ThumbnailEnabled { get; private set; }
         public int ThumbnailWidth { get; private set; }
         public int ThumbnailHeight { get; private set; }

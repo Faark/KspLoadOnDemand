@@ -124,7 +124,7 @@ namespace LoadOnDemand.Logic
         }
         void Awake()
         {
-            if (Config.Disabled)
+            if (Config.Disabled || Config.Current.Debug_DontLoadEditorCatalogThumbnailParts)
             {
                 enabled = false;
             }

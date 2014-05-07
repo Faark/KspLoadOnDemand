@@ -87,5 +87,36 @@ namespace LoadOnDemand.Managers
                 cnt++;
             }
         }*/
+
+
+        public class TexturesOfObj
+        {
+            public IEnumerable<GameDatabase.TextureInfo> this[AvailablePart part]
+            {
+                get
+                {
+                    return iManagedParts[part.name].Textures;
+                }
+                set
+                {
+                    // Todo: validation
+                    iManagedParts[part.name].Textures = value.ToArray();
+                }
+            }
+        }
+        public static readonly TexturesOfObj TexturesOf = new TexturesOfObj();
+        public class InternalsOfObj
+        {
+            public IEnumerable<string> this[AvailablePart part]{
+                get{
+                    return iManagedParts[part.name].Internals;
+                }
+                set{
+                    // Todo: validation
+                    iManagedParts[part.name].Internals = value.ToArray();
+                }
+            }
+        }
+        public static readonly InternalsOfObj InternalsOf = new InternalsOfObj();
     }
 }

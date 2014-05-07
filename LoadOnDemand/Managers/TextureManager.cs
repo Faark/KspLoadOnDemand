@@ -261,6 +261,10 @@ namespace LoadOnDemand.Managers
             });
         }
 
+        public static bool IsManaged(GameDatabase.TextureInfo textureObject)
+        {
+            return iManagedTextures.ContainsKey(textureObject);
+        }
         public static bool IsSupported(UrlDir.UrlFile file)
         {
             switch (file.fileExtension.ToUpper())

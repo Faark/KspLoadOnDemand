@@ -22,6 +22,7 @@ private:
 	static String^ mCacheDir;
 	static List<TextureData^>^ textures = gcnew List<TextureData^>();
 	//static List<TextureInitialization^>^ textureCurrentlyInitializing = gcnew List<TextureInitialization^>();
+	static ConcurrentDictionary<int, TextureData^>^ TexturesToLoadQueue = gcnew ConcurrentDictionary<int, TextureData^>();
 
 	ref class StartLoadHighResTextureScope{
 		int textureId;

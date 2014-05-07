@@ -57,6 +57,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Config.cs" />
+    <Compile Include="External.cs" />
+    <Compile Include="Foreign\LoadOnDemandWrapper.cs" />
+    <Compile Include="Foreign\TextureReplacer.cs" />
+    <Compile Include="Foreign\ToolbarWrapper.cs" />
     <Compile Include="Logic\ActivityGUI.cs" />
     <Compile Include="Logic\DevStuff.cs" />
     <Compile Include="Logic\Editor.cs" />

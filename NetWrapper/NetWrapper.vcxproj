@@ -93,6 +93,7 @@
     <ClInclude Include="AssemblyLoader.h" />
     <ClInclude Include="AssignableData.h" />
     <ClInclude Include="BitmapFormat.h" />
+    <ClInclude Include="BufferMemory.h" />
     <ClInclude Include="Disk.h" />
     <ClInclude Include="FormatDatabase.h" />
     <ClInclude Include="GPU.h" />
@@ -108,6 +109,7 @@
     <ClInclude Include="Stdafx.h" />
     <ClInclude Include="TargaImage.h" />
     <ClInclude Include="TextureInitialization.h" />
+    <ClInclude Include="TextureProcessingQueue.h" />
     <ClInclude Include="TextureManager.h" />
     <ClInclude Include="ThreadPriority.h" />
     <ClInclude Include="ThumbnailTexture.h" />

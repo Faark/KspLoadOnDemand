@@ -1,0 +1,88 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="ITexture.cpp" />
+    <ClCompile Include="NetWrapper.cpp" />
+    <ClCompile Include="Stdafx.cpp" />
+    <ClCompile Include="TextureInitialization.cpp" />
+    <ClCompile Include="TextureManager.cpp" />
+    <ClCompile Include="ThreadPriority.cpp" />
+    <ClCompile Include="BitmapFormat.cpp">
+      <Filter>ImageFormats</Filter>
+    </ClCompile>
+    <ClCompile Include="FormatDatabase.cpp">
+      <Filter>ImageFormats</Filter>
+    </ClCompile>
+    <ClCompile Include="AssemblyInfo.cpp">
+      <Filter>IDE Stuff</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="AssignableData.h" />
+    <ClInclude Include="Disk.h" />
+    <ClInclude Include="GPU.h" />
+    <ClInclude Include="KSPThread.h" />
+    <ClInclude Include="ITexture.h" />
+    <ClInclude Include="ManagedBridge.h" />
+    <ClInclude Include="NetWrapper.h" />
+    <ClInclude Include="resource.h" />
+    <ClInclude Include="Stdafx.h" />
+    <ClInclude Include="TextureInitialization.h" />
+    <ClInclude Include="TextureManager.h" />
+    <ClInclude Include="ThreadPriority.h" />
+    <ClInclude Include="ThumbnailTexture.h" />
+    <ClInclude Include="Work.h" />
+    <ClInclude Include="BitmapFormat.h">
+      <Filter>ImageFormats</Filter>
+    </ClInclude>
+    <ClInclude Include="FormatDatabase.h">
+      <Filter>ImageFormats</Filter>
+    </ClInclude>
+    <ClInclude Include="MBMTexture.h">
+      <Filter>ImageFormats</Filter>
+    </ClInclude>
+    <ClInclude Include="AssemblyLoader.h">
+      <Filter>Stuff</Filter>
+    </ClInclude>
+    <ClInclude Include="Lock.h">
+      <Filter>Stuff</Filter>
+    </ClInclude>
+    <ClInclude Include="Logger.h">
+      <Filter>Stuff</Filter>
+    </ClInclude>
+    <ClInclude Include="Pathing.h">
+      <Filter>Stuff</Filter>
+    </ClInclude>
+    <ClInclude Include="TargaImage.h">
+      <Filter>ImageFormats</Filter>
+    </ClInclude>
+    <ClInclude Include="TextureProcessingQueue.h" />
+    <ClInclude Include="BufferMemory.h">
+      <Filter>Stuff</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="ReadMe.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="ImageFormats">
+      <UniqueIdentifier>{966acf7a-35b9-4288-9734-6c69fa4e19f8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Stuff">
+      <UniqueIdentifier>{65b86239-51e2-439a-961c-c4b7f403b6d0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="IDE Stuff">
+      <UniqueIdentifier>{8eee1c79-40a7-4b94-9cd7-35bc56e3da53}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="app.rc">
+      <Filter>IDE Stuff</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="app.ico">
+      <Filter>IDE Stuff</Filter>
+    </Image>
+  </ItemGroup>
+</Project>

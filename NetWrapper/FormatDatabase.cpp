@@ -13,7 +13,12 @@ BitmapFormat^ FormatDatabase::RecognizeTGA(FileInfo^ file, array<Byte>^ data){
 		try{
 			auto img = gcnew Paloma::TargaImage();
 			img->LoadTGAFromMemory(data);
-			return (gcnew BitmapFormat(gcnew Bitmap(img->Image), false, gcnew TextureDebugInfo(file->FullName)))->MayToNormal(BitmapFormat::FileNameIndicatesTextureShouldBeNormal(file));
+			auto bmp = (gcnew BitmapFormat(gcnew Bitmap(img->Image), false, gcnew TextureDebugInfo(file->FullName)))->MayToNormal(BitmapFormat::FileNameIndicatesTextureShouldBeNormal(file));
+			delete img;
+			return bmp;
+			// todo: find out whether this has any effect (on KSP/pinvoke aswell!)
+			System::GC::Collect();
+			System::GC::WaitForFullGCComplete();
 		}
 #if NDEBUG
 		catch (Exception^ err){
@@ -23,10 +28,6 @@ BitmapFormat^ FormatDatabase::RecognizeTGA(FileInfo^ file, array<Byte>^ data){
 				, err);
 		}
 #endif
-		finally{
-			if (img != nullptr)
-				delete img;
-		}
 		//return gcnew BitmapFormat(gcnew Bitmap(16, 16, PixelFormat::Format32bppArgb), false, gcnew TextureDebugInfo("FakeTGA"));
 	}
 	return nullptr;

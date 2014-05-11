@@ -1,7 +1,9 @@
 #include "stdafx.h"
 #include "BitmapFormat.h"
 #include "GPU.h"
+#include "BufferMemory.h"
 
+using namespace LodNative;
 
 
 BitmapFormat^ BitmapFormat::ToNormal(){
@@ -118,12 +120,12 @@ BitmapFormat^ BitmapFormat::SetAlpha(Byte new_alpha){
 	return gcnew BitmapFormat(trgBmp, IsNormal, DebugInfo->Modify("SetAlpha" + new_alpha));
 }
 
-BitmapFormat^ BitmapFormat::LoadUnknownFile(FileInfo^ file, array<Byte>^ data)
+BitmapFormat^ BitmapFormat::LoadUnknownFile(FileInfo^ file, BufferMemory::ISegment^ data)
 {
 	MemoryStream^ ms;
 	try
 	{
-		ms = gcnew MemoryStream(data);
+		ms = data->CreateStream();
 		BitmapFormat^ bmp = gcnew BitmapFormat(gcnew Drawing::Bitmap(Image::FromStream(ms)), false, gcnew TextureDebugInfo(file->FullName));
 		if (FileNameIndicatesTextureShouldBeNormal(file))
 			return bmp->ToNormal();
@@ -135,6 +137,7 @@ BitmapFormat^ BitmapFormat::LoadUnknownFile(FileInfo^ file, array<Byte>^ data)
 	}
 	finally{
 		delete ms;
+		data->Free();
 	}
 }
 

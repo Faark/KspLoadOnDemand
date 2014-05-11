@@ -250,6 +250,10 @@ namespace LoadOnDemand.Managers
                 var currentNative = data.Info.texture.GetNativeTexturePtr();
                 if (currentNative == data.UnloadedTexture)
                 {
+                    if (NativeBridge.CancelTextureLoad(data.NativeId))
+                    {
+                        Logic.ActivityGUI.HighResCanceled();
+                    }
                     ("Texture reference " + data.NativeId + " dropped! (not loaded anyway, doing nothing)").Log();
                 }
                 else

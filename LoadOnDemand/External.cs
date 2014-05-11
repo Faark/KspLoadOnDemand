@@ -65,6 +65,10 @@ namespace LoadOnDemand
         {
             return Managers.TextureManager.IsManaged(texture);
         }
+        static GameDatabase.TextureInfo TextureManager_Setup(UrlDir.UrlFile file)
+        {
+            return Managers.TextureManager.Setup(file);
+        }
         #endregion
 
         public static Dictionary<String, Delegate> RequestBindingA(int requested_version)
@@ -90,6 +94,8 @@ namespace LoadOnDemand
             dict["InternalManager_TexturesOf_Set"] = new Action<string, IEnumerable<GameDatabase.TextureInfo>>(InternalManager_TexturesOf_Set);
             dict["TextureManager_Get"] = new Func<GameDatabase.TextureInfo, Object>(TextureManager_Get);
             dict["TextureManager_IsManaged"] = new Func<GameDatabase.TextureInfo, bool>(TextureManager_IsManaged);
+            dict["TextureManager_Setup"] = new Func<UrlDir.UrlFile, GameDatabase.TextureInfo>(TextureManager_Setup);
+
             return dict;
         }
 

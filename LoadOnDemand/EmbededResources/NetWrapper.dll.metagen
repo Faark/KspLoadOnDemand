@@ -139,6 +139,7 @@ Class Paloma.TargaImage: AutoLayout, AnsiClass, Class, Public, BeforeFieldInit
     get_Stride(): PrivateScope, Public, HideBySig, SpecialName
     get_Padding(): PrivateScope, Public, HideBySig, SpecialName
     LoadTGAFromMemory(Byte[]): PrivateScope, Public, HideBySig
+    LoadTGAFromMemory(MemoryStream): PrivateScope, Public, HideBySig
     LoadTGAFromFile(String): PrivateScope, Public, HideBySig
     LoadTargaImage(String): PrivateScope, Public, Static, HideBySig
     Dispose(): PrivateScope, Public, Final, Virtual, HideBySig

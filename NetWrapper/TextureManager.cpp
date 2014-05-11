@@ -5,9 +5,14 @@
 #include "GPU.h"
 #include "ThumbnailTexture.h"
 
+using namespace LodNative;
+
 void TextureManager::Setup(String^ cache_directory)
 {
 	mCacheDir = cache_directory;
+
+	IEnumerable<Disk::IoRequestProvider^>^ myProviders = gcnew cli::array<Disk::IoRequestProvider^>{ mLoadQueue };
+	Disk::RequestProviders = System::Linq::Enumerable::Union(myProviders, Disk::RequestProviders);
 
 	/*
 	// Crash on gcnew Bitmap... a ParameterException though its outa mem?
@@ -25,7 +30,7 @@ void TextureManager::Setup(String^ cache_directory)
 }
 
 
-void TextureManager::StartLoadHighResTextureScope::ProcessLoadedData(array<Byte>^ loaded_data){
+void TextureManager::StartLoadHighResTextureScope::ProcessLoadedData(BufferMemory::ISegment^ loaded_data){
 	//this->textureData->IsNormal
 	auto img = FormatDatabase::Recognize(textureData->HighResFile, loaded_data);
 	auto bmp = FormatDatabase::ConvertTo<BitmapFormat^>(img)->MayToNormal(textureData->IsNormal);
@@ -33,13 +38,14 @@ void TextureManager::StartLoadHighResTextureScope::ProcessLoadedData(array<Byte>
 	//GPU::CreateHighResTextureAsync(FormatDatabase::ConvertToAssignable(FormatDatabase::Recognize(textureData->HighResFile, loaded_data)), textureId);
 	// FormatDatabase.Recognize(info.File, bytes).ConvertToAssignable().AssignToAsync(id);
 }
-void TextureManager::StartLoadHighResTexture(int textureId, TextureData^ data){
+/*void TextureManager::StartLoadHighResTexture(int textureId, TextureData^ data){
 /*	if (data->IsNormal){
 		Logger::LogText("Skipping load because of normal: " + textureId);
 		return;
 	}
-*/	Disk::RequestFile(data->HighResFile, gcnew Action<array<Byte>^>(gcnew StartLoadHighResTextureScope(textureId, data), &StartLoadHighResTextureScope::ProcessLoadedData));
-}
+	*	
+	Disk::RequestFile(data->HighResFile, );
+}*/
 void TextureManager::OnTexturePreperationCompleted(TextureInitialization^ tex_init){
 
 	Logger::LogText("Texture prepared: " + tex_init->TextureId);
@@ -51,7 +57,7 @@ void TextureManager::OnTexturePreperationCompleted(TextureInitialization^ tex_in
 		TextureData^ texData = textures[tex_init->TextureId];
 		texData->HighResFile = tex_init->HighResolutionTextureFile;
 		if (texData->IsRequested){
-			StartLoadHighResTexture(tex_init->TextureId, texData);
+			mLoadQueue->RequestLoad(tex_init->TextureId, texData);
 		}
 	}
 	finally{
@@ -173,7 +179,7 @@ void TextureManager::RequestTextureLoad(int textureId){
 		throw gcnew NotImplementedException("Texture seems already loaded. Todo: As we don't have caching yet, its probably a bug...");
 	}
 	if (texData->HighResFile != nullptr){
-		StartLoadHighResTexture(textureId, texData);
+		mLoadQueue->RequestLoad(textureId, texData);
 	}
 	else{
 		Lock lock;
@@ -187,7 +193,7 @@ void TextureManager::RequestTextureLoad(int textureId){
 		finally{
 			lock.TryExit();
 		}
-		StartLoadHighResTexture(textureId, texData);
+		mLoadQueue->RequestLoad(textureId, texData);
 	}
 }
 void TextureManager::RequestTextureUnload(int textureId){

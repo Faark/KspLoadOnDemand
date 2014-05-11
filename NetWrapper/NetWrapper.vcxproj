@@ -109,7 +109,6 @@
     <ClInclude Include="Stdafx.h" />
     <ClInclude Include="TargaImage.h" />
     <ClInclude Include="TextureInitialization.h" />
-    <ClInclude Include="TextureProcessingQueue.h" />
     <ClInclude Include="TextureManager.h" />
     <ClInclude Include="ThreadPriority.h" />
     <ClInclude Include="ThumbnailTexture.h" />

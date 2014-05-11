@@ -6,15 +6,20 @@
 #include "MBMTexture.h"
 #include "TargaImage.h"
 
+using namespace LodNative;
 
-BitmapFormat^ FormatDatabase::RecognizeTGA(FileInfo^ file, array<Byte>^ data){
+BitmapFormat^ FormatDatabase::RecognizeTGA(FileInfo^ file, BufferMemory::ISegment^ data){
 	if (file->Extension->ToUpper() == ".TGA"){
 		Paloma::TargaImage^ img = nullptr;
+		System::IO::MemoryStream^ ms = nullptr;
 		try{
+			ms = data->CreateStream();
 			auto img = gcnew Paloma::TargaImage();
-			img->LoadTGAFromMemory(data);
+			img->LoadTGAFromMemory(ms);
 			auto bmp = (gcnew BitmapFormat(gcnew Bitmap(img->Image), false, gcnew TextureDebugInfo(file->FullName)))->MayToNormal(BitmapFormat::FileNameIndicatesTextureShouldBeNormal(file));
 			delete img;
+			delete ms;
+			data->Free();
 			return bmp;
 			// todo: find out whether this has any effect (on KSP/pinvoke aswell!)
 			System::GC::Collect();
@@ -28,13 +33,14 @@ BitmapFormat^ FormatDatabase::RecognizeTGA(FileInfo^ file, array<Byte>^ data){
 				, err);
 		}
 #endif
+		finally{}
 		//return gcnew BitmapFormat(gcnew Bitmap(16, 16, PixelFormat::Format32bppArgb), false, gcnew TextureDebugInfo("FakeTGA"));
 	}
 	return nullptr;
 }
 static FormatDatabase::FormatDatabase(){
-	AddRecognition(gcnew Func<FileInfo^, array<Byte>^, MBMTexture^>(&MBMTexture::Recignizer));
-	AddRecognition(gcnew Func<FileInfo^, array<Byte>^, BitmapFormat^>(&FormatDatabase::RecognizeTGA));
+	AddRecognition(gcnew Func<FileInfo^, BufferMemory::ISegment^, MBMTexture^>(&MBMTexture::Recignizer));
+	AddRecognition(gcnew Func<FileInfo^, BufferMemory::ISegment^, BitmapFormat^>(&FormatDatabase::RecognizeTGA));
 	AddConversion(gcnew Func<ThumbnailTexture^, BitmapFormat^>(&ThumbnailTexture::ConvertToBitmap));
 	AddConversion(gcnew Func<MBMTexture^, BitmapFormat^>(&MBMTexture::ConvertToBitmap));
 

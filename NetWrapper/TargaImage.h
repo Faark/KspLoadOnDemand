@@ -1450,33 +1450,37 @@ namespace Paloma
 			LoadTGAFromFile(strFileName);
 		}
 
+		void LoadTGAFromMemory(MemoryStream^ filestream){
+			if (filestream != nullptr && filestream->Length > 0 && filestream->CanSeek == true)
+			{
+				BinaryReader^ binReader = nullptr;
+
+				// create a BinaryReader used to read the Targa file
+				try{
+					binReader = gcnew BinaryReader(filestream);
+					this->LoadTGAFooterInfo(binReader);
+					this->LoadTGAHeaderInfo(binReader);
+					this->LoadTGAExtensionArea(binReader);
+					this->LoadTGAImage(binReader);
+
+				}
+				finally{
+					delete binReader;
+				}
+			}
+			else
+				throw gcnew Exception("Error loading file, could not read file from disk->");
+		}
 		void LoadTGAFromMemory(array<byte>^ filebytes){
 			// todo: cleanup on reuse?
 
 
 			MemoryStream^ filestream = nullptr;
-			BinaryReader^ binReader = nullptr;
 
 			// create a seekable memory stream of the file bytes
 			try{
 				filestream = gcnew MemoryStream(filebytes);
-				if (filestream != nullptr && filestream->Length > 0 && filestream->CanSeek == true)
-				{
-					// create a BinaryReader used to read the Targa file
-					try{
-						binReader = gcnew BinaryReader(filestream);
-						this->LoadTGAFooterInfo(binReader);
-						this->LoadTGAHeaderInfo(binReader);
-						this->LoadTGAExtensionArea(binReader);
-						this->LoadTGAImage(binReader);
-
-					}
-					finally{
-						delete binReader;
-					}
-				}
-				else
-					throw gcnew Exception("Error loading file, could not read file from disk->");
+				LoadTGAFromMemory(filestream);
 			}
 			finally{
 				if (filestream != nullptr)

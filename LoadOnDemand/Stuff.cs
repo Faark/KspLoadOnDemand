@@ -132,15 +132,22 @@ namespace LoadOnDemand
         /// that the file is not a  loadable image.</remarks>
         public UnmanagedLibrary(string fileName)
         {
-            m_hLibrary = NativeMethods.LoadLibrary(fileName);
-            if (m_hLibrary.IsInvalid)
+            try
             {
+                m_hLibrary = NativeMethods.LoadLibrary(fileName);
+                if (m_hLibrary.IsInvalid)
+                {
 
-                int dwLastError = Marshal.GetLastWin32Error();
-                ("ERROR: Native load failed with error code " + dwLastError + ".").ForceLog();
-                if ((dwLastError & 0x80000000) != 0x80000000)
-                    dwLastError = (dwLastError & 0x0000FFFF) | unchecked((int)0x80070000);
-                Marshal.ThrowExceptionForHR(dwLastError);
+                    int dwLastError = Marshal.GetLastWin32Error();
+                    ("ERROR: Native load failed with error code " + dwLastError + ".").ForceLog();
+                    if ((dwLastError & 0x80000000) != 0x80000000)
+                        dwLastError = (dwLastError & 0x0000FFFF) | unchecked((int)0x80070000);
+                    Marshal.ThrowExceptionForHR(dwLastError);
+                }
+            }
+            catch (Exception err)
+            {
+                throw new Exception("Failed to load native library: ", err);
             }
         }
 
@@ -201,7 +208,7 @@ namespace LoadOnDemand
     } // UnmanagedLibrary
     public static class Logger
     {
-#if DEBUG
+#if DEBUG_BUT_I_DONT_USE_IT_ATM
         const bool Async = false;
         struct LogItem { public String Text; public DateTime Time;  }
         static Queue<LogItem> QueuedMessages = new Queue<LogItem>();
@@ -267,7 +274,6 @@ namespace LoadOnDemand
             // Todo20: comment...
             Log(self.ToString());
         }
-        public static void ForceLog(this String self)
 #else
 
         public static void Log(this String self)

@@ -59,32 +59,36 @@ namespace LoadOnDemand.Logic
                 }
             }
             "Dumping missed texture informations.".Log();
-            Func<int, TextureFormat, String> bpp = (pixels, fmt) =>
+            Func<int, String> toSizeString = bytes => (bytes > 0) ? ((bytes / (1024f * 1024f)) + " MB") : "N/A";
+            Func<int, TextureFormat, int> bpp = (pixels, fmt) =>
             {
-                Func<int, String> toSizeString = bytes => (bytes / (1024f * 1024f)) + " MB";
                 switch (fmt)
                 {
                     case TextureFormat.RGB24:
                     case TextureFormat.RGBA32:
                     case TextureFormat.ARGB32:
-                        return toSizeString(pixels * 4);
+                        return (pixels * 4);
                     case TextureFormat.DXT1:
-                        return toSizeString(pixels / 2);
+                        return (pixels / 2);
                     case TextureFormat.DXT5:
-                        return toSizeString(pixels);
+                        return (pixels);
                     default:
-                        return "N/A";
+                        return 0;
                 }
             };
+            long total_missed = 0;
             foreach (var imgs in GameDatabase.Instance.root.AllFiles.Where(f => f.fileType == UrlDir.FileType.Texture))
             {
                 try
                 {
                     var tex = GameDatabase.Instance.GetTexture(imgs.url, false);
-                    ("MISSED TEXTURE: " + imgs.fullPath + " (" + tex.width + "x" + tex.height + "@" + tex.format.ToString() + "=> " + bpp(tex.width * tex.height, tex.format) + ")").Log();
+                    var bytes = bpp(tex.width * tex.height, tex.format);
+                    ("MISSED TEXTURE: " + imgs.fullPath + " (" + tex.width + "x" + tex.height + "@" + tex.format.ToString() + "=> " + toSizeString(bytes)+ ")").Log();
+                    total_missed += bytes;
                 }
                 catch (Exception) { }
             }
+            ("TOTAL SIZE OF MISSED TEXTURES: " + toSizeString((int)total_missed)).Log();
 
             /*
             foreach (var el in UnityEngine.Resources.FindObjectsOfTypeAll(typeof(UnityEngine.Object)))

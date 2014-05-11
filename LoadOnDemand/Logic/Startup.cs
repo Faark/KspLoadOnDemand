@@ -68,7 +68,7 @@ namespace LoadOnDemand.Logic
                     throw new Exception("Looks like we missed it?!");
                 }
             }
-            ("Debug: Should be GameData: " + current.name + ", " + current.path + ", " + current.url).Log();
+            //("Debug: Should be GameData: " + current.name + ", " + current.path + ", " + current.url).Log();
             return current;
         }
         static UrlDir.UrlFile GetFileByRelativeSegments(UrlDir gameData, string[] pathSegments, UrlDir.FileType? fileType)
@@ -193,8 +193,21 @@ namespace LoadOnDemand.Logic
                 yield return partData;
             }
         }
+
+        void printPathRecursive(UrlDir dir)
+        {
+            (dir.url + " / " + dir.path + " / " + dir.type + " / " + dir.root.path).Log();
+            foreach (var sub in dir.children)
+            {
+                printPathRecursive(sub);
+            }
+        }
         public void Awake()
         {
+            //printPathRecursive(GameDatabase.Instance.root);
+
+
+
             NativeBridge.Setup(Config.Current.GetCacheDirectory());
 #if DISABLED_DEBUG
             foreach(var file in System.IO.Directory.GetFiles(Config.Current.GetCacheDirectory()))
@@ -228,6 +241,7 @@ namespace LoadOnDemand.Logic
             foreach (var imgs in GameDatabase.Instance.root.AllFiles.Where(f => f.fileType == UrlDir.FileType.Texture))
             {
                 ("REM_IMG: " + imgs.fullPath).Log();
+                // Todo: Details about them incl their meta-data & size would be nice...
             }
         }
     }

@@ -3,6 +3,8 @@
 #include "FormatDatabase.h"
 #include "BitmapFormat.h"
 
+using namespace LodNative;
+
 ITextureBase::ITextureBase(TextureDebugInfo^ debug_info){
 	DebugInfo = debug_info;
 }

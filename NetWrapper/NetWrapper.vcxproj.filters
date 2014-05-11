@@ -6,7 +6,6 @@
     <ClCompile Include="Stdafx.cpp" />
     <ClCompile Include="TextureInitialization.cpp" />
     <ClCompile Include="TextureManager.cpp" />
-    <ClCompile Include="ThreadPriority.cpp" />
     <ClCompile Include="BitmapFormat.cpp">
       <Filter>ImageFormats</Filter>
     </ClCompile>
@@ -14,7 +13,10 @@
       <Filter>ImageFormats</Filter>
     </ClCompile>
     <ClCompile Include="AssemblyInfo.cpp">
-      <Filter>IDE Stuff</Filter>
+      <Filter>Dev IDE Stuff</Filter>
+    </ClCompile>
+    <ClCompile Include="ThreadPriority.cpp">
+      <Filter>Stuff</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -29,7 +31,6 @@
     <ClInclude Include="Stdafx.h" />
     <ClInclude Include="TextureInitialization.h" />
     <ClInclude Include="TextureManager.h" />
-    <ClInclude Include="ThreadPriority.h" />
     <ClInclude Include="ThumbnailTexture.h" />
     <ClInclude Include="Work.h" />
     <ClInclude Include="BitmapFormat.h">
@@ -56,8 +57,10 @@
     <ClInclude Include="TargaImage.h">
       <Filter>ImageFormats</Filter>
     </ClInclude>
-    <ClInclude Include="TextureProcessingQueue.h" />
     <ClInclude Include="BufferMemory.h">
+      <Filter>Stuff</Filter>
+    </ClInclude>
+    <ClInclude Include="ThreadPriority.h">
       <Filter>Stuff</Filter>
     </ClInclude>
   </ItemGroup>
@@ -71,18 +74,18 @@
     <Filter Include="Stuff">
       <UniqueIdentifier>{65b86239-51e2-439a-961c-c4b7f403b6d0}</UniqueIdentifier>
     </Filter>
-    <Filter Include="IDE Stuff">
+    <Filter Include="Dev IDE Stuff">
       <UniqueIdentifier>{8eee1c79-40a7-4b94-9cd7-35bc56e3da53}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="app.rc">
-      <Filter>IDE Stuff</Filter>
+      <Filter>Dev IDE Stuff</Filter>
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
     <Image Include="app.ico">
-      <Filter>IDE Stuff</Filter>
+      <Filter>Dev IDE Stuff</Filter>
     </Image>
   </ItemGroup>
 </Project>

@@ -31,6 +31,7 @@ namespace LoadOnDemand
             );
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         delegate void PInvokeDelegate_RequestTextureLoad(int nativeId);
+        delegate bool PInvokeDelegate_CancelTextureLoad(int nativeId);
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         delegate void PInvokeDelegate_RequestTextureUnload(int nativeId);
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
@@ -45,6 +46,7 @@ namespace LoadOnDemand
         static PInvokeDelegate_Setup NlodSetup;
         static PInvokeDelegate_RegisterTexture NlodRegisterTexture;
         static PInvokeDelegate_RequestTextureLoad NlodRequestTextureLoad;
+        static PInvokeDelegate_CancelTextureLoad NlodCancelTextureLoad;
         static PInvokeDelegate_RequestTextureUnload NlodRequestTextureUnload;
         static PInvokeDelegate_RequestedUpdate NlodRequestedUpdate;
         static PInvokeDelegate_StartSignalMessages NlodStartSignalMessages;
@@ -96,12 +98,6 @@ namespace LoadOnDemand
         static OnRequestKspUpdateDelegate orku;
         static OnSignalThreadIdleDelegate osti;
         #endregion
-        #region PInvokes
-
-        // Todo5: Switch to dynamic pinvoke, so we can support non-windows and use a proper static constructor. Shouldn't have a considerable perf impact.
-
-
-        #endregion
 
 
 
@@ -128,6 +124,7 @@ namespace LoadOnDemand
                 NlodSetup = lib.GetUnmanagedFunction<PInvokeDelegate_Setup>("NlodSetup").NotNull();
                 NlodRegisterTexture = lib.GetUnmanagedFunction<PInvokeDelegate_RegisterTexture>("NlodRegisterTexture").NotNull();
                 NlodRequestTextureLoad = lib.GetUnmanagedFunction<PInvokeDelegate_RequestTextureLoad>("NlodRequestTextureLoad").NotNull();
+                NlodCancelTextureLoad = lib.GetUnmanagedFunction<PInvokeDelegate_CancelTextureLoad>("NlodCancelTextureLoad").NotNull();
                 NlodRequestTextureUnload = lib.GetUnmanagedFunction<PInvokeDelegate_RequestTextureUnload>("NlodRequestTextureUnload").NotNull();
                 NlodRequestedUpdate = lib.GetUnmanagedFunction<PInvokeDelegate_RequestedUpdate>("NlodRequestedUpdate").NotNull();
                 NlodStartSignalMessages = lib.GetUnmanagedFunction<PInvokeDelegate_StartSignalMessages>("NlodStartSignalMessages").NotNull();
@@ -233,6 +230,10 @@ namespace LoadOnDemand
                 throw new Exception("Cannot loade texture with index < 0. Texture was most likely not yet initialized.");
             }
             NlodRequestTextureLoad(id);
+        }
+        public static bool CancelTextureLoad(int id)
+        {
+            return NlodCancelTextureLoad(id);
         }
         public static void RequestTextureUnload(int id)
         {

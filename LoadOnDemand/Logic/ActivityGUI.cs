@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using UnityEngine;
 
 namespace LoadOnDemand.Logic
@@ -69,10 +70,12 @@ namespace LoadOnDemand.Logic
             CurrentStatus = null;
             ShowActivityWindowWhenStillActiveAt = DateTime.MaxValue;
             CurrentFadeoutTimer = DateTime.MinValue;
-            ActiveThumbnailRequests = 0;
-            FinishedThumbnailRequests = 0;
-            ActiveHighResLoadRequests = 0;
-            FinishedHighResLoadRequests = 0;
+            int tmp = ActiveThumbnailRequests;
+            Interlocked.Add(ref ActiveThumbnailRequests, -tmp);
+            Interlocked.Add(ref FinishedThumbnailRequests, -tmp);
+            int tmp2 = ActiveHighResLoadRequests;
+            Interlocked.Add(ref ActiveHighResLoadRequests, -tmp2);
+            Interlocked.Add(ref FinishedHighResLoadRequests, -tmp2);
         }
         void Update()
         {
@@ -156,7 +159,7 @@ namespace LoadOnDemand.Logic
 
         static void MayStartTimer(int numRequestsBefore)
         {
-            if (numRequestsBefore == 0)
+            if (numRequestsBefore == 1)
             {
                 //"AGUI.mayStart".Log();
                 if (ShowActivityWindowWhenStillActiveAt >= DateTime.MaxValue)
@@ -173,22 +176,27 @@ namespace LoadOnDemand.Logic
         public static void ThumbStarting()
         {
             //"ThumbStart".Log();
-            MayStartTimer(ActiveThumbnailRequests++);
+            MayStartTimer(Interlocked.Increment(ref ActiveThumbnailRequests));
         }
         public static void ThumbFinished()
         {
             //"ThumbStop".Log();
-            FinishedThumbnailRequests++;
+            Interlocked.Increment(ref FinishedThumbnailRequests);
         }
         public static void HighResStarting()
         {
             //"ResStart".Log();
-            MayStartTimer(ActiveHighResLoadRequests++);
+            MayStartTimer(Interlocked.Increment(ref ActiveHighResLoadRequests));
         }
         public static void HighResFinished()
         {
             ///"ResStop".Log();
-            FinishedHighResLoadRequests++;
+            Interlocked.Increment(ref FinishedHighResLoadRequests);
+            //FinishedHighResLoadRequests++;
+        }
+        public static void HighResCanceled()
+        {
+            Interlocked.Decrement(ref ActiveHighResLoadRequests);
         }
         public static void SetError(String text)
         {

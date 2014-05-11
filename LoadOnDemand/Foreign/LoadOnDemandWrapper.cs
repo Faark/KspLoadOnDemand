@@ -26,6 +26,15 @@ namespace LoadOnDemand.Foreign
             public static Action<string, IEnumerable<GameDatabase.TextureInfo>> InternalManager_TexturesOf_Set = (internalName, textures) => { };
             public static Func<GameDatabase.TextureInfo, Object> TextureManager_Get = texture => null;
             public static Func<GameDatabase.TextureInfo, bool> TextureManager_IsManaged = texture => false;
+            public static Func<UrlDir.UrlFile, GameDatabase.TextureInfo> TextureManager_Setup = file => null; // todo: This might have to be optimized, eg. to be LOD independend?!
+        }
+
+        public static class Urls
+        {
+            public static UrlDir DirectoryFromPath(string path)
+            {
+                throw new NotImplementedException();
+            }
         }
 
         public class Resource
@@ -153,6 +162,10 @@ namespace LoadOnDemand.Foreign
             {
                 return Bindings.TextureManager_IsManaged(texture);
             }
+            public static GameDatabase.TextureInfo Setup(UrlDir.UrlFile file)
+            {
+                return Bindings.TextureManager_Setup(file);
+            }
         }
 
         public static bool Available { get; private set; }
@@ -177,6 +190,7 @@ namespace LoadOnDemand.Foreign
                 Bindings.InternalManager_TexturesOf_Set = (Action<string, IEnumerable<GameDatabase.TextureInfo>>)bindings["InternalManager_TexturesOf_Set"];
                 Bindings.TextureManager_Get = (Func<GameDatabase.TextureInfo, Object>)bindings["TextureManager_Get"];
                 Bindings.TextureManager_IsManaged = (Func<GameDatabase.TextureInfo, bool>)bindings["TextureManager_IsManaged"];
+                Bindings.TextureManager_Setup = (Func<UrlDir.UrlFile, GameDatabase.TextureInfo>)bindings["TextureManager_Setup"];
                 Available = true;
             }
             else

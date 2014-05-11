@@ -20,7 +20,7 @@
       <PdhCountersRate>500</PdhCountersRate>
       <PdhCounters>
         <PdhCounter>\Arbeitsspeicher\Seiten/s</PdhCounter>
-        <PdhCounter>\Physikalischer Datentr&amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;#228;ger(_Total)\Durchschnittl. Warteschlangenl&amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;#228;nge des Datentr&amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;#228;gers</PdhCounter>
+        <PdhCounter>\Physikalischer Datentr&amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;#228;ger(_Total)\Durchschnittl. Warteschlangenl&amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;#228;nge des Datentr&amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;#228;gers</PdhCounter>
         <PdhCounter>\Prozessor(_Total)\Prozessorzeit (%)</PdhCounter>
       </PdhCounters>
     </PdhSettings>
@@ -45,10 +45,10 @@
       <IsLocalJavascript>false</IsLocalJavascript>
       <IsWindowsStoreApp>false</IsWindowsStoreApp>
       <IsWWA>false</IsWWA>
-      <LaunchProject>true</LaunchProject>
-      <OverrideProjectSettings>false</OverrideProjectSettings>
+      <LaunchProject>false</LaunchProject>
+      <OverrideProjectSettings>true</OverrideProjectSettings>
       <LaunchMethod>Executable</LaunchMethod>
-      <ExecutablePath>..\..\..\..\..\ksp_rtLodNew\KSP.exe</ExecutablePath>
+      <ExecutablePath>..\..\..\..\..\ksp_rtLodHuge\KSP.exe</ExecutablePath>
       <StartupDirectory>
       </StartupDirectory>
       <Arguments>

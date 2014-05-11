@@ -6,13 +6,18 @@
 #include "FormatDatabase.h"
 #include "GPU.h"
 
+using namespace LodNative;
 
-void TextureInitialization::GetOrLoadSourceFileScope::OnLoaded(array<Byte>^ loaded_data){
-	Callback(Self->sourceFileLoaded = FormatDatabase::Recognize(Self->sourceFile, loaded_data));
+
+void TextureInitialization::GetOrLoadSourceFileScope::OnLoaded(BufferMemory::ISegment^ loaded_data){
+	Self->sourceFileLoaded = FormatDatabase::Recognize(Self->sourceFile, loaded_data);
+	Callback(Self->sourceFileLoaded);
 }
 void TextureInitialization::GetOrLoadSourceFile(Action<ITextureBase^>^ onLoadedCallback){
+	// Todo: Exception removed for now, since we both don't process/compress large versions and haven't redone most texture methods, yet!
+	// throw gcnew NotImplementedException("This is likely broken since Textures are one time only use, now...");
 	if (sourceFileLoaded == nullptr){
-		Disk::RequestFile(sourceFile, gcnew Action<array<Byte>^>(gcnew GetOrLoadSourceFileScope(this, onLoadedCallback), &GetOrLoadSourceFileScope::OnLoaded));
+		Disk::RequestFile(sourceFile, gcnew Action<BufferMemory::ISegment^>(gcnew GetOrLoadSourceFileScope(this, onLoadedCallback), &GetOrLoadSourceFileScope::OnLoaded));
 	}
 	else
 	{
@@ -33,10 +38,10 @@ void TextureInitialization::ThumbInitialize(){
 
 
 void TextureInitialization::ThumbTryLoadFromDisk(){
-	Disk::RequestFile(thumbFile, gcnew Action<array<Byte>^>(this, &TextureInitialization::ThumbTryLoadFromDisk_OnLoaded));
+	Disk::RequestFile(thumbFile, gcnew Action<BufferMemory::ISegment^>(this, &TextureInitialization::ThumbTryLoadFromDisk_OnLoaded));
 }
 
-void TextureInitialization::ThumbTryLoadFromDisk_OnLoaded(array<Byte>^ loaded_data){
+void TextureInitialization::ThumbTryLoadFromDisk_OnLoaded(BufferMemory::ISegment^ loaded_data){
 	ThumbnailTexture^ thumb;
 	try{
 		thumb = gcnew ThumbnailTexture(loaded_data, isNormal, gcnew TextureDebugInfo(thumbFile));
@@ -52,6 +57,7 @@ void TextureInitialization::ThumbTryLoadFromDisk_OnLoaded(array<Byte>^ loaded_da
 	}
 	Logger::LogText("Thumb cache hit, loading " + thumbFile + " to " + textureId);
 	GPU::AssignDataToThumbnailAsync(thumb, thumbTexture, textureId);
+	delete thumb;
 	CompressionInitialize();
 }
 
@@ -70,6 +76,7 @@ void TextureInitialization::ThumbGenerate_OnLoaded(ITextureBase^ loaded_texture)
 	Logger::LogText("Writing cache: " + thumbFile + (thumb->IsNormal ? " (Normal)" : " (Texture)"));
 	Disk::WriteFile(thumbFile, thumb->GetFileBytes());
 	GPU::AssignDataToThumbnailAsync(thumb, thumbTexture, textureId);
+	delete thumb;
 	CompressionInitialize();
 }
 

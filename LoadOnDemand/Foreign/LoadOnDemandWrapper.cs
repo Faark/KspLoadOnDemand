@@ -27,6 +27,7 @@ namespace LoadOnDemand.Foreign
             public static Func<GameDatabase.TextureInfo, Object> TextureManager_Get = texture => null;
             public static Func<GameDatabase.TextureInfo, bool> TextureManager_IsManaged = texture => false;
             public static Func<UrlDir.UrlFile, GameDatabase.TextureInfo> TextureManager_Setup = file => null; // todo: This might have to be optimized, eg. to be LOD independend?!
+            public static Action<GameDatabase.TextureInfo> TextureManager_ForceManage = file => { };
         }
 
         public static class Urls
@@ -166,13 +167,16 @@ namespace LoadOnDemand.Foreign
             {
                 return Bindings.TextureManager_Setup(file);
             }
+            public static void ForceManage(GameDatabase.TextureInfo texture)
+            {
+                Bindings.TextureManager_ForceManage(texture);
+            }
         }
 
         public static bool Available { get; private set; }
         static LoadOnDemand()
         {
-
-            var lodExternalType = System.Type.GetType("LoadOnDemand.External");
+            var lodExternalType = System.Type.GetType("LoadOnDemand.External, LoadOnDemand");
             if (lodExternalType != null)
             {
                 var bindings = (Dictionary<String, Delegate>)lodExternalType.GetMethod("RequestBindingA").Invoke(null, new object[] { 1 });
@@ -191,6 +195,7 @@ namespace LoadOnDemand.Foreign
                 Bindings.TextureManager_Get = (Func<GameDatabase.TextureInfo, Object>)bindings["TextureManager_Get"];
                 Bindings.TextureManager_IsManaged = (Func<GameDatabase.TextureInfo, bool>)bindings["TextureManager_IsManaged"];
                 Bindings.TextureManager_Setup = (Func<UrlDir.UrlFile, GameDatabase.TextureInfo>)bindings["TextureManager_Setup"];
+                Bindings.TextureManager_ForceManage = (Action<GameDatabase.TextureInfo>)bindings["TextureManager_ForceManage"]; 
                 Available = true;
             }
             else

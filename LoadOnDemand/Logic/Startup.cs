@@ -88,7 +88,6 @@ namespace LoadOnDemand.Logic
                     + Environment.NewLine + "Base: " + gameData.path + ", Path: " + String.Join("/", pathSegments) + ", Dirs: " + String.Join(";", current.children.Select(dir => dir.name).ToArray()), err);
                 }
             }
-            ("FINAL DIR: " + current.name + ", " + current.path).Log();
             var fname = pathSegments[i];
             try
             {

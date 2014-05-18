@@ -17,7 +17,7 @@ namespace LodNative{
 		static Dictionary<Type^, Dictionary<Type^, Func<ITextureBase^, ITextureBase^>^>^>^ FromToConverters = gcnew Dictionary<Type^, Dictionary<Type^, Func<ITextureBase^, ITextureBase^>^>^>();
 
 
-		// buffer segment will be consumed!
+		// buffer segment will be consumed, unless there is an exception!
 		static ITextureBase^ Recognize(String^ file, BufferMemory::ISegment^ data){
 			FileInfo^ fi = gcnew FileInfo(file);
 			for each(Func<FileInfo^, BufferMemory::ISegment^, ITextureBase^>^ func in FormatDetectors){
@@ -58,6 +58,14 @@ namespace LodNative{
 					}
 					return (TTexture)currentTexture;
 				}
+		}
+
+		/* generic copy version?!
+		generic<class TTexture> where TTexture: ITextureBase{
+			static TTexture 
+		}*/
+		static ITextureBase^ Clone(ITextureBase^ texture){
+			throw gcnew NotImplementedException("this mehod shouldn't be required until	we implement texture compression");
 		}
 	private:
 		ref class GetConverterJobScope{

@@ -31,6 +31,7 @@ namespace LoadOnDemand
             );
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         delegate void PInvokeDelegate_RequestTextureLoad(int nativeId);
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         delegate bool PInvokeDelegate_CancelTextureLoad(int nativeId);
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         delegate void PInvokeDelegate_RequestTextureUnload(int nativeId);

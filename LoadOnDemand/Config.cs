@@ -118,7 +118,7 @@ namespace LoadOnDemand
             UI_DelayBeforeShowingActivityUI = TimeSpan.FromSeconds(3);
 
             UI_DisplayDebugUI = false;
-            Debug_DontLoadEditorCatalogThumbnailParts = true;
+            Debug_DontLoadEditorCatalogThumbnailParts = true; // notimplementedexception, debug, todo: default to false once we got DXT!
 
             CompressTextures = true;
         }

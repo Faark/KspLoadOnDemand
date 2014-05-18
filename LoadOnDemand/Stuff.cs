@@ -297,4 +297,11 @@ namespace LoadOnDemand
         }
 #endif
     }
+    public static class UrlExtensions
+    {
+        static UrlDir GetGamedata()
+        {
+            throw new NotImplementedException();
+        }
+    }
 }

@@ -32,9 +32,17 @@ void TextureManager::Setup(String^ cache_directory)
 
 void TextureManager::StartLoadHighResTextureScope::ProcessLoadedData(BufferMemory::ISegment^ loaded_data){
 	//this->textureData->IsNormal
-	auto img = FormatDatabase::Recognize(textureData->HighResFile, loaded_data);
-	auto bmp = FormatDatabase::ConvertTo<BitmapFormat^>(img)->MayToNormal(textureData->IsNormal);
-	GPU::CreateHighResTextureAsync(bmp, textureId);
+	try{
+		auto img = FormatDatabase::Recognize(textureData->HighResFile, loaded_data);
+		loaded_data = nullptr;
+		auto bmp = FormatDatabase::ConvertTo<BitmapFormat^>(img)->MayToNormal(textureData->IsNormal);
+		GPU::CreateHighResTextureAsync(bmp, textureId);
+	}
+	finally{
+		if (loaded_data != nullptr){
+			loaded_data->Free();
+		}
+	}
 	//GPU::CreateHighResTextureAsync(FormatDatabase::ConvertToAssignable(FormatDatabase::Recognize(textureData->HighResFile, loaded_data)), textureId);
 	// FormatDatabase.Recognize(info.File, bytes).ConvertToAssignable().AssignToAsync(id);
 }

@@ -431,6 +431,11 @@ namespace LoadOnDemand.Managers
             return tex;
         }
 
+        // Makes lod taking over control over an already loaded texture.
+        public static void ForceManage(GameDatabase.TextureInfo texture)
+        {
+            throw new NotImplementedException();
+        }
 
     }
 }

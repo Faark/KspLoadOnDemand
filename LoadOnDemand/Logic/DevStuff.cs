@@ -440,7 +440,7 @@ namespace LoadOnDemand.Logic
         {
             if (Config.Current.UI_DisplayDebugUI)
             {
-                if ((toolbarButton == null ) && ToolbarWrapper.ToolbarManager.ToolbarAvailable)
+                if (!Config.Current.UI_TryUseToolbarForDebugUI && (toolbarButton == null) && ToolbarWrapper.ToolbarManager.ToolbarAvailable)
                 {
                     toolbarButton = ToolbarWrapper.ToolbarManager.Instance.add("LoadOnDemand", "DebugUIButton");
                     toolbarButton.OnClick += e => closed = !closed;

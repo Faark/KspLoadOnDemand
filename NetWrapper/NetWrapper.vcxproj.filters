@@ -31,7 +31,6 @@
     <ClInclude Include="Stdafx.h" />
     <ClInclude Include="TextureInitialization.h" />
     <ClInclude Include="TextureManager.h" />
-    <ClInclude Include="ThumbnailTexture.h" />
     <ClInclude Include="Work.h" />
     <ClInclude Include="BitmapFormat.h">
       <Filter>ImageFormats</Filter>
@@ -61,6 +60,12 @@
       <Filter>Stuff</Filter>
     </ClInclude>
     <ClInclude Include="ThreadPriority.h">
+      <Filter>Stuff</Filter>
+    </ClInclude>
+    <ClInclude Include="ThumbnailTexture.h">
+      <Filter>ImageFormats</Filter>
+    </ClInclude>
+    <ClInclude Include="DirectXStuff.h">
       <Filter>Stuff</Filter>
     </ClInclude>
   </ItemGroup>

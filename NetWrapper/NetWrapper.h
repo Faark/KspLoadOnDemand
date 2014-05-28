@@ -18,18 +18,24 @@ namespace LodNative{
 	extern "C" __declspec(dllexport) void NlodDebug_DumpTexture(void* texturePtr, const char* file_name){
 		ManagedBridge::MayCrash();
 		try{
+
+
 			auto texture = (IDirect3DTexture9*)texturePtr;
+
 			D3DXSaveTextureToFileA(file_name, D3DXIMAGE_FILEFORMAT::D3DXIFF_PNG, texture, NULL);
+
+			/*
 			D3DSURFACE_DESC desc;
 			texture->GetLevelDesc(0, &desc);
-			auto bmp = gcnew Drawing::Bitmap(desc.Width, desc.Height, AssignableFormat::PixelFormatFromD3DFormat(desc.Format));
+			auto bmp = gcnew Drawing::Bitmap(desc.Width, desc.Height, DirectXStuff::PixelFormatFromD3DFormat(desc.Format));
 			auto bmpData = bmp->LockBits(Drawing::Rectangle(0, 0, desc.Width, desc.Height), ImageLockMode::WriteOnly, bmp->PixelFormat);
 			D3DLOCKED_RECT rect;
 			texture->LockRect(0, &rect, NULL, 0);
-			GPU::CopyBuffer((unsigned char*)rect.pBits, rect.Pitch, (unsigned char*)bmpData->Scan0.ToPointer(), bmpData->Stride, AssignableFormat::GetByteDepthForFormat(desc.Format)*desc.Width, desc.Height);
+			GPU::CopyBuffer((unsigned char*)rect.pBits, rect.Pitch, (unsigned char*)bmpData->Scan0.ToPointer(), bmpData->Stride, DirectXStuff::GetByteDepthForFormat(desc.Format)*desc.Width, desc.Height);
 			texture->UnlockRect(0);
 			bmp->UnlockBits(bmpData);
 			bmp->Save(gcnew String(file_name)+"C", ImageFormat::Png);
+			*/
 		}
 		catch (Exception^ err){
 			Logger::LogException(err);

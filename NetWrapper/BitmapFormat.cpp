@@ -7,12 +7,43 @@ using namespace LodNative;
 
 
 BitmapFormat^ BitmapFormat::ToNormal(){
-	if (IsNormal)
+	if (!IsNormal)
 	{
-		return this;
+
+		// Source: http://answers.unity3d.com/questions/47121/runtime-normal-map-import.html
+
+
+		int w = Bitmap->Width;
+		int h = Bitmap->Height;
+		auto bmpData = Bitmap->LockBits(Drawing::Rectangle(0, 0, w, h), ImageLockMode::ReadWrite, PixelFormat::Format32bppArgb);
+		const int bytePerPixel = 4;
+		unsigned char * lineStart = (unsigned char*)bmpData->Scan0.ToPointer();
+
+		for (int y = 0; y < h; y++){
+			unsigned char * pixelPos = lineStart;
+			for (int x = 0; x < w; x++){
+				//throw gcnew NotImplementedException("New locked...");
+				//Color c = Bitmap->GetPixel(x, y);
+				char r = *(pixelPos + 1);
+				char g = *(pixelPos + 2);
+				*(pixelPos++) = r;
+				*(pixelPos++) = g;
+				*(pixelPos++) = g;
+				*(pixelPos++) = g;
+			}
+			lineStart = lineStart + bmpData->Stride;
+		}
+
+		Bitmap->UnlockBits(bmpData);
+
+		Logger::LogText("ToNormal");
+		isNormal = true;
+		this->DebugInfo = this->DebugInfo->Modify("ToNormal");
 	}
 
-	// Source: http://answers.unity3d.com/questions/47121/runtime-normal-map-import.html
+	return this;
+	/*/
+
 
 	// Todo: We are going native anyway. Can't we use native copy and a better texture format?!
 	int w = Bitmap->Width;
@@ -56,8 +87,10 @@ BitmapFormat^ BitmapFormat::ToNormal(){
 	}
 
 	System.Runtime.InteropServices.Marshal.Copy(targetData, 0, bmpData.Scan0, targetSize);*/
-	newImg->UnlockBits(bmpData);
-	return gcnew BitmapFormat(newImg, true, DebugInfo->Modify("ToNormal"));
+	
+	
+	//newImg->UnlockBits(bmpData);
+	//return gcnew BitmapFormat(newImg, true, DebugInfo->Modify("ToNormal"));
 }
 BitmapFormat^ BitmapFormat::MayToNormal(bool toNormal){
 	return toNormal ? ToNormal() : this;
@@ -76,7 +109,10 @@ BitmapFormat^ BitmapFormat::Resize(int new_width, int new_height){
 		gr->InterpolationMode = InterpolationMode::HighQualityBicubic;
 		gr->PixelOffsetMode = PixelOffsetMode::HighQuality;
 		gr->DrawImage(Bitmap, Drawing::Rectangle(0, 0, new_width, new_height));
-		return gcnew BitmapFormat(newImg, IsNormal, DebugInfo->Modify("Resized"));
+		auto isN = IsNormal;
+		auto dIn = DebugInfo;
+		delete this;
+		return gcnew BitmapFormat(newImg, isN, dIn->Modify("Resized"));
 	}
 	finally{
 		if (gr != nullptr)
@@ -84,40 +120,48 @@ BitmapFormat^ BitmapFormat::Resize(int new_width, int new_height){
 	}
 }
 BitmapFormat^ BitmapFormat::ConvertTo(PixelFormat format){
-	return gcnew BitmapFormat(Bitmap->Clone(Drawing::Rectangle(0, 0, Bitmap->Width, Bitmap->Height), format), IsNormal, DebugInfo->Modify("Converted"));
+	auto newImg = Bitmap->Clone(Drawing::Rectangle(0, 0, Bitmap->Width, Bitmap->Height), format);
+	auto isN = IsNormal;
+	auto dIn = DebugInfo;
+	delete this;
+	return gcnew BitmapFormat(newImg, isN, dIn->Modify("ConvertedTo[" + format.ToString() + "]"));
 }
 BitmapFormat^ BitmapFormat::ConvertTo(D3DFORMAT format){
-	return ConvertTo(AssignableFormat::PixelFormatFromD3DFormat(format));
+	return ConvertTo(DirectXStuff::PixelFormatFromD3DFormat(format));
 }
 BitmapFormat^ BitmapFormat::SetAlpha(Byte new_alpha){
 	//from http://stackoverflow.com/questions/6809442/how-to-load-transparent-png-to-bitmap-and-ignore-alpha-channel (kinda)
 
 	int w = Bitmap->Width;
 	int h = Bitmap->Height;
-	auto fmt = Bitmap->PixelFormat;
-	auto trgBmp = gcnew Drawing::Bitmap(w, h, fmt);
-	auto trgData = trgBmp->LockBits(Drawing::Rectangle(0, 0, w, h), ImageLockMode::WriteOnly, PixelFormat::Format32bppArgb);
+	//auto fmt = Bitmap->PixelFormat;
+	//auto trgBmp = gcnew Drawing::Bitmap(w, h, fmt);
+	//auto trgData = trgBmp->LockBits(Drawing::Rectangle(0, 0, w, h), ImageLockMode::WriteOnly, PixelFormat::Format32bppArgb);
 	auto srcData = Bitmap->LockBits(Drawing::Rectangle(0, 0, w, h), ImageLockMode::ReadWrite, PixelFormat::Format32bppArgb);
 
 	auto srcLine = (unsigned char*)srcData->Scan0.ToPointer();
-	auto trgLine = (unsigned char*)trgData->Scan0.ToPointer();
+	//auto trgLine = (unsigned char*)trgData->Scan0.ToPointer();
 	for (int y = 0; y < h; y++){
 		auto srcPos = srcLine;
-		auto trgPos = trgLine;
+		//auto trgPos = trgLine;
 		for (int x = 0; x < w; x++){
-			*(trgPos++) = *(srcPos++);
-			*(trgPos++) = *(srcPos++);
-			*(trgPos++) = *(srcPos++);
-			*(trgPos++) = new_alpha;
-			srcPos++;
+			srcPos = srcPos + 3;
+			*(srcPos++) = new_alpha;
+			//*(trgPos++) = *(srcPos++);
+			//*(trgPos++) = *(srcPos++);
+			//*(trgPos++) = *(srcPos++);
+			//*(trgPos++) = new_alpha;
+			//srcPos++;
 		}
 		srcLine += srcData->Stride;
-		trgLine += trgData->Stride;
+		//trgLine += trgData->Stride;
 	}
 
-	trgBmp->UnlockBits(trgData);
+	//trgBmp->UnlockBits(trgData);
 	Bitmap->UnlockBits(srcData);
-	return gcnew BitmapFormat(trgBmp, IsNormal, DebugInfo->Modify("SetAlpha" + new_alpha));
+	DebugInfo = DebugInfo->Modify("SetAlpha" + new_alpha);
+	//return gcnew BitmapFormat(trgBmp, IsNormal, DebugInfo->Modify("SetAlpha" + new_alpha));
+	return this;
 }
 
 BitmapFormat^ BitmapFormat::LoadUnknownFile(FileInfo^ file, BufferMemory::ISegment^ data)
@@ -143,12 +187,12 @@ BitmapFormat^ BitmapFormat::LoadUnknownFile(FileInfo^ file, BufferMemory::ISegme
 
 
 AssignableFormat^ BitmapFormat::GetAssignableFormat(){
-	return gcnew AssignableFormat(Bitmap->Width, Bitmap->Height, AssignableFormat::D3DFormatFromPixelFormat(Bitmap->PixelFormat));
+	return gcnew AssignableFormat(Bitmap->Width, Bitmap->Height, DirectXStuff::D3DFormatFromPixelFormat(Bitmap->PixelFormat));
 }
 
 void BitmapFormat::BitmapAssignableData::AssignTo(AssignableTarget^ target){
 	auto bmpData = bmp->LockBits(Drawing::Rectangle(0, 0, bmp->Width, bmp->Height), ImageLockMode::ReadOnly, bmp->PixelFormat);
-	GPU::CopyRawBytesTo(target, (unsigned char*)bmpData->Scan0.ToPointer(), bmpData->Stride, bmpData->Width * AssignableFormat::GetByteDepthForFormat(AssignableFormat::D3DFormatFromPixelFormat(bmpData->PixelFormat)), bmpData->Height, IsUpsideDown, Debug);
+	GPU::CopyRawBytesTo(target, (unsigned char*)bmpData->Scan0.ToPointer(), bmpData->Stride, bmpData->Width * DirectXStuff::GetByteDepthForFormat(DirectXStuff::D3DFormatFromPixelFormat(bmpData->PixelFormat)), bmpData->Height, IsUpsideDown, Debug);
 	bmp->UnlockBits(bmpData);
 }
 

@@ -165,7 +165,7 @@ namespace LodNative{
 			}
 		};
 
-		static BufferMemory^ mReadBuffer = gcnew BufferMemory(5, 32*1024*1024); // todo: make default buffer size customizable via cfg?
+		static BufferMemory^ mReadBuffer = gcnew BufferMemory(10, 32*1024*1024); // todo: make default buffer size customizable via cfg?
 		static DefaultIoRequestQueue^ mDefaultIoRequestQueue = gcnew DefaultIoRequestQueue();
 		static array<IoRequestProvider^>^ mIoRequestProviders;
 		static BlockingCollection<Tuple<String^, array<Byte>^>^>^ WriteQueue = gcnew BlockingCollection<Tuple<String^, array<Byte>^>^>(2);
@@ -255,6 +255,7 @@ namespace LodNative{
 
 				BufferMemory::ISegment^ segment;
 				if (mReadBuffer->TryAlloc(request.Size, segment)){
+					Logger::LogText("Allocated " + segment->ToString() + ((request.Stream->Name == nullptr) ? "" : (" for stream " + request.Stream->Name)));
 					RunReadJob(request, segment);
 					return ReadJobStatus::Ok;
 				}
@@ -268,6 +269,7 @@ namespace LodNative{
 
 				BufferMemory::ISegment^ segment;
 				if (mReadBuffer->TryAllocSecondary(request.Size, reserved_size, segment)){
+					Logger::LogText("Allocated " + segment->ToString() + ((request.Stream->Name == nullptr) ? "" : (" for stream " + request.Stream->Name)));
 					RunReadJob(request, segment);
 					return ReadJobStatus::Ok;
 				}
@@ -308,18 +310,22 @@ namespace LodNative{
 						req.Stream = gcnew FileStream(req.Request.File, FileMode::Open, FileAccess::Read, FileShare::Read, 8 * 1024, FileOptions::SequentialScan | FileOptions::Asynchronous);
 						req.Size = (int)req.Stream->Length;
 
+						Logger::LogText("Opened file: " + req.Request.File + " (" + req.Size + " bytes)");
 
-						switch (TryRunReadJob(req, reserved_size)){
+						auto tryRunJobState = TryRunReadJob(req, reserved_size);
+						switch (tryRunJobState){
 						case ReadJobStatus::Ok:
 							return ReadJobStatus::Ok;
 						case ReadJobStatus::DelayForResize:
-							return ReadJobStatus::DelayForResize;
 						case ReadJobStatus::NoMemoryOrJob:{
 							auto nextFree = freeImminentRequest->Next;
 							emptyRequestNodes->Remove(freeImminentRequest);
 							freeImminentRequest->Value = req;
 							imminentRequests->AddLast(freeImminentRequest);
 							freeImminentRequest = nextFree;
+							if (tryRunJobState == ReadJobStatus::DelayForResize){
+								return ReadJobStatus::DelayForResize;
+							}
 							break;
 						}
 						default:

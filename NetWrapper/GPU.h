@@ -8,6 +8,7 @@ using namespace System::Runtime::InteropServices;
 #include "Work.h"
 #include "ITexture.h"
 #include "TextureManager.h"
+#include "DirectXStuff.h"
 
 namespace LodNative{
 	// helper class for GPU related stuff
@@ -143,18 +144,15 @@ namespace LodNative{
 	private:
 		static void CopyToTexture(IDirect3DTexture9* texture, AssignableData^ assignableData, AssignableFormat^ format){
 			D3DLOCKED_RECT lockedRect;
-			if (texture->LockRect(0, &lockedRect, NULL, 0) != D3D_OK){
-				throw gcnew NotImplementedException("Todo: Implement error handling (LockRect failed).");
-			}
+			DirectXStuff::Texture_LockRectOrThrow(texture, 0, &lockedRect, NULL, 0);
 			try{
 				assignableData->AssignTo(gcnew AssignableTarget(format, &lockedRect, true /*Unity textures seem to be upside down...*/));
+				Logger::LogText("Assigned texture " + assignableData->Debug->File + assignableData->Debug->Modifiers);
 			}
 			finally{
-				if (texture->UnlockRect(0) != D3D_OK){
-					throw gcnew NotImplementedException("Todo: Implement error handling (UnlockRect failed).");
-				}
+				DirectXStuff::Texture_UnlockRectOrThrow(texture, 0);
 			}
-			// Todo25: Check whether this has a [positive] effect
+			// Todo25: Check whether PreLoad has a (positive) effect
 			texture->PreLoad();
 		}
 		ref class CreateHighResTextureAsyncScope{
@@ -170,10 +168,7 @@ namespace LodNative{
 				textureId = texture_id;
 			}
 			void RunWithAssignable(IDirect3DDevice9* device, AssignableFormat^ format, AssignableData^ data){
-				IDirect3DTexture9* dxTexture;
-				if (device->CreateTexture(format->Width, format->Height, 0, D3DUSAGE_AUTOGENMIPMAP, format->Format, D3DPOOL::D3DPOOL_MANAGED, &dxTexture, NULL) != D3D_OK){
-					throw gcnew NotImplementedException("Todo: Implement error handling (CreateTexture failed).");
-				}
+				IDirect3DTexture9* dxTexture = DirectXStuff::Device_CreateTextureOrThrow(device, format->Width, format->Height, 0, D3DUSAGE_AUTOGENMIPMAP, format->Format, D3DPOOL::D3DPOOL_MANAGED);
 				try{
 					CopyToTexture(dxTexture, data, format);
 				}
@@ -202,9 +197,7 @@ namespace LodNative{
 				auto format = assignableTexture->GetAssignableFormat();
 				UINT width = format->Width, height = format->Height;
 				D3DFORMAT texFormat = format->Format;
-				if (D3DXCheckTextureRequirements(device, &width, &height, 0, 0, &texFormat, D3DPOOL::D3DPOOL_MANAGED) != D3D_OK){
-					throw gcnew NotImplementedException("Todo: Implement error handling (D3DXCheckTextureRequirements failed).");
-				}
+				DirectXStuff::D3DX_CheckTextureRequirementsToThrow(device, &width, &height, 0, 0, &texFormat, D3DPOOL::D3DPOOL_MANAGED);
 				auto changedFormat = gcnew AssignableFormat(width, height, texFormat);
 				format = changedFormat->SameAs(format) ? nullptr : changedFormat;
 				Func<AssignableFormat^, AssignableData^>^ delayedCallback;
@@ -237,6 +230,7 @@ namespace LodNative{
 			AssignDataToThumbnailAsyncScope(IAssignableTexture^ assignable, IDirect3DTexture9* target, int textureId){
 				assignableTexture = assignable;
 				targetTexture = target;
+				this->textureId = textureId;
 			}
 			void Run(IntPtr devicePtr){
 				D3DSURFACE_DESC texDesc;
@@ -256,6 +250,7 @@ namespace LodNative{
 				}
 				else{
 					CopyToTexture(targetTexture, assignableData, format);
+					delete assignableTexture;
 					ManagedBridge::ThumbnailUpdated(textureId);
 					//Logger::LogText("success reporting?");
 				}

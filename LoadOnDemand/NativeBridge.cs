@@ -10,49 +10,78 @@ namespace LoadOnDemand
     internal class NativeBridge
     {
         static System.Object libraryRef;
-        #region PInvoke Delegates
-        // NotImplementedException / Todo6: Make sure no interop between mono and net4 is leaking! E.g. passing strings...
-        // Todo: Do we need UnmanagedFunctionPointer(CallingConvention.Cdecl)? Some examples have them, others dont...
-        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-        unsafe delegate void PInvokeDelegate_Setup(
-            [MarshalAs(UnmanagedType.LPStr)] string cacheDirectory,
-            void* thumbUpdateCallback,
-            void* textureLoadedCallback,
-            void* statusUpdatedCallback,
-            void* requestUpdateFromKspThreadCallback,
-            void* onSignalThreadIdlleCallback
-            );
-        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-        unsafe delegate int PInvokeDelegate_RegisterTexture(
-            [MarshalAs(UnmanagedType.LPStr)] string file,
-            [MarshalAs(UnmanagedType.LPStr)] string key,
-            void* thumbTexturePtr,
-            bool isNormalMap
-            );
-        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-        delegate void PInvokeDelegate_RequestTextureLoad(int nativeId);
-        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-        delegate bool PInvokeDelegate_CancelTextureLoad(int nativeId);
-        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-        delegate void PInvokeDelegate_RequestTextureUnload(int nativeId);
-        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-        unsafe delegate bool PInvokeDelegate_RequestedUpdate(void* deviceRefTexturePtr);
-        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-        delegate bool PInvokeDelegate_StartSignalMessages();
 
 
-        //[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-        //delegate void PInvokeDelegate_DumpTexture(IntPtr texturePtr, [MarshalAs(UnmanagedType.LPStr)]string file_name);
 
-        static PInvokeDelegate_Setup NlodSetup;
-        static PInvokeDelegate_RegisterTexture NlodRegisterTexture;
-        static PInvokeDelegate_RequestTextureLoad NlodRequestTextureLoad;
-        static PInvokeDelegate_CancelTextureLoad NlodCancelTextureLoad;
-        static PInvokeDelegate_RequestTextureUnload NlodRequestTextureUnload;
-        static PInvokeDelegate_RequestedUpdate NlodRequestedUpdate;
-        static PInvokeDelegate_StartSignalMessages NlodStartSignalMessages;
-        //static PInvokeDelegate_DumpTexture NlodDebug_DumpTexture;
-        #endregion
+
+        public static class PInvokeDelegates
+        {
+            [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+            public delegate void DumpTexture(IntPtr texturePtr, [MarshalAs(UnmanagedType.LPStr)]string file_name);
+
+            // NotImplementedException / Todo6: Make sure no interop between mono and net4 is leaking! E.g. passing strings...
+            // Todo: Do we need UnmanagedFunctionPointer(CallingConvention.Cdecl)? Some examples have them, others dont...
+            [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+            public unsafe delegate void Setup(
+                [MarshalAs(UnmanagedType.LPStr)] string cacheDirectory,
+                void* thumbUpdateCallback,
+                void* textureLoadedCallback,
+                void* statusUpdatedCallback,
+                void* requestUpdateFromKspThreadCallback,
+                void* onSignalThreadIdlleCallback
+                );
+            [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+            public unsafe delegate int RegisterTexture(
+                [MarshalAs(UnmanagedType.LPStr)] string file,
+                [MarshalAs(UnmanagedType.LPStr)] string key,
+                void* thumbTexturePtr,
+                bool isNormalMap
+                );
+            [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+            public delegate void RequestTextureLoad(int nativeId);
+            [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+            public delegate bool CancelTextureLoad(int nativeId);
+            [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+            public delegate void RequestTextureUnload(int nativeId);
+            [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+            public unsafe delegate bool RequestedUpdate(void* deviceRefTexturePtr);
+            [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+            public delegate bool StartSignalMessages();
+        }
+
+        public static class Callbacks
+        {
+            
+            [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+            public delegate void OnThumbnailUpdatedDelegate(int textureId);
+            [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+            public delegate void OnTextureLoadedDelegate(int textureId, IntPtr nativePtr);
+            [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+            public delegate void OnStatusUpdatedDelegate([MarshalAs(UnmanagedType.LPStr)] string text);
+            [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+            public delegate void OnRequestKspUpdateDelegate();
+            [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+            public delegate void OnSignalThreadIdleDelegate();
+        }
+
+       
+
+
+        static PInvokeDelegates.Setup NlodSetup;
+        static PInvokeDelegates.RegisterTexture NlodRegisterTexture;
+        static PInvokeDelegates.RequestTextureLoad NlodRequestTextureLoad;
+        static PInvokeDelegates.CancelTextureLoad NlodCancelTextureLoad;
+        static PInvokeDelegates.RequestTextureUnload NlodRequestTextureUnload;
+        static PInvokeDelegates.RequestedUpdate NlodRequestedUpdate;
+        static PInvokeDelegates.StartSignalMessages NlodStartSignalMessages;
+        static PInvokeDelegates.DumpTexture NlodDebug_DumpTexture;
+
+        // references have to be kept alive?!
+        static Callbacks.OnThumbnailUpdatedDelegate otu;
+        static Callbacks.OnTextureLoadedDelegate otl;
+        static Callbacks.OnStatusUpdatedDelegate osu;
+        static Callbacks.OnRequestKspUpdateDelegate orku;
+        static Callbacks.OnSignalThreadIdleDelegate osti;
 
         static string CopyEmbededNativeDllAndGetPath()
         {
@@ -81,26 +110,6 @@ namespace LoadOnDemand
             }*/
         }
 
-        #region Callbacks
-        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-        delegate void OnThumbnailUpdatedDelegate(int textureId);
-        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-        delegate void OnTextureLoadedDelegate(int textureId, IntPtr nativePtr);
-        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-        delegate void OnStatusUpdatedDelegate([MarshalAs(UnmanagedType.LPStr)] string text);
-        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-        delegate void OnRequestKspUpdateDelegate();
-        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-        delegate void OnSignalThreadIdleDelegate();
-
-        static OnThumbnailUpdatedDelegate otu;
-        static OnTextureLoadedDelegate otl;
-        static OnStatusUpdatedDelegate osu;
-        static OnRequestKspUpdateDelegate orku;
-        static OnSignalThreadIdleDelegate osti;
-        #endregion
-
-
 
 
         /// <summary>
@@ -108,6 +117,17 @@ namespace LoadOnDemand
         /// </summary>
         static Texture2D DummyTexture;
 
+        static unsafe void TrySetupLegacyBridge()
+        {
+            NlodSetup = Legacy.LegacyNativeWrapper.Setup;
+            NlodRegisterTexture = Legacy.LegacyNativeWrapper.RegisterTexture;
+            NlodRequestTextureLoad = Legacy.LegacyNativeWrapper.RequestTextureLoad;
+            NlodCancelTextureLoad = Legacy.LegacyNativeWrapper.CancelTextureLoad;
+            NlodRequestTextureUnload = Legacy.LegacyNativeWrapper.RequestTextureUnload;
+            NlodRequestedUpdate = Legacy.LegacyNativeWrapper.RequestedUpdate;
+            NlodStartSignalMessages = Legacy.LegacyNativeWrapper.StartSignalMessages;
+            throw new NotImplementedException("DebugDumpTexture stil used? not implemented, at least!");
+        }
         static void SetupNativeBridge()
         {
             try
@@ -122,13 +142,16 @@ namespace LoadOnDemand
 
 
                 var lib = new UnmanagedLibrary(CopyEmbededNativeDllAndGetPath()).NotNull();
-                NlodSetup = lib.GetUnmanagedFunction<PInvokeDelegate_Setup>("NlodSetup").NotNull();
-                NlodRegisterTexture = lib.GetUnmanagedFunction<PInvokeDelegate_RegisterTexture>("NlodRegisterTexture").NotNull();
-                NlodRequestTextureLoad = lib.GetUnmanagedFunction<PInvokeDelegate_RequestTextureLoad>("NlodRequestTextureLoad").NotNull();
-                NlodCancelTextureLoad = lib.GetUnmanagedFunction<PInvokeDelegate_CancelTextureLoad>("NlodCancelTextureLoad").NotNull();
-                NlodRequestTextureUnload = lib.GetUnmanagedFunction<PInvokeDelegate_RequestTextureUnload>("NlodRequestTextureUnload").NotNull();
-                NlodRequestedUpdate = lib.GetUnmanagedFunction<PInvokeDelegate_RequestedUpdate>("NlodRequestedUpdate").NotNull();
-                NlodStartSignalMessages = lib.GetUnmanagedFunction<PInvokeDelegate_StartSignalMessages>("NlodStartSignalMessages").NotNull();
+                NlodSetup = lib.GetUnmanagedFunction<PInvokeDelegates.Setup>("NlodSetup").NotNull();
+                NlodRegisterTexture = lib.GetUnmanagedFunction<PInvokeDelegates.RegisterTexture>("NlodRegisterTexture").NotNull();
+                NlodRequestTextureLoad = lib.GetUnmanagedFunction<PInvokeDelegates.RequestTextureLoad>("NlodRequestTextureLoad").NotNull();
+                NlodCancelTextureLoad = lib.GetUnmanagedFunction<PInvokeDelegates.CancelTextureLoad>("NlodCancelTextureLoad").NotNull();
+                NlodRequestTextureUnload = lib.GetUnmanagedFunction<PInvokeDelegates.RequestTextureUnload>("NlodRequestTextureUnload").NotNull();
+                NlodRequestedUpdate = lib.GetUnmanagedFunction<PInvokeDelegates.RequestedUpdate>("NlodRequestedUpdate").NotNull();
+                NlodStartSignalMessages = lib.GetUnmanagedFunction<PInvokeDelegates.StartSignalMessages>("NlodStartSignalMessages").NotNull();
+
+                NlodDebug_DumpTexture = lib.GetUnmanagedFunction<PInvokeDelegates.DumpTexture>("NlodDebug_DumpTexture");
+
                 libraryRef = lib;
 
 
@@ -138,8 +161,19 @@ namespace LoadOnDemand
             }
             catch (Exception err)
             {
-                Logic.ActivityGUI.SetError(err);
-                throw;
+                try
+                {
+                    throw new NotImplementedException("Legacy mode isn't even close to a working state!");
+                    TrySetupLegacyBridge();
+                    err.Log("Failed to set up native module, using LegacyWrapper instead (horrible perf!)");
+                    Logic.ActivityGUI.SetText("Failed to set up native module, using LegacyWrapper instead (horrible perf!)");
+                }
+                catch (Exception fallbackErr)
+                {
+                    var bothErr = new AggregateException("Failed to create NativeBridge, even legacy mode!", new[] { err, fallbackErr });
+                    Logic.ActivityGUI.SetError(bothErr);
+                    throw bothErr;
+                }
             }
         }
 
@@ -243,11 +277,11 @@ namespace LoadOnDemand
 
         public static event Action<int, IntPtr> OnTextureLoaded;
         public static event Action<int> OnThumbnailLoaded;
-        /*
+        
         public static void Debug_DumpTextureNative(Texture2D texture, String fileName)
         {
             NlodDebug_DumpTexture(texture.GetNativeTexturePtr(), fileName);
         }
-         */
+        
     }
 }

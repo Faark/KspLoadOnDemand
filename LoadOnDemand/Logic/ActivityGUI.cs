@@ -175,30 +175,30 @@ namespace LoadOnDemand.Logic
 
         public static void ThumbStarting()
         {
-            //"ThumbStart".Log();
+            "ThumbStart".Log();
             MayStartTimer(Interlocked.Increment(ref ActiveThumbnailRequests));
         }
         public static void ThumbFinished()
         {
-            //"ThumbStop".Log();
+            "ThumbStop".Log();
             Interlocked.Increment(ref FinishedThumbnailRequests);
         }
         public static void HighResStarting()
         {
-            //"ResStart".Log();
+            "ResStart".Log();
             MayStartTimer(Interlocked.Increment(ref ActiveHighResLoadRequests));
         }
         public static void HighResFinished()
         {
-            ///"ResStop".Log();
+            "ResStop".Log();
             Interlocked.Increment(ref FinishedHighResLoadRequests);
-            //FinishedHighResLoadRequests++;
         }
         public static void HighResCanceled()
         {
+            "ResCanceled".Log();
             Interlocked.Decrement(ref ActiveHighResLoadRequests);
         }
-        public static void SetError(String text)
+        public static void SetText(String text)
         {
             ErrorMessage = text;
         }
@@ -209,8 +209,17 @@ namespace LoadOnDemand.Logic
             {
                 msg = msg.Substring(0, 60) + "...";
             }
-            Logic.ActivityGUI.SetError("LoadOnDemand has detected a problem and was disabled." + Environment.NewLine + msg);
+            Logic.ActivityGUI.SetText("LoadOnDemand has detected a problem and was disabled." + Environment.NewLine + msg);
             Config.Disabled = true;
+        }
+        public static void SetWarning(Exception err)
+        {
+            var msg = err.Message ?? err.ToString() ?? "NO ERROR DETAILS AVAILABLE";
+            if (msg.Length > 60)
+            {
+                msg = msg.Substring(0, 60) + "...";
+            }
+            Logic.ActivityGUI.SetText("LoadOnDemand has detected a problem and might not work properly." + Environment.NewLine + msg);
         }
     }
 }

@@ -94,6 +94,7 @@
     <ClInclude Include="AssignableData.h" />
     <ClInclude Include="BitmapFormat.h" />
     <ClInclude Include="BufferMemory.h" />
+    <ClInclude Include="DirectXStuff.h" />
     <ClInclude Include="Disk.h" />
     <ClInclude Include="FormatDatabase.h" />
     <ClInclude Include="GPU.h" />

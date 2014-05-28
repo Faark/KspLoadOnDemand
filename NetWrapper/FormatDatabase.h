@@ -19,14 +19,19 @@ namespace LodNative{
 
 		// buffer segment will be consumed, unless there is an exception!
 		static ITextureBase^ Recognize(String^ file, BufferMemory::ISegment^ data){
-			FileInfo^ fi = gcnew FileInfo(file);
-			for each(Func<FileInfo^, BufferMemory::ISegment^, ITextureBase^>^ func in FormatDetectors){
-				ITextureBase^ texture = func(fi, data);
-				if (texture != nullptr){
-					return texture;
+			try{
+				FileInfo^ fi = gcnew FileInfo(file);
+				for each(Func<FileInfo^, BufferMemory::ISegment^, ITextureBase^>^ func in FormatDetectors){
+					ITextureBase^ texture = func(fi, data);
+					if (texture != nullptr){
+						return texture;
+					}
 				}
+				return BitmapFormat::LoadUnknownFile(fi, data);
 			}
-			return BitmapFormat::LoadUnknownFile(fi, data);
+			catch (Exception^ err){
+				throw gcnew Exception("Failed to Recognize Texture [" + file + "]", err);
+			}
 		}
 		static IAssignableTexture^ ConvertToAssignable(ITextureBase^ self){
 			IAssignableTexture^ assignableTexture = dynamic_cast<IAssignableTexture^>(self);

@@ -113,10 +113,11 @@ namespace LodNative{
 				}
 			}
 		}
+		static void LogStack(String^ infoText){
+			LogText(infoText + " @ " + Environment::NewLine + System::Environment::StackTrace);
+		}
 		static void LogTrace(String^ text){
-#if _DEBUG
 			LogText(text);
-#endif
 		}
 
 	};

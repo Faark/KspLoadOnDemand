@@ -203,11 +203,13 @@ namespace LoadOnDemand.Logic
         }
         public void Awake()
         {
-            //printPathRecursive(GameDatabase.Instance.root);
+            try
+            {
+                //printPathRecursive(GameDatabase.Instance.root);
 
 
 
-            NativeBridge.Setup(Config.Current.GetCacheDirectory());
+                NativeBridge.Setup(Config.Current.GetCacheDirectory());
 #if DISABLED_DEBUG
             foreach(var file in System.IO.Directory.GetFiles(Config.Current.GetCacheDirectory()))
             {
@@ -219,28 +221,34 @@ namespace LoadOnDemand.Logic
             }
 #endif
 
-            Managers.InternalManager.Setup(processAndGetInternals());
-            StartupDelayed.PartsToManage = processAndGetParts().ToList();
+                Managers.InternalManager.Setup(processAndGetInternals());
+                StartupDelayed.PartsToManage = processAndGetParts().ToList();
 
-            // Delay removal from file"system" till all are resolved, so we don't have problems with textures that are used multiple times...
-            // we have to remove it, or GameDatabase would reload it...
-            foreach (var ft in createdTextures)
-            {
-                ft.parent.files.Remove(ft);
-            }
-            ("LoadOnDemand.Startup done.").Log();
-
-            foreach (var el in GameDatabase.Instance.databaseTexture)
-            {
-                if (el.texture == null)
+                // Delay removal from file"system" till all are resolved, so we don't have problems with textures that are used multiple times...
+                // we have to remove it, or GameDatabase would reload it...
+                foreach (var ft in createdTextures)
                 {
-                    ("NULLTEX FOUND: " + el.name).Log();
+                    ft.parent.files.Remove(ft);
+                }
+                ("LoadOnDemand.Startup done.").Log();
+
+                foreach (var el in GameDatabase.Instance.databaseTexture)
+                {
+                    if (el.texture == null)
+                    {
+                        ("NULLTEX FOUND: " + el.name).Log();
+                    }
+                }
+                foreach (var imgs in GameDatabase.Instance.root.AllFiles.Where(f => f.fileType == UrlDir.FileType.Texture))
+                {
+                    ("REM_IMG: " + imgs.fullPath).Log();
+                    // Todo: Details about them incl their meta-data & size would be nice...
                 }
             }
-            foreach (var imgs in GameDatabase.Instance.root.AllFiles.Where(f => f.fileType == UrlDir.FileType.Texture))
+            catch (Exception err)
             {
-                ("REM_IMG: " + imgs.fullPath).Log();
-                // Todo: Details about them incl their meta-data & size would be nice...
+                ActivityGUI.SetWarning(err);
+                throw;
             }
         }
     }

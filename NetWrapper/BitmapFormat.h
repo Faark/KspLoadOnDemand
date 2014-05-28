@@ -48,6 +48,10 @@ namespace LodNative{
 		};
 	public:
 		virtual AssignableData^ GetAssignableData(AssignableFormat^ assignableFormat, Func<AssignableFormat^, AssignableData^>^ %delayedCb) override;
+		~BitmapFormat(){
+			delete imgData;
+			imgData = nullptr;
+		}
 	};
 
 }

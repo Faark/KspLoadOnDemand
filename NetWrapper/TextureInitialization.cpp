@@ -10,6 +10,7 @@ using namespace LodNative;
 
 
 void TextureInitialization::TryVerifyThumb(){
+	Logger::LogText("TexInit" + textureId + ": TryVerifyThumb (thumb " + thumbFile + ", src " + sourceFile + ")");
 	if (File::Exists(thumbFile))
 	{
 		Disk::RequestFile(thumbFile, gcnew Action<BufferMemory::ISegment^>(this, &TextureInitialization::TryVerifyThumb_OnLoaded));
@@ -21,12 +22,13 @@ void TextureInitialization::TryVerifyThumb(){
 	}
 }
 void TextureInitialization::TryVerifyThumb_OnLoaded(BufferMemory::ISegment^ loaded_data){
+	Logger::LogText("TexInit" + textureId + ": TryVerifyThumb_OnLoaded");
 	ThumbnailTexture^ thumb;
 	try{
 		thumb = gcnew ThumbnailTexture(loaded_data, isNormal, gcnew TextureDebugInfo(thumbFile));
 		loaded_data = nullptr;
 		if (thumb->Width != thumbWidth || thumb->Height != thumbHeight || thumb->Format != thumbFormat){
-			throw gcnew FormatException("Loaded format (" + thumb->Width + "x" + thumb->Height + ", " + AssignableFormat::StringFromD3DFormat(thumb->Format) + ") does not match expected format (" + thumbWidth + "x" + thumbHeight + ", " + AssignableFormat::StringFromD3DFormat(thumbFormat) + ")");
+			throw gcnew FormatException("Loaded format (" + thumb->Width + "x" + thumb->Height + ", " + DirectXStuff::StringFromD3DFormat(thumb->Format) + ") does not match expected format (" + thumbWidth + "x" + thumbHeight + ", " + DirectXStuff::StringFromD3DFormat(thumbFormat) + ")");
 		}
 	}
 	catch (Exception^ err){
@@ -41,10 +43,10 @@ void TextureInitialization::TryVerifyThumb_OnLoaded(BufferMemory::ISegment^ load
 	}
 	Logger::LogText("Thumb cache hit, loading " + thumbFile + " to " + textureId);
 	GPU::AssignDataToThumbnailAsync(thumb, thumbTexture, textureId);
-	delete thumb;
 	TryVerifyHighRes();
 }
 void TextureInitialization::TryVerifyHighRes(){
+	Logger::LogText("TexInit" + textureId + ": TryVerifyHighRes");
 
 	ingameDetailedFile = sourceFile;
 	VerificationCompleted();
@@ -70,6 +72,7 @@ void TextureInitialization::TryVerifyHighRes(){
 	*/
 }
 void TextureInitialization::VerificationCompleted(){
+	Logger::LogText("TexInit" + textureId + ": VerificationCompleted");
 	if (hasToGenerateHighRes || hasToGenerateThumb){
 		Disk::RequestFile(sourceFile, gcnew Action<BufferMemory::ISegment^>(this, &TextureInitialization::Generate_OnLoaded));
 	}
@@ -78,6 +81,7 @@ void TextureInitialization::VerificationCompleted(){
 	}
 }
 void TextureInitialization::Generate_OnLoaded(BufferMemory::ISegment^ loaded_data){
+	Logger::LogText("TexInit" + textureId + ": Generate_OnLoaded");
 	ITextureBase^ source_texture = nullptr;
 	try{
 		source_texture = FormatDatabase::Recognize(sourceFile, loaded_data);
@@ -98,6 +102,7 @@ void TextureInitialization::Generate_OnLoaded(BufferMemory::ISegment^ loaded_dat
 }
 
 void TextureInitialization::GenerateThumb(ITextureBase^ loaded_texture){
+	Logger::LogText("TexInit" + textureId + ": GenerateThumb");
 	/*
 	* Encode to readable format
 	* Resize data
@@ -109,10 +114,10 @@ void TextureInitialization::GenerateThumb(ITextureBase^ loaded_texture){
 	Logger::LogText("Writing cache: " + thumbFile + (thumb->IsNormal ? " (Normal)" : " (Texture)"));
 	Disk::WriteFile(thumbFile, thumb->GetFileBytes());
 	GPU::AssignDataToThumbnailAsync(thumb, thumbTexture, textureId);
-	delete thumb;
 }
 
 void TextureInitialization::GenerateHighRes(ITextureBase^ loaded_texture){
+	Logger::LogText("TexInit" + textureId + ": GenerateHighRes");
 	throw gcnew NotImplementedException("This features doesn't yet exist, shouldn't be used and this error should not happen.");
 	delete loaded_texture;
 	/*
@@ -124,12 +129,14 @@ void TextureInitialization::GenerateHighRes(ITextureBase^ loaded_texture){
 }
 
 void TextureInitialization::InitializationComplete(){
+	Logger::LogText("TexInit" + textureId + ": InitializationComplete");
 	onDoneCallback(this);
 }
 
 
 
 void TextureInitialization::Start(int texture_id, String^ source_file, String^ cache_id, String^ cache_dir, IDirect3DTexture9* thumbnail_texture, bool is_normal, Action<TextureInitialization^>^ on_done_callback){
+	Logger::LogText("TexInit" + texture_id + ": Start");
 	TextureInitialization^ ti = gcnew TextureInitialization();
 	ti->started = false;
 	ti->textureId = texture_id;

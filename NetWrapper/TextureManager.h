@@ -18,7 +18,7 @@ namespace LodNative{
 		ref class TextureData{
 		public:
 			bool IsNormal;
-			bool IsRequested = false;// Todo: This flag shouldn't be required anymore. See usage for details
+			bool IsRequested = false;// Todo: This flag shouldn't be required anymore. See usage for details | UPDATE: Its at least used to prevent load until prepared. This has to be reworked anyway.
 			IDirect3DTexture9* HighResTexture = NULL;
 			String^ HighResFile;
 		};
@@ -85,13 +85,7 @@ namespace LodNative{
 		static void Setup(String^ cache_directory);
 		static int RegisterTexture(String^ file, String^ cache, IDirect3DTexture9* thumb, bool normal);
 		static void RequestTextureLoad(int id);
-		static bool CancelTextureLoad(int id){
-			auto canceled = mLoadQueue->CancelLoadRequest(id); // todo: Add aditionl cancelation (e.g. current loading)?
-			if (canceled){
-				textures[id]->IsRequested = false;
-			}
-			return canceled;
-		}
+		static bool CancelTextureLoad(int id);
 		static void RequestTextureUnload(int id);
 
 	internal:

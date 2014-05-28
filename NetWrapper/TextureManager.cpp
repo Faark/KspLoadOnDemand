@@ -204,6 +204,13 @@ void TextureManager::RequestTextureLoad(int textureId){
 		mLoadQueue->RequestLoad(textureId, texData);
 	}
 }
+bool TextureManager::CancelTextureLoad(int id){
+	auto canceled = mLoadQueue->CancelLoadRequest(id); // todo: Add aditionl cancelation (e.g. current loading)?
+	if (canceled){
+		textures[id]->IsRequested = false;
+	}
+	return canceled;
+}
 void TextureManager::RequestTextureUnload(int textureId){
 	TextureData^ texData = textures[textureId];
 	if (!texData->IsRequested){

@@ -58,6 +58,7 @@ namespace LodNative{
 		}
 	public:
 		static void ThumbnailUpdated(int textureId){
+			Logger::LogText("ThumbUpdated: " + textureId);
 			Messages->Add(gcnew Action(gcnew ThumbnailUpdatedScope(textureId), &ThumbnailUpdatedScope::Do));
 		}
 		static void TextureLoaded(int textureId, IDirect3DTexture9* highResTexturePtr){

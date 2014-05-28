@@ -2,7 +2,6 @@
 // http://forum.kerbalspaceprogram.com/threads/73236-WIP-Loading-textures-only-as-required?p=1143406&viewfull=1#post1143406
 // http://forum.kerbalspaceprogram.com/threads/73236-WIP-Loading-textures-only-as-required?p=1126134&viewfull=1#post1126134 
 // transparency issue + blacklisting!
-// Cancelable queues in Net4 for Prep and Load...
 
 
 // working set? but likely only for processes, thus useless to me. Also AddMemoryPressure, but thats already in testing... http://stackoverflow.com/questions/2860917/how-do-i-get-net-to-garbage-collect-aggressively
@@ -61,8 +60,8 @@ Todo3: Currently, textures are loaded and unloaded as requested from ksp-rt. It 
 Todo7: Improve Logger
 Todo25: Check whether DxResource->PreLoad has any positive / not negative effect
 
+Todo: A windows file copy can keep the disk busy. Its higher thread prio makes lod sleep while it is copying... solvable without modifying other thread prios?
 
+- ModuleManager is probably applyed after LOD! It might have repaced models or textures!
 
-
-- Flags
-- Props
+- Flags / Props? Doesn'T seem to much memory

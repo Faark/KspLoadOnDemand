@@ -17,6 +17,13 @@ namespace LoadOnDemand
             System.IO.File.WriteAllText("LoadOnDemand.log", "");
             UnityThreadId = System.Threading.Thread.CurrentThread.ManagedThreadId;
         }
+
+
+
+        public static unsafe void SetDelegateForFunctionPointer<TDelegate>(ref TDelegate del, void* ptr)
+        {
+            del = (TDelegate)(object)Marshal.GetDelegateForFunctionPointer(new IntPtr(ptr), typeof(TDelegate));
+        }
     }
 
     public static class Extensions
@@ -296,12 +303,5 @@ namespace LoadOnDemand
             self.Log();
         }
 #endif
-    }
-    public static class UrlExtensions
-    {
-        static UrlDir GetGamedata()
-        {
-            throw new NotImplementedException();
-        }
     }
 }

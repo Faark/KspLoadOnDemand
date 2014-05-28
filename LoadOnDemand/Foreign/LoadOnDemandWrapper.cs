@@ -195,7 +195,7 @@ namespace LoadOnDemand.Foreign
                 Bindings.TextureManager_Get = (Func<GameDatabase.TextureInfo, Object>)bindings["TextureManager_Get"];
                 Bindings.TextureManager_IsManaged = (Func<GameDatabase.TextureInfo, bool>)bindings["TextureManager_IsManaged"];
                 Bindings.TextureManager_Setup = (Func<UrlDir.UrlFile, GameDatabase.TextureInfo>)bindings["TextureManager_Setup"];
-                Bindings.TextureManager_ForceManage = (Action<GameDatabase.TextureInfo>)bindings["TextureManager_ForceManage"]; 
+                Bindings.TextureManager_ForceManage = (Action<GameDatabase.TextureInfo>)bindings["TextureManager_ForceManage"];
                 Available = true;
             }
             else

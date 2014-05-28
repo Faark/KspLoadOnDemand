@@ -15,6 +15,17 @@ namespace LoadOnDemand
     }
     class ImageConfigItem
     {
+        private static string escapeIdsSpaces(string idWithSpaces)
+        {
+            // shitty cfg nodes can't handle lot of chars... this "escapes" them
+            return idWithSpaces.Replace(@"\", @"\\").Replace(" ", @"\s").Replace("(", @"\i").Replace(")", @"\o");
+        }
+        private static string unescapeIdsSpaces(string escapedId)
+        {
+            // shitty cfg nodes can't handle lot of chars... this "unescapes" them
+            return escapedId.Replace( @"\o", ")").Replace(@"\i", "(").Replace(@"\s", " ").Replace(@"\\", @"\");
+        }
+
         public string FileUrl { get; private set; }
         public string CacheKey { get; private set; }
         public long FileSize { get; private set; }
@@ -54,7 +65,7 @@ namespace LoadOnDemand
         public ImageConfigItem(string cacheKey, UrlDir.UrlFile fromFile)
         {
             CacheKey = cacheKey;
-            FileUrl = fromFile.url;
+            FileUrl = fromFile.url + "."+ fromFile.fileExtension;
             updateVerificationData(fromFile);
         }
         public static ImageConfigItem FromConfigNode(ConfigNode node)
@@ -66,7 +77,7 @@ namespace LoadOnDemand
                 {
                     if (skipImage)
                     {
-                        return new ImageConfigItem() { SkipImage = true, FileUrl = node.name };
+                        return new ImageConfigItem() { SkipImage = true, FileUrl = unescapeIdsSpaces(node.name) };
                     }
                 }
                 else
@@ -76,7 +87,7 @@ namespace LoadOnDemand
             }
             return new ImageConfigItem()
             {
-                FileUrl = node.name,
+                FileUrl = unescapeIdsSpaces(node.name),
                 CacheKey = node.GetValue("Key"),
                 //Url = node.GetValue("Url"),
                 FileSize = long.Parse(node.GetValue("Size")),
@@ -85,7 +96,7 @@ namespace LoadOnDemand
         }
         public ConfigNode ToConfigNode()
         {
-            var node = new ConfigNode(FileUrl);
+            var node = new ConfigNode(escapeIdsSpaces(FileUrl));
             if (SkipImage)
             {
                 node.AddValue("SkipImage", true.ToString());
@@ -117,8 +128,9 @@ namespace LoadOnDemand
             UI_DelayBeforeHidingActivityUI = TimeSpan.FromSeconds(3);
             UI_DelayBeforeShowingActivityUI = TimeSpan.FromSeconds(3);
 
+            UI_TryUseToolbarForDebugUI = true;
             UI_DisplayDebugUI = false;
-            Debug_DontLoadEditorCatalogThumbnailParts = true; // notimplementedexception, debug, todo: default to false once we got DXT!
+            Debug_DontLoadEditorCatalogThumbnailParts = false; // notimplementedexception, debug, todo: default to false once we got DXT!
 
             CompressTextures = true;
         }
@@ -183,6 +195,7 @@ namespace LoadOnDemand
             ui.AddValue("SecondsBeforeShowing", UI_DelayBeforeShowingActivityUI.TotalSeconds.ToInt().ToString());
             ui.AddValue("SecondsBeforeHiding", UI_DelayBeforeHidingActivityUI.TotalSeconds.ToInt().ToString());
 
+            cfg.AddValue("TryUseToolbarForDebugUI", UI_TryUseToolbarForDebugUI.ToString());
             cfg.AddValue("ShowDebugUI", UI_DisplayDebugUI.ToString());
             cfg.AddValue("DontLoadEditorCatalogParts", Debug_DontLoadEditorCatalogThumbnailParts.ToString());
 
@@ -229,6 +242,7 @@ namespace LoadOnDemand
             }
 
 
+            UI_TryUseToolbarForDebugUI = cfgNode.GetValue("TryUseToolbarForDebugUI", text => bool.Parse(text), UI_TryUseToolbarForDebugUI);
             UI_DisplayDebugUI = cfgNode.GetValue("ShowDebugUI", text => bool.Parse(text), UI_DisplayDebugUI);
             Debug_DontLoadEditorCatalogThumbnailParts = cfgNode.GetValue("DontLoadEditorCatalogParts", text => bool.Parse(text), Debug_DontLoadEditorCatalogThumbnailParts);
 
@@ -249,6 +263,7 @@ namespace LoadOnDemand
         public TimeSpan UI_DelayBeforeShowingActivityUI { get; private set; }
         public TimeSpan UI_DelayBeforeHidingActivityUI { get; private set; }
 
+        public bool UI_TryUseToolbarForDebugUI { get; private set; }
         public bool UI_DisplayDebugUI { get; private set; }
         public bool Debug_DontLoadEditorCatalogThumbnailParts { get; private set; }
         public bool ThumbnailEnabled { get; private set; }
@@ -289,8 +304,23 @@ namespace LoadOnDemand
         /// <returns>name (neither path, nor extension) of a unique image file</returns>
         public ImageConfigItem GetImageConfig(UrlDir.UrlFile file)
         {
+            /*
+            "CacheKeyTest".Log();
+            ("Trg: " + file.fullPath).Log();
+            ("Url: " + file.url).Log();
+            ("Ext: " + file.fileExtension).Log();
+            var p =  file.parent;
+            while (p != null)
+            {
+                ("P: " + (p.name ?? "") + " / " + p.url + "  " + p.path).Log();
+                p = p.parent;
+            }*/
+
+
+
             ImageConfigItem cachedItem;
-            if (CachedDataPerResUrl.TryGetValue(file.url, out cachedItem))
+            var key = file.url + "." + file.fileExtension;
+            if (CachedDataPerResUrl.TryGetValue(key, out cachedItem))
             {
                 if (!cachedItem.isCacheValid(file))
                 {
@@ -302,7 +332,7 @@ namespace LoadOnDemand
             }
             else
             {
-                ("New Cache: " + file.url).Log();
+                ("New Cache: " + key).Log();
             }
             while (true)
             {

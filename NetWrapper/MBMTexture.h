@@ -37,9 +37,9 @@ namespace LodNative{
 					break;
 				}
 				data_offset = (int)ms->Position;
-				if (data->SegmentLength != ((Width * Height * AssignableFormat::GetByteDepthForFormat(dataFormat)) + data_offset))
+				if (data->SegmentLength != ((Width * Height * DirectXStuff::GetByteDepthForFormat(dataFormat)) + data_offset))
 				{
-					throw gcnew FormatException("Invalid data size. Expected " + ((Width * Height * AssignableFormat::GetByteDepthForFormat(dataFormat)) + data_offset) + " byte, got " + data->SegmentLength + " byte (both including a " + data_offset + " byte header)");
+					throw gcnew FormatException("Invalid data size. Expected " + ((Width * Height * DirectXStuff::GetByteDepthForFormat(dataFormat)) + data_offset) + " byte, got " + data->SegmentLength + " byte (both including a " + data_offset + " byte header)");
 				}
 			}
 			finally{
@@ -125,7 +125,10 @@ namespace LodNative{
 			int lineSize = Width * 4;
 			GPU::CopyBufferInverted(srcPinPtr, lineSize, (unsigned char*)bmpData->Scan0.ToPointer(), bmpData->Stride, lineSize, h);
 			bmp->UnlockBits(bmpData);
-			return gcnew BitmapFormat(bmp, IsNormal, DebugInfo->Modify("ToBitmap"));
+			auto isN = IsNormal;
+			auto di = DebugInfo;
+			delete this;
+			return gcnew BitmapFormat(bmp, isN, di->Modify("ToBitmap"));
 		}
 		static BitmapFormat^ ConvertToBitmap(MBMTexture^ from){
 			return from->ToBitmap();

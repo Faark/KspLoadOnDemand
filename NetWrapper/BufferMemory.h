@@ -40,7 +40,10 @@ namespace LodNative{
 			property array<Byte>^ EntireBuffer{virtual array<Byte>^ get(){ return mEntireBuffer; }}
 			property int SegmentStartsAt{virtual int get(){ return mSegmentStartsAt; }}
 			property int SegmentLength { virtual int get(){ return mSegmentLength; }}
+
+
 			virtual void Free(){
+				Logger::LogStack("freeing " + this);
 				mState = SegmentState::Releasing;
 				mHost->mSegmentsToFree->Enqueue(this);
 				mHost->fireOnFree();
@@ -82,6 +85,9 @@ namespace LodNative{
 					mSegmentLength = size;
 					return true;
 				}
+			}
+			String^ ToString() override{
+				return "Segment " + mSegmentIndex + " (" + mSegmentLength + "@" + mSegmentStartsAt + ")";
 			}
 		};
 

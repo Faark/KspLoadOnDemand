@@ -24,6 +24,13 @@ namespace LoadOnDemand.Managers
                 Info = new GameDatabase.TextureInfo(CreateEmptyThumbnailTexture(), false, true, false);
                 Info.texture.name = Info.name = file.url;
             }
+            public TextureData(GameDatabase.TextureInfo info, UrlDir.UrlFile file)
+            {
+                File = file;
+                Info = info;
+                Info.texture = CreateEmptyThumbnailTexture();
+                Info.texture.name = Info.name = file.url;
+            }
         }
 
         /// <summary>
@@ -388,28 +395,48 @@ namespace LoadOnDemand.Managers
                 if (!DelayLoading)
                 {
                     SetupNative(data);
-                    // Todo14: This doesn't update nativeIdDataLookup and users has to call FinalizeSetup manually. While fine, we might be able to improve that API without killink lots of Setup(...)-perf on lots of textures
+                    /*if (data.NativeId >= nativeIdToDataLookup.Length)
+                    {
+                        Array.Resize(ref nativeIdToDataLookup, data.NativeId + 1);
+                    }
+                    nativeIdToDataLookup[data.NativeId] = data;*/
+                    // Todo14: This doesn't update nativeIdDataLookup and users has to call FinalizeSetup manually. While fine, we might be able to improve that API without killink lots of Setup(...)-perf on lots of textures. Suggestion: "Bulk" call option
                 }
                 iManagedTextures.Add(data.Info, data);
                 return data.Info;
             }
         }
-        public static void FinalizeSetup()
+        public static void FinalizeSetup() // must be called sync after setups!
         {
+            List<Exception> failedLoads = null;
             ("FinSetup: " + DelayLoading).Log();
             if (DelayLoading)
             {
                 "Sending Texture Info to net4".Log();
                 foreach (var tex in iManagedTextures)
                 {
-                    SetupNative(tex.Value);
+                    try
+                    {
+                        SetupNative(tex.Value);
+                    }
+                    catch (Exception err)
+                    {
+                        (failedLoads ?? (failedLoads = new List<Exception>())).Add(err);
+                    }
                 }
                 DelayLoading = false;
             }
             nativeIdToDataLookup = new TextureData[iManagedTextures.Max(tex => tex.Value.NativeId) + 1];
             foreach (var tex in iManagedTextures)
             {
-                nativeIdToDataLookup[tex.Value.NativeId] = tex.Value;
+                if (tex.Value.NativeId >= 0)
+                {
+                    nativeIdToDataLookup[tex.Value.NativeId] = tex.Value;
+                }
+            }
+            if (failedLoads != null)
+            {
+                throw new AggregateException("Failed to load some textures!", failedLoads);
             }
         }
         static Texture2D CreateEmptyThumbnailTexture()
@@ -432,9 +459,41 @@ namespace LoadOnDemand.Managers
         }
 
         // Makes lod taking over control over an already loaded texture.
-        public static void ForceManage(GameDatabase.TextureInfo texture)
+        public static void ForceManage(GameDatabase.TextureInfo info)
         {
+            // this one is experimental for now.
+            // it tries to resolve the source file by the textures name (yea, kinda stupid)
+            // it unloads the currently laoded texture
+            // it places an unloaded "dummy"
+            
+            // warning, this might not work with derived TextureInfos! Or think about this replacing TextureInfo in the first place
+
+            if(iManagedTextures.ContainsKey(info)){
+                "Texture already managed!".Log();
+                return;
+            }
+
+            /*
+             * URL splittten
+             * Dirs solange existent aus dingsda rausholen
+             * Sobald nicht mehr existent manuell weitersuchen
+             * Thats just great!
+             */
             throw new NotImplementedException();
+
+            UrlDir.UrlFile file = null; // Todo: Resolve file...
+
+            if (info.texture != null)
+            {
+                UnityEngine.Resources.UnloadAsset(info.texture);
+            }
+
+            var data = new TextureData(info, file);
+            if(!DelayLoading){
+                SetupNative(data);
+                // Todo14: See above
+            }
+            iManagedTextures.Add(data.Info, data);
         }
 
     }

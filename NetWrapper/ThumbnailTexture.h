@@ -29,21 +29,26 @@ namespace LodNative{
 		int height;
 		D3DFORMAT format;
 		BufferMemory::ISegment^ segm = nullptr;
-		int array_offset = 0;
+		//int array_offset = 0; // todo: what the hell is this? Some old offset remains? Then kill it! Update: Got it! Its what the offset of ISegment should have been, but never worked in the first place. Merging it with ByteDataHeaderOffset, i guess
 	public:
-		static const int ByteDataHeaderOffset = 13;
+		static const int ByteHeaderOffset = 13;
+		int ByteDataOffset = ByteHeaderOffset;
 		property int Width{int get(){ return width; }}
 		property int Height{int get(){ return height; }}
 		property D3DFORMAT Format{D3DFORMAT get(){ return format; }}
 		property bool IsNormal{bool get(){ return isNormal; }}
 		array<Byte>^ GetFileBytes(){
-			return byteData;
+			if (segm == nullptr){
+				return byteData;
+			}
+			else{
+				throw gcnew InvalidOperationException("Cannot get file bytes for a loaded file. ("+DebugInfo+")");
+			}
 		}
 		ThumbnailTexture(BufferMemory::ISegment^ data, bool has_to_be_normal, TextureDebugInfo^ debug_info) :IAssignableTexture(debug_info){
-			segm = data;
-			if (data->SegmentLength < ByteDataHeaderOffset)
+			if (data->SegmentLength < ByteDataOffset)
 			{
-				throw gcnew FormatException("Given thumbnail data is invalid. It doesn't even have the " + ByteDataHeaderOffset + " bytes for the header (length: " + data->SegmentLength + ")");
+				throw gcnew FormatException("Given thumbnail data is invalid. It doesn't even have the " + ByteDataOffset + " bytes for the header (length: " + data->SegmentLength + ")");
 			}
 			MemoryStream^ ms;
 			BinaryReader^ bs;
@@ -55,6 +60,9 @@ namespace LodNative{
 				height = bs->ReadInt32();
 				format = (D3DFORMAT)bs->ReadInt32();
 				isNormal = bs->ReadByte() != 0;
+				ByteDataOffset = ByteHeaderOffset + data->SegmentStartsAt; // or 13 + 
+				//Logger::LogText("Embeded: " + bs->ReadString());
+				//ByteDataHeaderOffset = (int)ms->Position;
 			}
 			finally{
 				if (bs != nullptr)
@@ -62,32 +70,50 @@ namespace LodNative{
 				if (ms != nullptr)
 					delete ms;
 			}
+			Logger::LogText("FromMem/ Creating thumb " + width + "x" + height + "@" + DirectXStuff::StringFromD3DFormat(format) + (isNormal ? " (NORMAL)" : " (NO NORMAL)") + ", path: " + DebugInfo->File + DebugInfo->Modifiers);
 			if (has_to_be_normal && !IsNormal) // Todo: Is has_to_be != isNormal reason enough?
 			{
-				throw gcnew Exception("Thumb has to be a normal but isn!");
+				throw gcnew Exception("Thumb has to be a normal but isn't!");
 			}
 			if (format != D3DFORMAT::D3DFMT_A8R8G8B8)
 				throw gcnew NotSupportedException("Thumbnails currently have to be in ARGB32 format.");
 
-			int expectedSize = ByteDataHeaderOffset + (width * height * BytesPerPixel);
+			int expectedSize = ByteHeaderOffset + (width * height * BytesPerPixel);
 			if (expectedSize != data->SegmentLength)
 			{
-				throw gcnew FormatException("Invalid data size. Expected " + expectedSize + " byte, got " + data->SegmentLength + " byte (both including a " + ByteDataHeaderOffset + " byte header)");
+				throw gcnew FormatException("Invalid data size. Expected " + expectedSize + " byte, got " + data->SegmentLength + " byte (both including a " + ByteDataOffset + " byte header)");
 			}
 
 			byteData = data->EntireBuffer;
 			Log(this);
+			segm = data;
 		}
 	private:
 		ThumbnailTexture(int thumb_width, int thumb_height, D3DFORMAT thumb_format, bool is_normal, TextureDebugInfo^ debug_info) : IAssignableTexture(debug_info){
+			auto logText = "FromScratch/ Creating thumb " + thumb_height + "x" + thumb_height + "@" + DirectXStuff::StringFromD3DFormat(thumb_format) + (is_normal ? " (NORMAL)" : " (NO NORMAL)") + ", path: " + DebugInfo->File + DebugInfo->Modifiers;
+			Logger::LogText(logText);
 			if (thumb_format != D3DFORMAT::D3DFMT_A8R8G8B8){
 				throw gcnew NotSupportedException("Thumbnails currently have to be in ARGB32 format.");
 			}
+
+			/*debug shit!*/
+			/*auto s = gcnew MemoryStream();
+			auto w = gcnew BinaryWriter(s);
+			w->Write(logText);
+			auto logBytes = s->ToArray();
+			delete w;
+			delete s;
+			/* */
+
+
 			width = thumb_width;
 			height = thumb_height;
 			isNormal = is_normal;
-			byteData = gcnew array<Byte>(ByteDataHeaderOffset + (Width * Height * BytesPerPixel));
+			byteData = gcnew array<Byte>(ByteDataOffset + (Width * Height * BytesPerPixel) /*+ logBytes->Length*/);
 			format = thumb_format;
+
+
+
 
 
 			MemoryStream^ ms;
@@ -99,6 +125,11 @@ namespace LodNative{
 				bw->Write((Int32)Height);
 				bw->Write((Int32)Format);
 				bw->Write((Byte)(IsNormal ? 1 : 0));
+				if (ByteHeaderOffset != ms->Position){
+					throw gcnew Exception("internal bug #324916192832");
+				}
+				//bw->Write(logBytes, 0, logBytes->Length);
+				//ByteDataHeaderOffset = (int)ms->Position;
 			}
 			finally{
 				if (bw != nullptr)
@@ -113,12 +144,12 @@ namespace LodNative{
 			auto newThumb = gcnew ThumbnailTexture(
 				source->Bitmap->Width,
 				source->Bitmap->Height,
-				AssignableFormat::D3DFormatFromPixelFormat(source->Bitmap->PixelFormat),
+				DirectXStuff::D3DFormatFromPixelFormat(source->Bitmap->PixelFormat),
 				source->IsNormal,
 				source->DebugInfo->Modify("ToThumb")
 				);
 			array<Byte>^ bytes = newThumb->byteData;
-			int pos = newThumb->array_offset + newThumb->ByteDataHeaderOffset;
+			int pos = newThumb->ByteDataOffset;
 			// Todo: With correct locking i should be able to this pretty much a memcpy?!
 			for (int y = 0; y < source->Bitmap->Height; y++)
 			{
@@ -147,10 +178,10 @@ namespace LodNative{
 			return ConvertFromBitmap(source->Resize(width, height));
 		}
 		static BitmapFormat^ ConvertToBitmap(ThumbnailTexture^ source){
-			auto format = AssignableFormat::PixelFormatFromD3DFormat(source->Format);
+			auto format = DirectXStuff::PixelFormatFromD3DFormat(source->Format);
 			auto bmp = gcnew Bitmap(source->Width, source->Height, format);
 			auto bytes = source->byteData;
-			int pos = source->array_offset + source->ByteDataHeaderOffset;
+			int pos = source->ByteDataOffset;
 			/*auto sb = gcnew System::Text::StringBuilder();
 			Logger::LogText("Start con to bmp");
 			sb->Append("Raw Data: {");
@@ -187,13 +218,14 @@ namespace LodNative{
 				return FormatDatabase::GetConverterJob(this)(assignableFormat);
 				throw gcnew NotSupportedException("Cannot assign ThumbnailTextures to an different surface (Got " + GetAssignableFormat() + ", trg is " + assignableFormat + ")");
 			}
-			return gcnew ByteArrayAssignableData(GetAssignableFormat(), byteData, Width * BytesPerPixel, array_offset + ByteDataHeaderOffset, DebugInfo);
+			return gcnew ByteArrayAssignableData(GetAssignableFormat(), byteData, Width * BytesPerPixel, ByteDataOffset, DebugInfo);
 		}
 
 		~ThumbnailTexture(){
 			if (segm != nullptr){
 				segm->Free();
 			}
+			byteData = nullptr;
 		}
 	};
 }

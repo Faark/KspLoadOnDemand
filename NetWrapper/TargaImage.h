@@ -40,7 +40,7 @@ using namespace System::IO;
 using namespace System::Drawing;
 using namespace System::Drawing::Imaging;
 using namespace System::Runtime::InteropServices;
-
+#include "Logger.h"
 
 namespace Paloma
 {
@@ -2141,6 +2141,7 @@ namespace Paloma
 			// get the Pixel format to use with the Bitmap object
 			PixelFormat pf = this->GetPixelFormat();
 
+			LodNative::Logger::LogText("TGA LOADER: creating texture with " + pf.ToString());
 
 			// create a Bitmap object using the image Width, Height,
 			// Stride, PixelFormat and the pointer to the pinned byte array->
@@ -2470,7 +2471,20 @@ namespace Paloma
 			TargaImage^ ti = nullptr;
 			try{
 				ti = gcnew TargaImage(sFileName);
+
 				return gcnew Bitmap(ti->Image);
+				
+				
+				/* Keep format? Use this instead:
+				auto b = gcnew Drawing::Bitmap(ti->Image->Width, ti->Image->Height, ti->Image->PixelFormat);
+				auto g = Graphics::FromImage(b);
+				try{
+					g->DrawImage(ti->Image, 0, 0, Drawing::Rectangle(0, 0, b->Width, b->Height), GraphicsUnit::Pixel);
+					return b;
+				}
+				finally{
+					delete g;
+				}*/
 			}
 			finally{
 				if (ti != nullptr)

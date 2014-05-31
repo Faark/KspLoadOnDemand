@@ -249,6 +249,7 @@ namespace LodNative{
 						return ReadJobStatus::DelayForResize;
 					}
 					else{
+						Logger::LogText("Resizing Disk buffer from " + mReadBuffer->BufferSize + " to " + request.Size);
 						mReadBuffer->ResizeBuffer(request.Size);
 					}
 				}

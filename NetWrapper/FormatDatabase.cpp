@@ -13,6 +13,7 @@ BitmapFormat^ FormatDatabase::RecognizeTGA(FileInfo^ file, BufferMemory::ISegmen
 		Paloma::TargaImage^ img = nullptr;
 		System::IO::MemoryStream^ ms = nullptr;
 		try{
+			Logger::LogText("Loading " + file->FullName);
 			ms = data->CreateStream();
 			auto img = gcnew Paloma::TargaImage();
 			img->LoadTGAFromMemory(ms);

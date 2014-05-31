@@ -35,6 +35,9 @@ void TextureInitialization::TryVerifyThumb_OnLoaded(BufferMemory::ISegment^ load
 		if (loaded_data != nullptr){
 			loaded_data->Free();
 		}
+		if (thumb != nullptr){
+			delete thumb;
+		}
 		Logger::LogText("Thumbnail cache is invalid: " + thumbFile + Environment::NewLine + "Error: " + err->ToString());
 		File::Delete(thumbFile);
 		hasToGenerateThumb = true;

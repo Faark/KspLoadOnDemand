@@ -77,7 +77,10 @@ namespace LoadOnDemand
                 {
                     if (skipImage)
                     {
-                        return new ImageConfigItem() { SkipImage = true, FileUrl = unescapeIdsSpaces(node.name) };
+                        return new ImageConfigItem() { 
+                            SkipImage = true, 
+                            FileUrl = unescapeIdsSpaces(node.name)
+                        };
                     }
                 }
                 else
@@ -204,7 +207,7 @@ namespace LoadOnDemand
 
             var cache = cfg.AddNode("Cache");
 
-            foreach (var el in CachedDataPerKey)
+            foreach (var el in CachedDataPerResUrl)
             {
                 cache.AddNode(el.Value.ToConfigNode());
             }
@@ -254,8 +257,11 @@ namespace LoadOnDemand
                 foreach (ConfigNode node in cache.nodes)
                 {
                     var el = ImageConfigItem.FromConfigNode(node);
-                    Current.CachedDataPerKey[el.CacheKey] = el;
                     Current.CachedDataPerResUrl[el.FileUrl] = el;
+                    if (el.CacheKey != null)
+                    {
+                        Current.CachedDataPerKey[el.CacheKey] = el;
+                    }
                 }
             }
         }
@@ -266,12 +272,12 @@ namespace LoadOnDemand
         public bool UI_TryUseToolbarForDebugUI { get; private set; }
         public bool UI_DisplayDebugUI { get; private set; }
         public bool Debug_DontLoadEditorCatalogThumbnailParts { get; private set; }
-        public bool ThumbnailEnabled { get; private set; }
+        public bool ThumbnailEnabled { get; private set; } // implement this!
         public int ThumbnailWidth { get; private set; }
         public int ThumbnailHeight { get; private set; }
         public TextureFormat ThumbnailFormat { get; private set; }
 
-        public bool CompressTextures { get; private set; }
+        public bool CompressTextures { get; private set; } // implement this!
 
         public bool IsDirty { get; private set; }
 

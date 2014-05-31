@@ -121,10 +121,39 @@ namespace LodNative{
 		{
 			if (!gotCrash){
 				gotCrash = true;
-				auto err = dynamic_cast<Exception^>(e->ExceptionObject);
-				if (err != nullptr){
-					Logger::LogText("Unhandled exception!");
-					Logger::LogException(err);
+				try{
+					auto err = dynamic_cast<Exception^>(e->ExceptionObject);
+					if (err != nullptr){
+						Logger::LogText("Unhandled exception!");
+						Logger::LogException(err);
+						auto mem1 = GC::GetTotalMemory(false);
+						auto mem2 = GC::GetTotalMemory(true);
+						Logger::LogText("GC { 1: " + mem1 + ", 2: " + mem2 + " }");
+						auto p = System::Diagnostics::Process::GetCurrentProcess();
+						Logger::LogText("Process {" +
+							Environment::NewLine + "	Id: " + p->Id +
+							Environment::NewLine + "	MachineName: " + p->MachineName +
+							Environment::NewLine + "	MaxWorkingSet: " + p->MaxWorkingSet +
+							Environment::NewLine + "	MinWorkingSet: " + p->MinWorkingSet +
+							Environment::NewLine + "	NonpagedSystemMemorySize64: " + p->NonpagedSystemMemorySize64 +
+							Environment::NewLine + "	PagedMemorySize64: " + p->PagedMemorySize64 +
+							Environment::NewLine + "	PagedSystemMemorySize64: " + p->PagedSystemMemorySize64 +
+							Environment::NewLine + "	PeakPagedMemorySize64: " + p->PeakPagedMemorySize64 +
+							Environment::NewLine + "	PeakVirtualMemorySize64: " + p->PeakVirtualMemorySize64 +
+							Environment::NewLine + "	PeakWorkingSet64: " + p->PeakWorkingSet64 +
+							Environment::NewLine + "	PrivateMemorySize64: " + p->PrivateMemorySize64 +
+							Environment::NewLine + "	PrivilegedProcessorTime: " + p->PrivilegedProcessorTime +
+							Environment::NewLine + "	ProcessName: " + p->ProcessName +
+							Environment::NewLine + "	StartTime: " + p->StartTime +
+							Environment::NewLine + "	TotalProcessorTime: " + p->TotalProcessorTime +
+							Environment::NewLine + "	UserProcessorTime: " + p->UserProcessorTime +
+							Environment::NewLine + "	VirtualMemorySize64: " + p->VirtualMemorySize64 +
+							Environment::NewLine + "	WorkingSet64: " + p->WorkingSet64 +
+							//Environment::NewLine + ": " + p +
+							Environment::NewLine + "}");
+					}
+				}
+				finally{
 					SetCrash();
 				}
 			}

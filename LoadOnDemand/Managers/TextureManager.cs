@@ -473,16 +473,11 @@ namespace LoadOnDemand.Managers
                 return;
             }
 
-            /*
-             * URL splittten
-             * Dirs solange existent aus dingsda rausholen
-             * Sobald nicht mehr existent manuell weitersuchen
-             * Thats just great!
-             */
-            throw new NotImplementedException();
-
-            UrlDir.UrlFile file = null; // Todo: Resolve file...
-
+            UrlDir.UrlFile file = Stuff.ResolveTextureInfo(info); // Todo: Resolve file...
+            if (file == null)
+            {
+                throw new NotSupportedException("Could not find a source file for this texture. This kinda textures are not currently supported.");
+            }
             if (info.texture != null)
             {
                 UnityEngine.Resources.UnloadAsset(info.texture);

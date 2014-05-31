@@ -24,6 +24,21 @@ namespace LoadOnDemand
         {
             del = (TDelegate)(object)Marshal.GetDelegateForFunctionPointer(new IntPtr(ptr), typeof(TDelegate));
         }
+
+
+
+        public static UrlDir.UrlFile ResolveTextureInfo(GameDatabase.TextureInfo texInfo)
+        {
+            /*
+             * URL splittten
+             * Dirs solange existent aus dingsda rausholen
+             * Sobald nicht mehr existent manuell weitersuchen
+             * Thats just great!
+             */
+            throw new NotImplementedException();
+
+            throw new NotImplementedException();
+        }
     }
 
     public static class Extensions

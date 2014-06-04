@@ -30,7 +30,7 @@ namespace LoadOnDemand.Logic
     public class DevStuff : MonoBehaviour
     {
         int winId = UnityEngine.Random.Range(0, int.MaxValue);
-        static Rect pos = new Rect(100, 100, 100, 200);
+        static Rect pos = new Rect(100, 100, 100, 250);
         string ResourceText;
         public void OnGUI()
         {
@@ -78,7 +78,7 @@ namespace LoadOnDemand.Logic
             else if (Event.current.type == EventType.Repaint)
             {
                 pos.width = 100;
-                pos.height = 200;
+                pos.height = 250;
                 ResourceText = null;
             }
             if (ResourceText != null)
@@ -86,6 +86,7 @@ namespace LoadOnDemand.Logic
                 GUILayout.Label(ResourceText);
             }
             GUILayout.Label(Status);
+            GUILayout.Label("ScriptMem:" + Environment.NewLine + (GC.GetTotalMemory(false)/(double)(1024*1024)).ToString("0.00") + "mb");
             if (GUILayout.Button("GC"))
             {
                 System.GC.Collect(System.GC.MaxGeneration, GCCollectionMode.Forced);

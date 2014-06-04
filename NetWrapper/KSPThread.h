@@ -34,7 +34,6 @@ namespace LodNative{
 		static void Update(IDirect3DTexture9* devicePtrTexture){
 			IDirect3DDevice9* device;
 			devicePtrTexture->GetDevice(&device);
-			// Todo1: & Todo2: Limit time / gpu traffic / whatever ... see RequestedUpdate below for that...
 			auto devicePtr = IntPtr(device);
 			while (true){
 				Action<IntPtr>^ currentJob;

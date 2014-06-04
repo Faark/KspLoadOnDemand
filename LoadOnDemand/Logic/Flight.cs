@@ -40,6 +40,7 @@ namespace LoadOnDemand.Logic
                         {
                             if (!partRes.ContainsKey(part.partInfo))
                             {
+                                ("Flight is referencing part: " + part.partInfo.name).Log();
                                 partRes[part.partInfo] = Managers.PartManager.GetSafe(part.partInfo);
                             }
                             else
@@ -56,9 +57,10 @@ namespace LoadOnDemand.Logic
                 }
                 foreach (var vessel in vesselsToUnload)
                 {
-                    foreach (var parts in ReferencedVessels[vessel])
+                    foreach (var part in ReferencedVessels[vessel])
                     {
-                        parts.Value.Release();
+                        ("Flight is releasing part: " + part.Key.name).Log();
+                        part.Value.Release();
                     }
                     ReferencedVessels.Remove(vessel);
                 }
@@ -88,6 +90,7 @@ namespace LoadOnDemand.Logic
                 //"Dereferencing vessel".Log();
                 foreach (var part in parts)
                 {
+                    ("Flight[VDes] is releasing part: " + part.Key.name).Log();
                     part.Value.Release();
                 }
                 ReferencedVessels.Remove(vessel);
@@ -104,6 +107,7 @@ namespace LoadOnDemand.Logic
             {
                 foreach (var part in vessel.Value)
                 {
+                    ("Flight[End] is releasing part: " + part.Key.name).Log();
                     part.Value.Release();
                 }
             }

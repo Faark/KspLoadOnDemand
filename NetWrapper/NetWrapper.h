@@ -80,14 +80,14 @@ namespace LodNative{
 			if (thumbTexturePtr == NULL){
 				throw gcnew ArgumentException("Thumb texture ptr is null!");
 			}
-			return TextureManager::RegisterTexture(f, ck, (IDirect3DTexture9*)thumbTexturePtr, isNormalMap);
+			int r = TextureManager::RegisterTexture(f, ck, (IDirect3DTexture9*)thumbTexturePtr, isNormalMap);
+			Logger::LogTrace("Leave RegisterTexture: " +r);
+			return;
 		}
 		catch (Exception^err){
 			Logger::LogException(err);
+			Logger::LogTrace("Leave RegisterTexture (error)");
 			throw err;
-		}
-		finally{
-			Logger::LogTrace("Leave RegisterTexture");
 		}
 	}
 	extern "C" __declspec(dllexport) void NlodRequestTextureLoad(int nativeId){
@@ -108,14 +108,14 @@ namespace LodNative{
 		ManagedBridge::MayCrash();
 		try{
 			Logger::LogTrace(String::Format("Enter CancelTextureLoad({0})", nativeId));
-			return TextureManager::CancelTextureLoad(nativeId);
+			auto r =  TextureManager::CancelTextureLoad(nativeId);
+			Logger::LogTrace("Leave CancelTextureLoad: " + r);
+			return r;
 		}
 		catch (Exception^ err){
 			Logger::LogException(err);
+			Logger::LogTrace("Leave CancelTextureLoad (error)");
 			throw err;
-		}
-		finally{
-			Logger::LogTrace("Leave CancelTextureLoad");
 		}
 	}
 	extern "C" __declspec(dllexport) void NlodRequestTextureUnload(int nativeId){
@@ -136,14 +136,14 @@ namespace LodNative{
 		ManagedBridge::MayCrash();
 		try{
 			Logger::LogTrace("Enter RequestedUpdate");
-			return KSPThread::RequestedUpdate((IDirect3DTexture9*)deviceRefTexturePtr);
+			auto r = KSPThread::RequestedUpdate((IDirect3DTexture9*)deviceRefTexturePtr);
+			Logger::LogTrace("Leave RequestedUpdate: " + r);
+			return r;
 		}
 		catch (Exception^err){
 			Logger::LogException(err);
+			Logger::LogTrace("Leave RequestedUpdate (error)");
 			throw;
-		}
-		finally{
-			Logger::LogTrace("Leave RequestedUpdate");
 		}
 	}
 	extern "C" __declspec(dllexport) void NlodStartSignalMessages(){

@@ -79,7 +79,7 @@ namespace LoadOnDemand.Logic
                     }
                 };
                 long total_missed = 0;
-                foreach (var imgs in GameDatabase.Instance.root.AllFiles.Where(f => f.fileType == UrlDir.FileType.Texture))
+                /*foreach (var imgs in GameDatabase.Instance.root.AllFiles.Where(f => f.fileType == UrlDir.FileType.Texture))
                 {
                     try
                     {
@@ -89,6 +89,16 @@ namespace LoadOnDemand.Logic
                         total_missed += bytes;
                     }
                     catch (Exception) { }
+                }*/
+                foreach (var ti in GameDatabase.Instance.databaseTexture)
+                {
+                    if (!Managers.TextureManager.IsManaged(ti))
+                    {
+                        var tex = ti.texture;
+                        var bytes = bpp(tex.width * tex.height, tex.format);
+                        ("MISSED TEXTURE: " + ti.name + " (" + tex.width + "x" + tex.height + "@" + tex.format.ToString() + "=> " + toSizeString(bytes) + ")").Log();
+                        total_missed += bytes;
+                    }
                 }
                 ("TOTAL SIZE OF MISSED TEXTURES: " + toSizeString((int)total_missed)).Log();
 

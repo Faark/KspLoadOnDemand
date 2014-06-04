@@ -219,7 +219,6 @@ namespace LoadOnDemand
         }
         static void OnThumbnailLoaded_Callback(int textureId)
         {
-            // Todo4: Do we want to consume this event?
             Logic.WorkQueue.AddJob(() =>
             {
                 OnThumbnailLoaded.TryCall(textureId);

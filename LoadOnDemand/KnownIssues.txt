@@ -1,7 +1,82 @@
-﻿
-// http://forum.kerbalspaceprogram.com/threads/73236-WIP-Loading-textures-only-as-required?p=1143406&viewfull=1#post1143406
-// http://forum.kerbalspaceprogram.com/threads/73236-WIP-Loading-textures-only-as-required?p=1126134&viewfull=1#post1126134 
-// transparency issue + blacklisting!
+﻿Todo list for Load On Demand. Starting with important improvements and open issues:
+
+- Offer a complete API for other mods.
+-- Mostly completed (External.cs is interface within this mod, Foreign\LoadOnDemandWrapper.cs will be included in other projects)
+-- The still open problem is that mods might order LOD to take control of textures at anytime. Those textures might not or already be loaded (especially with ATM).
+   We need a good way to support all cases (maybe except textures without a source file, for now. But the api should probably be transparent in that regard)
+
+- DXT compression
+-- DXT in memory compression could heavily reduce the amount of memory required for loaded high res textures
+-- Compressing images can take some time, especially with higher quality. That should probably be done once on startup (see TextureInitialization) and just loaded & copied at runtime
+-- There are a bunch of compression libs like libsquish or crunch. Choose and integrate a good one. Worst case would be to abuse Unity...
+
+- custom texture sizes/configs. If DXT doesn't save enough we could reduce texture quality of loaded textures even further.
+-- We would have to forward configs from mono to net4 :(
+
+- On my install, LOD doesn't properly load high res textures for ALCOR POD: http://forum.kerbalspaceprogram.com/threads/54925-WIP-ALCOR-Advanced-Landing-Capsule-for-Orbital-Rendezvous-by-ASET-%28UPD-19-04-2014%29
+-- With LOD: http://imgur.com/pPIVefx Without LOD: http://imgur.com/CZlaQ0W
+-- => Identify and fix the cause
+
+- Try to reproduce other transparency or blacklisting issues that were reported:
+-- http://forum.kerbalspaceprogram.com/threads/73236-WIP-Loading-textures-only-as-required?p=1143406&viewfull=1#post1143406
+-- http://forum.kerbalspaceprogram.com/threads/73236-WIP-Loading-textures-only-as-required?p=1126134&viewfull=1#post1126134 
+-- Remark: I couldn't with v3 and those reports where with v2
+
+- we could try to use some texture infos on thumb creation (e.g. from cfg), to e.g. not create alpha channels if not necessary. Currently we use cfg.w*cfg.h@rgba32 for everything. But handling misses might be trick / not worth the effort.
+
+- Fixing disk IO thread's priority. But perferably in a way that doesn't mess around with everything else
+-- The current disk io thread has a lower priority then KSP game thread, thus "lower". This might make him suspend while other heavy disk io is in progress, even unrelated to KSP
+-- E.g. I had a network file copy running and lod didn't load any textures for about 20 min, what ofc suxxs...
+
+- Config.Enabled = false; in case of error is nice, but doens't actually shut down LOD until the next sceene is loaded...
+-- Maybe some kind of MonoBehavior base class for Logic modules that takes care of this?
+
+
+
+
+
+
+
+
+
+
+Low priority issues and improvements that are probably hard to fix/implement and thus might not be worth the effort:
+
+- Transparency issues on thumbnails textures.
+-- While resizing we currently loose pixel color for fully transparent pixels. Some textures have alpha channel set even though those pixel colors are drawn, so that broke a lot of textures
+-- Thus currently all alpha channels (for non-normals?) are cleared before resizing, what ofc is a problem for parts that actually use transparancy.
+-- We resize alpha channel and color channels seperately. Would probalby increase memory usage, compressing time, etc
+-- We might could set pixels to "barely transparent" and undo that after resizing?
+
+- Do we want to handle flags or props with lod? Their textures usually seem very small, so that might not be worth the effort for now
+
+- Reduce LODs [performance] impact on the game. DiskIO and backgroundworkers should be fine now (though profile that!), but we still throttle GPU traffic or somehow else reduce net4 time for mono threads?
+
+- Currently, all textures are in DX's managed pool. This is nice, since they survive most device resets. But default pool would probably make them not consume RAM but only device memory
+-- We would probably have to handle device resets manually. Therefor we would have to make net4 runtime a real plugin, the current probably cant do that
+--- Unity Plugin links: http://docs.unity3d.com/Documentation/Manual/Plugins.html http://docs.unity3d.com/Documentation/Manual/NativePluginInterface.html http://docs.unity3d.com/Documentation/ScriptReference/GL.IssuePluginEvent.html
+
+- Part textures are currently identified by a. its directoy they are in and b. part configs (those can change them)
+-- It might be better to actually use the textures used by the model, but doing this before the texture is loaded seems "complicated"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Older stuff that might still be open, but wasn't checked for some time and is probably more of a personal note:
+
+
+
 
 
 // working set? but likely only for processes, thus useless to me. Also AddMemoryPressure, but thats already in testing... http://stackoverflow.com/questions/2860917/how-do-i-get-net-to-garbage-collect-aggressively
@@ -12,56 +87,30 @@
 
 // Unity command line arguments: https://docs.unity3d.com/Documentation/Manual/CommandLineArguments.html
 
-
-// Unity Plugins: http://docs.unity3d.com/Documentation/Manual/Plugins.html http://docs.unity3d.com/Documentation/Manual/NativePluginInterface.html http://docs.unity3d.com/Documentation/ScriptReference/GL.IssuePluginEvent.html
-
 // System.Drawing on Unity: http://answers.unity3d.com/questions/53170/using-drawing-package-like-systemdrawing.html http://answers.unity3d.com/questions/428295/could-not-load-file-or-assembly-systemdrawing.html
-
-- texture meta info for texture creations... atm we predict defaults
-- compression
-- use actual model resources instead of "all file in directory"
-
-
-Blocking: Find coding standard!
-Todo: Freeze on KSP shutdown. It seems to be related to be related with reverse-pInvoke. Not doing anything in Net4.ManagedBridge helps, not doing anything on the other side keeps the same issue. Those calls come from net4-threads... or GC?
-Todo: DXT, resizing and stuff like that (especially DXT should be easy, since we can cache them on disk. Generate either via unity or sth like squidlib)
 
 Issues in the KSP runtime part of this mod:
 
 Todo1: Editor's currently tracked parts are left panel, picked item and build rocket. Everything detatched but not picked is currently missed.
 Todo2: Don't loop though all parts ever frame... this shouldn't be neccessary.
-Todo3: Leaving the Editor and GCing doesn't free all parts for unknown reason. Investigate! (should be EditorPages related)
-Todo4: No UI as of yet... some reasons are: Display format & conversion errors, show long-running background work (preperation, e.g.) or texture stats
-Todo5: Startup currently loads the other library. Should be moved to NativeBridge's constructor but also use dynamic delegates we can bind by methodPtr, to support non-LoadLibrary in the future (perf should be about equal)
 Todo6: Make sure no Interop between KSP & Net4 is leaking!
 Todo7: NetWrapper currently only supports DirectX 9.0c... OpenGL, DX10, etc?
 Todo8: Do we need a string callback for net4->Ksp? Its currently unused...
 Todo9: File date of the unpacked net4 dll doesn't change as expected.. sometimes even after full recompile its still sth from earlier. Investigate.
 Todo10: Iterate and clean up "Startup"...
 Todo11: GetNativeTexturePtr seems to be rather expensive... try to make TextureManager use it less frequent.
-Todo12: TextureManagement. Currently every thumb is created as same X*Y*ARGB and HighRes are loaded as saved. Texture-Specific threatment would be nice, though difficult since only Net4 handels the actual file
-Todo13: Create a Copy&Paste code that interfaces with this project, so other mods can ref textures as they like.
 Todo14: A small optimization to TextureManager's exposed methods
-Todo15: Resource management was meant to blend into KSP perfectly by freeing up textures on GC. Well, that doesn't seem to work due to threading issues. We better re-think memory management
-Todo18: Load events for Resources? Though that might fck up automatic GC fallbacks...?!
-Todo19: The cache directory might end up with lods of dead files. Find a way to clean up...
+Todo15: Resource management was meant to blend into KSP perfectly by freeing up textures on GC. Well, that doesn't seem to work well due to threading issues. We better re-think memory management
+Todo18: Load events for Resources? Though that might fck up automatic GC fallbacks...?! (at least if we aren't ultra careful)
+Todo19: The cache directory might end up with lots of dead files. Find a way to clean up... (same for cfg files, btw! but tricky since mods might add stuff later?)
 Todo20: Fix Logger.Log(Exception)
-Todo21: Evil edge-case on duplicate file name + different extension. Cant currently handle it...
+Todo21: Evil edge-case on duplicate file name + different extension. Cant currently handle it... (update1: Its at least fixed for some stuff. Cfgs nodes now have extensions)
 Todo22: Had some parts on the panel in Editor not loaded... it was grey. (Was it managed anyway?)
 Todo23: TLS-Large flat foot container ingame doesn't properly replace the texture. LOD does. Investigate, since we are at least out of sync.
 Todo24: LOD doesn't like changing texture resolution ingame to half/quater/eights...
-Todo: Config.Enabled = false; is nice, but doens't actually shut down LOD until the next sceene is loaded....
 
 Issues in the net4 part of this mod:
 
-Todo1: Analye in general, especially what causes bad frame rates. DiskIO? BG-Work? Unthrottelt GPU copy?
-Todo2: We might rly want some kind of throttle on the KSP thread and for GPU copy...
 Todo3: Currently, textures are loaded and unloaded as requested from ksp-rt. It might be stupid, though... some kinda caching would be nice.
 Todo7: Improve Logger
 Todo25: Check whether DxResource->PreLoad has any positive / not negative effect
-
-Todo: A windows file copy can keep the disk busy. Its higher thread prio makes lod sleep while it is copying... solvable without modifying other thread prios?
-
-- ModuleManager is probably applyed after LOD! It might have repaced models or textures!
-
-- Flags / Props? Doesn'T seem to much memory

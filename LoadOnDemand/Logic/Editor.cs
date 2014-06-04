@@ -40,11 +40,13 @@ namespace LoadOnDemand.Logic
                 {
                     if (!unusedParts.Remove(part))
                     {
+                        ("EditorUsedParts is referencing part: " + part.name).Log();
                         referencedResources[part] = Managers.PartManager.GetSafe(part, false);
                     }
                 }
                 foreach (var part in unusedParts)
                 {
+                    ("EditorUsedParts is releasing part: " + part.name).Log();
                     referencedResources[part].Release();
                     referencedResources.Remove(part);
                 }
@@ -61,16 +63,13 @@ namespace LoadOnDemand.Logic
         {
             foreach (var el in referencedResources)
             {
+                ("EditorUsedParts[End] is releasing part: " + el.Key.name).Log();
                 el.Value.Release();
             }
             referencedResources = null;
         }
     }
 
-    /// <summary>
-    /// Todo3: Last page refs aren't GC'ed at all... find out why and fix it!
-    /// Got it: EditorPartList.Instance.GreyoutFilters might not be recycled, thus still referencing this. But thats actually tricky, since i fck up good cleanup... fixed. todo: Test it!
-    /// </summary>
     [KSPAddon(KSPAddon.Startup.EditorAny, false)]
     class EditorPages : MonoBehaviour
     {
@@ -109,13 +108,14 @@ namespace LoadOnDemand.Logic
             {
                 if (!unusedParts.Remove(part))
                 {
-                    ("EditorPages: Accuqiring " + part.name).Log();
+                    ("EditorPages is referencing part: " + part.name).Log();
                     referencedResources[part] = Managers.PartManager.GetSafe(part, false);
                 }
             }
             foreach (var part in unusedParts)
             {
-                ("EditorPages: Dropping " + part.name).Log();
+
+                ("EditorPages is releasing part: " + part.name).Log();
                 referencedResources[part].Release();
                 referencedResources.Remove(part);
             }
@@ -152,6 +152,7 @@ namespace LoadOnDemand.Logic
 
             foreach (var el in referencedResources)
             {
+                ("EditorPages is releasing part: " + el.Key.name).Log();
                 el.Value.Release();
             }
             referencedResources = null;

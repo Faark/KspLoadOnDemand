@@ -54,21 +54,23 @@ namespace LoadOnDemand.Managers
             }
             public TextureData Data { get; private set; }
             public int RefCount;
-#if DEBUG
+#if true
             public List<WeakReference> ReferencedBy = new List<WeakReference>();
 #endif
             public void Ref(TextureReference r)
             {
                 RefCount++;
-#if DEBUG
+#if true
                 ReferencedBy.Add(new WeakReference(r));
+                ("Referenced " + Data.Info.name + ", new cnt is " + RefCount).Log();
 #endif
             }
             public void Dec(TextureReference r)
             {
                 RefCount--;
-#if DEBUG
+#if true
                 ReferencedBy.RemoveAll(el => !el.IsAlive || (el.Target == r));
+                ("Dropped reference to " + Data.Info.name + ", new cnt is " + RefCount).Log();
 #endif
                 if (RefCount == 0)
                 {
@@ -80,7 +82,7 @@ namespace LoadOnDemand.Managers
             }
             public override string ToString()
             {
-#if DEBUG
+#if true
                 var sb = new StringBuilder(Data.Info.name);
                 sb.Append(", Active references: ").Append(RefCount);
                 sb.AppendLine(", Lifetime references:");
@@ -148,7 +150,7 @@ namespace LoadOnDemand.Managers
                     return Resource.Loaded;
                 }
             }
-#if DEBUG
+#if true
             public string CreationLog;
 #endif
 
@@ -185,7 +187,7 @@ namespace LoadOnDemand.Managers
                 var res = Resource = fromResource;
                 if (res != null)
                 {
-#if DEBUG
+#if true
                     CreationLog = String.Join(Environment.NewLine + "  ", Environment.StackTrace.Split(new[] { Environment.NewLine }, StringSplitOptions.None));
 #endif
                     Resource.Ref(this);

@@ -25,7 +25,7 @@ void TextureInitialization::TryVerifyThumb_OnLoaded(BufferMemory::ISegment^ load
 	Logger::LogText("TexInit" + textureId + ": TryVerifyThumb_OnLoaded");
 	ThumbnailTexture^ thumb;
 	try{
-		thumb = gcnew ThumbnailTexture(loaded_data, isNormal, gcnew TextureDebugInfo(thumbFile));
+		thumb = gcnew ThumbnailTexture(loaded_data, isNormal, gcnew TextureDebugInfo(thumbFile, textureId));
 		loaded_data = nullptr;
 		if (thumb->Width != thumbWidth || thumb->Height != thumbHeight || thumb->Format != thumbFormat){
 			throw gcnew FormatException("Loaded format (" + thumb->Width + "x" + thumb->Height + ", " + DirectXStuff::StringFromD3DFormat(thumb->Format) + ") does not match expected format (" + thumbWidth + "x" + thumbHeight + ", " + DirectXStuff::StringFromD3DFormat(thumbFormat) + ")");
@@ -87,7 +87,7 @@ void TextureInitialization::Generate_OnLoaded(BufferMemory::ISegment^ loaded_dat
 	Logger::LogText("TexInit" + textureId + ": Generate_OnLoaded");
 	ITextureBase^ source_texture = nullptr;
 	try{
-		source_texture = FormatDatabase::Recognize(sourceFile, loaded_data);
+		source_texture = FormatDatabase::Recognize(sourceFile, loaded_data, textureId);
 	}
 	catch (Exception^){
 		loaded_data->Free();

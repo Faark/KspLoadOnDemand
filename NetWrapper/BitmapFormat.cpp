@@ -164,13 +164,13 @@ BitmapFormat^ BitmapFormat::SetAlpha(Byte new_alpha){
 	return this;
 }
 
-BitmapFormat^ BitmapFormat::LoadUnknownFile(FileInfo^ file, BufferMemory::ISegment^ data)
+BitmapFormat^ BitmapFormat::LoadUnknownFile(FileInfo^ file, BufferMemory::ISegment^ data, int textureId)
 {
 	MemoryStream^ ms;
 	try
 	{
 		ms = data->CreateStream();
-		BitmapFormat^ bmp = gcnew BitmapFormat(gcnew Drawing::Bitmap(Image::FromStream(ms)), false, gcnew TextureDebugInfo(file->FullName));
+		BitmapFormat^ bmp = gcnew BitmapFormat(gcnew Drawing::Bitmap(Image::FromStream(ms)), false, gcnew TextureDebugInfo(file->FullName, textureId));
 		if (FileNameIndicatesTextureShouldBeNormal(file))
 			return bmp->ToNormal();
 		return bmp;

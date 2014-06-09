@@ -85,6 +85,7 @@
     <EmbeddedResource Include="EmbededResources\NetWrapper.dll" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="EmbededResources\NetWrapper64.dll" />
     <Content Include="KnownIssues.txt" />
   </ItemGroup>
   <ItemGroup />

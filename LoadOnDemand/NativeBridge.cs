@@ -85,8 +85,9 @@ namespace LoadOnDemand
 
         static string CopyEmbededNativeDllAndGetPath()
         {
+            var is64 = IntPtr.Size == 8;
 
-            var path = System.IO.Path.Combine(Config.Current.GetCacheDirectory(), "NetWrapper.native");
+            var path = System.IO.Path.Combine(Config.Current.GetCacheDirectory(), is64 ? "NetWrapper64.native": "NetWrapper.native");
             /*
              * Todo9: Date of the created file seems wrong (hasn't changed for more than 1h, even after i deleted the file it was re-created with the wrong date)... Investiage?!
              * 
@@ -97,7 +98,7 @@ namespace LoadOnDemand
             path.Log();
              * 
              */
-            var data = System.Reflection.Assembly.GetExecutingAssembly().GetManifestResourceStream("LoadOnDemand.EmbededResources.NetWrapper.dll");
+            var data = System.Reflection.Assembly.GetExecutingAssembly().GetManifestResourceStream(is64 ? "LoadOnDemand.EmbededResources.NetWrapper64.dll" : "LoadOnDemand.EmbededResources.NetWrapper.dll");
             System.IO.File.WriteAllBytes(path, new System.IO.BinaryReader(data).ReadBytes((int)data.Length));
             return path;
             /*

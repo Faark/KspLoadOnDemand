@@ -147,7 +147,7 @@ namespace LodNative{
 			DirectXStuff::Texture_LockRectOrThrow(texture, 0, &lockedRect, NULL, 0);
 			try{
 				assignableData->AssignTo(gcnew AssignableTarget(format, &lockedRect, true /*Unity textures seem to be upside down...*/));
-				Logger::LogText("Assigned texture " + assignableData->Debug->File + assignableData->Debug->Modifiers);
+				Logger::LogText("Assigned texture " + assignableData->Debug->ToString());
 			}
 			finally{
 				DirectXStuff::Texture_UnlockRectOrThrow(texture, 0);

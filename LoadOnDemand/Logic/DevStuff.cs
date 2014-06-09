@@ -77,9 +77,9 @@ namespace LoadOnDemand.Logic
             }
             else if (Event.current.type == EventType.Repaint)
             {
+                ResourceText = null;
                 pos.width = 100;
                 pos.height = 250;
-                ResourceText = null;
             }
             if (ResourceText != null)
             {

@@ -259,7 +259,7 @@ namespace Paloma
 		/// GetBits looks at the following bits in the byte -> 00{1101}00
 		/// Returns 1101 as an int (13)
 		/// </remarks>
-		static int GetBits(byte b, int offset, int count)
+		static int GetBits(Byte b, int offset, int count)
 		{
 			return (b >> offset) & ((1 << count) - 1);
 		}
@@ -275,7 +275,7 @@ namespace Paloma
 		/// |   BYTE 1   |  BYTE 2   |
 		/// | A RRRRR GG | GGG BBBBB |
 		/// </remarks>
-		static Color GetColorFrom2Bytes(byte one, byte two)
+		static Color GetColorFrom2Bytes(Byte one, Byte two)
 		{
 			// get the 5 bits used for the RED value from the first byte
 			int r1 = Utilities::GetBits(one, 2, 5);
@@ -374,21 +374,21 @@ namespace Paloma
 	public ref class TargaHeader
 	{
 	private:
-		byte bImageIDLength = 0;
+		Byte bImageIDLength = 0;
 		ColorMapType eColorMapType = ColorMapType::NO_COLOR_MAP;
 		ImageType eImageType = ImageType::NO_IMAGE_DATA;
 		short sColorMapFirstEntryIndex = 0;
 		short sColorMapLength = 0;
-		byte bColorMapEntrySize = 0;
+		Byte bColorMapEntrySize = 0;
 		short sXOrigin = 0;
 		short sYOrigin = 0;
 		short sWidth = 0;
 		short sHeight = 0;
-		byte bPixelDepth = 0;
-		byte bImageDescriptor = 0;
+		Byte bPixelDepth = 0;
+		Byte bImageDescriptor = 0;
 		VerticalTransferOrder eVerticalTransferOrder = VerticalTransferOrder::UNKNOWN;
 		HorizontalTransferOrder eHorizontalTransferOrder = HorizontalTransferOrder::UNKNOWN;
-		byte bAttributeBits = 0;
+		Byte bAttributeBits = 0;
 		String^ strImageIDValue = String::Empty;
 		List<System::Drawing::Color>^ cColorMap = gcnew List<System::Drawing::Color>();
 
@@ -398,9 +398,9 @@ namespace Paloma
 		/// number of characters is 255. A value of zero indicates that no ImageIDValue is included with the
 		/// image.
 		/// </summary>
-		property byte ImageIDLength
+		property Byte ImageIDLength
 		{
-			byte get(){ return bImageIDLength; }
+			Byte get(){ return bImageIDLength; }
 		}
 
 	internal:
@@ -408,7 +408,7 @@ namespace Paloma
 		/// Sets the ImageIDLength property, available only to objects in the same assembly as TargaHeader.
 		/// </summary>
 		/// <param name="bImageIDLength">The Image ID Length value read from the file.</param>
-		void SetImageIDLength(byte bImageIDLength)
+		void SetImageIDLength(Byte bImageIDLength)
 		{
 			this->bImageIDLength = bImageIDLength;
 		}
@@ -494,9 +494,9 @@ namespace Paloma
 			  /// Gets the number of bits per entry in the Color Map. Typically 15, 16, 24 or 32-bit values are used.
 			  /// </summary>
 	public:
-		property byte ColorMapEntrySize
+		property Byte ColorMapEntrySize
 		{
-			byte get(){ return this->bColorMapEntrySize; }
+			Byte get(){ return this->bColorMapEntrySize; }
 		}
 
 		/// <summary>
@@ -504,7 +504,7 @@ namespace Paloma
 		/// </summary>
 		/// <param name="bColorMapEntrySize">The Color Map Entry Size value read from the file.</param>
 	internal:
-		void SetColorMapEntrySize(byte bColorMapEntrySize)
+		void SetColorMapEntrySize(Byte bColorMapEntrySize)
 		{
 			this->bColorMapEntrySize = bColorMapEntrySize;
 		}
@@ -593,9 +593,9 @@ namespace Paloma
 		/// the Attribute or Alpha channel bits. Common values are 8, 16, 24 and 32.
 		/// </summary>
 	public:
-		property byte PixelDepth
+		property Byte PixelDepth
 		{
-			byte get(){ return this->bPixelDepth; }
+			Byte get(){ return this->bPixelDepth; }
 		}
 
 		/// <summary>
@@ -603,7 +603,7 @@ namespace Paloma
 		/// </summary>
 		/// <param name="bPixelDepth">The Pixel Depth value read from the file.</param>
 	internal:
-		void SetPixelDepth(byte bPixelDepth)
+		void SetPixelDepth(Byte bPixelDepth)
 		{
 			this->bPixelDepth = bPixelDepth;
 		}
@@ -614,10 +614,10 @@ namespace Paloma
 		/// Available only to objects in the same assembly as TargaHeader.
 		/// </summary>
 	internal:
-		property byte ImageDescriptor
+		property Byte ImageDescriptor
 		{
-			byte get(){ return this->bImageDescriptor; }
-			void set(byte value){ this->bImageDescriptor = value; }
+			Byte get(){ return this->bImageDescriptor; }
+			void set(Byte value){ this->bImageDescriptor = value; }
 		}
 
 		/// <summary>
@@ -686,9 +686,9 @@ namespace Paloma
 		/// Gets the number of attribute bits per pixel.
 		/// </summary>
 	public:
-		property byte AttributeBits
+		property Byte AttributeBits
 		{
-			byte get(){ return this->bAttributeBits; }
+			Byte get(){ return this->bAttributeBits; }
 		}
 
 		/// <summary>
@@ -696,7 +696,7 @@ namespace Paloma
 		/// </summary>
 		/// <param name="bAttributeBits">The Attribute Bits value read from the file.</param>
 	internal:
-		void SetAttributeBits(byte bAttributeBits)
+		void SetAttributeBits(Byte bAttributeBits)
 		{
 			this->bAttributeBits = bAttributeBits;
 		}
@@ -1316,8 +1316,8 @@ namespace Paloma
 		int intPadding = 0;
 		GCHandle ImageByteHandle;
 		GCHandle ThumbnailByteHandle;
-		List<List<byte>^>^ rows = gcnew List<List<byte>^>();
-		List<byte>^ row = gcnew List<byte>();
+		List<List<Byte>^>^ rows = gcnew List<List<Byte>^>();
+		List<Byte>^ row = gcnew List<Byte>();
 
 
 
@@ -1392,7 +1392,7 @@ namespace Paloma
 		/// </summary>
 		property String^ FileName
 		{
-			String^				get(){ return this->strFileName; }
+			String^	get(){ return this->strFileName; }
 		}
 
 
@@ -1443,7 +1443,7 @@ namespace Paloma
 
 
 		/// <summary>
-		/// Creates a gcnew instance of the TargaImage object with strFileName as the image loaded->
+		/// Creates a gcnew instance of the TargaImage object with strFileName as the image loaded.
 		/// </summary>
 		TargaImage(String^ strFileName) : TargaImage()
 		{
@@ -1469,9 +1469,9 @@ namespace Paloma
 				}
 			}
 			else
-				throw gcnew Exception("Error loading file, could not read file from disk->");
+				throw gcnew Exception("Error loading file, could not read file from disk.");
 		}
-		void LoadTGAFromMemory(array<byte>^ filebytes){
+		void LoadTGAFromMemory(array<Byte>^ filebytes){
 			// todo: cleanup on reuse?
 
 
@@ -1487,17 +1487,17 @@ namespace Paloma
 					delete filestream;
 			}
 		}
-		void LoadTGAFromFile(String^ file){
+		void LoadTGAFromFile(String^ strFileName){
 			// todo: cleanup on reuse?
 
-			// make sure we have a ->tga file
-			if (Path::GetExtension(strFileName)->ToLower() == "->tga")
+			// make sure we have a .tga file
+			if (Path::GetExtension(strFileName)->ToLower() == ".tga")
 			{
 				// make sure the file exists
 				if (File::Exists(strFileName) == true)
 				{
 					this->strFileName = strFileName;
-					array<byte>^ filebytes = nullptr;
+					array<Byte>^ filebytes = nullptr;
 
 					// load the file as an array of bytes
 					filebytes = File::ReadAllBytes(this->strFileName);
@@ -1506,23 +1506,23 @@ namespace Paloma
 						LoadTGAFromMemory(filebytes);
 					}
 					else
-						throw gcnew Exception("Error loading file, could not read file from disk->");
+						throw gcnew Exception("Error loading file, could not read file from disk.");
 
 				}
 				else
-					throw gcnew Exception("Error loading file, could not find file '" + strFileName + "' on disk->");
+					throw gcnew Exception("Error loading file, could not find file '" + strFileName + "' on disk.");
 
 			}
 			else
-				throw gcnew Exception("Error loading file, file '" + strFileName + "' must have an extension of '->tga'->");
+				throw gcnew Exception("Error loading file, file '" + strFileName + "' must have an extension of '.tga'.");
 
 		}
 
 	private:
 		/// <summary>
-		/// Loads the Targa Footer information from the file->
+		/// Loads the Targa Footer information from the file.
 		/// </summary>
-		/// <param name="binReader">A BinaryReader that points the loaded file byte stream-></param>
+		/// <param name="binReader">A BinaryReader that points the loaded file byte stream.</param>
 		void LoadTGAFooterInfo(BinaryReader^ binReader)
 		{
 
@@ -1531,7 +1531,7 @@ namespace Paloma
 
 				try
 				{
-					// set the cursor at the beginning of the signature string->
+					// set the cursor at the beginning of the signature string.
 					binReader->BaseStream->Seek((TargaConstants::FooterSignatureOffsetFromEnd * -1), SeekOrigin::End);
 
 					// read the signature bytes and convert to ascii string
@@ -1540,7 +1540,7 @@ namespace Paloma
 					// do we have a proper signature
 					if (String::Compare(Signature, TargaConstants::TargaFooterASCIISignature) == 0)
 					{
-						// this is a gcnew targa file->
+						// this is a gcnew targa file.
 						// create the footer
 						this->eTGAFormat = TGAFormat::NEW_TGA;
 
@@ -1553,7 +1553,7 @@ namespace Paloma
 						// read the Developer Directory Offset value
 						int DevDirOff = binReader->ReadInt32();
 
-						// skip the signature we have already read it->
+						// skip the signature we have already read it.
 						binReader->ReadBytes(TargaConstants::FooterSignatureByteLength);
 
 						// read the reserved character
@@ -1567,7 +1567,7 @@ namespace Paloma
 					}
 					else
 					{
-						// this is not an ORIGINAL targa file->
+						// this is not an ORIGINAL targa file.
 						this->eTGAFormat = TGAFormat::ORIGINAL_TGA;
 					}
 				}
@@ -1581,7 +1581,7 @@ namespace Paloma
 			else
 			{
 				this->ClearAll();
-				throw gcnew Exception("Error loading file, could not read file from disk->");
+				throw gcnew Exception("Error loading file, could not read file from disk.");
 			}
 
 
@@ -1589,9 +1589,9 @@ namespace Paloma
 
 
 		/// <summary>
-		/// Loads the Targa Header information from the file->
+		/// Loads the Targa Header information from the file.
 		/// </summary>
-		/// <param name="binReader">A BinaryReader that points the loaded file byte stream-></param>
+		/// <param name="binReader">A BinaryReader that points the loaded file byte stream.</param>
 		void LoadTGAHeaderInfo(BinaryReader^ binReader)
 		{
 
@@ -1599,7 +1599,7 @@ namespace Paloma
 			{
 				try
 				{
-					// set the cursor at the beginning of the file->
+					// set the cursor at the beginning of the file.
 					binReader->BaseStream->Seek(0, SeekOrigin::Begin);
 
 					// read the header properties from the file
@@ -1616,7 +1616,7 @@ namespace Paloma
 					this->objTargaHeader->SetWidth(binReader->ReadInt16());
 					this->objTargaHeader->SetHeight(binReader->ReadInt16());
 
-					byte pixeldepth = binReader->ReadByte();
+					Byte pixeldepth = binReader->ReadByte();
 					switch (pixeldepth)
 					{
 					case 8:
@@ -1628,12 +1628,12 @@ namespace Paloma
 
 					default:
 						this->ClearAll();
-						throw gcnew Exception("Targa Image only supports 8, 16, 24, or 32 bit pixel depths->");
+						throw gcnew Exception("Targa Image only supports 8, 16, 24, or 32 bit pixel depths.");
 					}
 
 
-					byte ImageDescriptor = binReader->ReadByte();
-					this->objTargaHeader->SetAttributeBits((byte)Utilities::GetBits(ImageDescriptor, 0, 4));
+					Byte ImageDescriptor = binReader->ReadByte();
+					this->objTargaHeader->SetAttributeBits((Byte)Utilities::GetBits(ImageDescriptor, 0, 4));
 
 					this->objTargaHeader->SetVerticalTransferOrder((VerticalTransferOrder)Utilities::GetBits(ImageDescriptor, 5, 1));
 					this->objTargaHeader->SetHorizontalTransferOrder((HorizontalTransferOrder)Utilities::GetBits(ImageDescriptor, 4, 1));
@@ -1641,7 +1641,7 @@ namespace Paloma
 					// load ImageID value if any
 					if (this->objTargaHeader->ImageIDLength > 0)
 					{
-						array<byte>^ ImageIDValueBytes = binReader->ReadBytes(this->objTargaHeader->ImageIDLength);
+						array<Byte>^ ImageIDValueBytes = binReader->ReadBytes(this->objTargaHeader->ImageIDLength);
 						this->objTargaHeader->SetImageIDValue(System::Text::Encoding::ASCII->GetString(ImageIDValueBytes)->TrimEnd('\0'));
 					}
 				}
@@ -1654,7 +1654,7 @@ namespace Paloma
 
 				// load color map if it's included and/or needed
 				// Only needed for UNCOMPRESSED_COLOR_MAPPED and RUN_LENGTH_ENCODED_COLOR_MAPPED
-				// image types-> If color map is included for other file types we can ignore it->
+				// image types-> If color map is included for other file types we can ignore it.
 				if (this->objTargaHeader->ColorMapTypeProperty == ColorMapType::COLOR_MAP_INCLUDED)
 				{
 					if (this->objTargaHeader->ImageTypeProperty == ImageType::UNCOMPRESSED_COLOR_MAPPED ||
@@ -1675,14 +1675,14 @@ namespace Paloma
 									switch (this->objTargaHeader->ColorMapEntrySize)
 									{
 									case 15:{
-										array<byte>^ color15 = binReader->ReadBytes(2);
+										array<Byte>^ color15 = binReader->ReadBytes(2);
 										// remember that the bytes are stored in reverse oreder
 										this->objTargaHeader->ColorMap->Add(Utilities::GetColorFrom2Bytes(color15[1], color15[0]));
 										break;
 									}
 									case 16:
 									{
-										array<byte>^ color16 = binReader->ReadBytes(2);
+										array<Byte>^ color16 = binReader->ReadBytes(2);
 										// remember that the bytes are stored in reverse oreder
 										this->objTargaHeader->ColorMap->Add(Utilities::GetColorFrom2Bytes(color16[1], color16[0]));
 										break;
@@ -1702,7 +1702,7 @@ namespace Paloma
 										break;
 									default:
 										this->ClearAll();
-										throw gcnew Exception("TargaImage only supports ColorMap Entry Sizes of 15, 16, 24 or 32 bits->");
+										throw gcnew Exception("TargaImage only supports ColorMap Entry Sizes of 15, 16, 24 or 32 bits.");
 
 									}
 
@@ -1721,7 +1721,7 @@ namespace Paloma
 						else
 						{
 							this->ClearAll();
-							throw gcnew Exception("Image Type requires a Color Map and Color Map Length is zero->");
+							throw gcnew Exception("Image Type requires a Color Map and Color Map Length is zero.");
 						}
 					}
 
@@ -1733,7 +1733,7 @@ namespace Paloma
 						this->objTargaHeader->ImageTypeProperty == ImageType::RUN_LENGTH_ENCODED_COLOR_MAPPED)
 					{
 						this->ClearAll();
-						throw gcnew Exception("Image Type requires a Color Map and there was not a Color Map included in the file->");
+						throw gcnew Exception("Image Type requires a Color Map and there was not a Color Map included in the file.");
 					}
 				}
 
@@ -1742,15 +1742,15 @@ namespace Paloma
 			else
 			{
 				this->ClearAll();
-				throw gcnew Exception("Error loading file, could not read file from disk->");
+				throw gcnew Exception("Error loading file, could not read file from disk.");
 			}
 		}
 
 
 		/// <summary>
-		/// Loads the Targa Extension Area from the file, if it exists->
+		/// Loads the Targa Extension Area from the file, if it exists.
 		/// </summary>
-		/// <param name="binReader">A BinaryReader that points the loaded file byte stream-></param>
+		/// <param name="binReader">A BinaryReader that points the loaded file byte stream.</param>
 		void LoadTGAExtensionArea(BinaryReader^ binReader)
 		{
 
@@ -1761,7 +1761,7 @@ namespace Paloma
 				{
 					try
 					{
-						// set the cursor at the beginning of the Extension Area using ExtensionAreaOffset->
+						// set the cursor at the beginning of the Extension Area using ExtensionAreaOffset.
 						binReader->BaseStream->Seek(this->objTargaFooter->ExtensionAreaOffset, SeekOrigin::Begin);
 
 						// load the extension area fields from the file
@@ -1860,30 +1860,30 @@ namespace Paloma
 			else
 			{
 				this->ClearAll();
-				throw gcnew Exception("Error loading file, could not read file from disk->");
+				throw gcnew Exception("Error loading file, could not read file from disk.");
 			}
 		}
 
 		/// <summary>
-		/// Reads the image data bytes from the file-> Handles Uncompressed and RLE Compressed image data-> 
-		/// Uses FirstPixelDestination to properly align the image->
+		/// Reads the image data bytes from the file. Handles Uncompressed and RLE Compressed image data.
+		/// Uses FirstPixelDestination to properly align the image.
 		/// </summary>
-		/// <param name="binReader">A BinaryReader that points the loaded file byte stream-></param>
-		/// <returns>An array of bytes representing the image data in the proper alignment-></returns>
-		array<byte>^ LoadImageBytes(BinaryReader^ binReader)
+		/// <param name="binReader">A BinaryReader that points the loaded file byte stream.</param>
+		/// <returns>An array of bytes representing the image data in the proper alignment.</returns>
+		array<Byte>^ LoadImageBytes(BinaryReader^ binReader)
 		{
 
 			// read the image data into a byte array
 			// take into account stride has to be a multiple of 4
 			// use padding to make sure multiple of 4    
 
-			array<byte>^ data = nullptr;
+			array<Byte>^ data = nullptr;
 			if (binReader != nullptr && binReader->BaseStream != nullptr && binReader->BaseStream->Length > 0 && binReader->BaseStream->CanSeek == true)
 			{
 				if (this->objTargaHeader->ImageDataOffset > 0)
 				{
 					// padding bytes
-					array<byte>^ padding = gcnew array<byte>(this->intPadding);
+					array<Byte>^ padding = gcnew array<Byte>(this->intPadding);
 					MemoryStream^ msData = nullptr;
 
 					// seek to the beginning of the image data using the ImageDataOffset value
@@ -1905,10 +1905,10 @@ namespace Paloma
 						//#region COMPRESSED
 
 						// RLE Packet info
-						byte bRLEPacket = 0;
+						Byte bRLEPacket = 0;
 						int intRLEPacketType = -1;
 						int intRLEPixelCount = 0;
-						array<byte>^ bRunLengthPixel = nullptr;
+						array<Byte>^ bRunLengthPixel = nullptr;
 
 						// used to keep track of bytes read
 						int intImageBytesRead = 0;
@@ -1931,7 +1931,7 @@ namespace Paloma
 								// add the number of pixels specified using the read pixel color
 								for (int i = 0; i < intRLEPixelCount; i++)
 								{
-									for each(byte b in bRunLengthPixel)
+									for each(Byte b in bRunLengthPixel)
 										row->Add(b);
 
 									// increment the byte counts
@@ -1944,7 +1944,7 @@ namespace Paloma
 									if (intImageRowBytesRead == intImageRowByteSize)
 									{
 										rows->Add(row);
-										row = gcnew List<byte>();
+										row = gcnew List<Byte>();
 										intImageRowBytesRead = 0;
 
 									}
@@ -1972,7 +1972,7 @@ namespace Paloma
 									if (intImageRowBytesRead == intImageRowByteSize)
 									{
 										rows->Add(row);
-										row = gcnew List<byte>();
+										row = gcnew List<Byte>();
 										intImageRowBytesRead = 0;
 									}
 
@@ -2003,17 +2003,17 @@ namespace Paloma
 							rows->Add(row);
 
 							// create a gcnew row
-							row = gcnew List<byte>();
+							row = gcnew List<Byte>();
 						}
 
 
 						//#endregion
 					}
 
-					// flag that states whether or not to reverse the location of all rows->
+					// flag that states whether or not to reverse the location of all rows.
 					bool blnRowsReverse = false;
 
-					// flag that states whether or not to reverse the bytes in each row->
+					// flag that states whether or not to reverse the bytes in each row.
 					bool blnEachRowReverse = false;
 
 					// use FirstPixelDestination to determine the alignment of the 
@@ -2048,7 +2048,7 @@ namespace Paloma
 					try{
 						msData = gcnew MemoryStream();
 
-						// do we reverse the rows in the row list->
+						// do we reverse the rows in the row list.
 						if (blnRowsReverse == true)
 							rows->Reverse();
 
@@ -2060,7 +2060,7 @@ namespace Paloma
 								rows[i]->Reverse();
 
 							// get the byte array for the row
-							array<byte>^ brow = rows[i]->ToArray();
+							array<Byte>^ brow = rows[i]->ToArray();
 
 							// write the row bytes and padding bytes to the memory streem
 							msData->Write(brow, 0, brow->Length);
@@ -2081,13 +2081,13 @@ namespace Paloma
 				else
 				{
 					this->ClearAll();
-					throw gcnew Exception("Error loading file, No image data in file->");
+					throw gcnew Exception("Error loading file, No image data in file.");
 				}
 			}
 			else
 			{
 				this->ClearAll();
-				throw gcnew Exception("Error loading file, could not read file from disk->");
+				throw gcnew Exception("Error loading file, could not read file from disk.");
 			}
 
 			// return the image byte array
@@ -2096,17 +2096,17 @@ namespace Paloma
 		}
 
 		/// <summary>
-		/// Reads the image data bytes from the file and loads them into the Image Bitmap object->
-		/// Also loads the color map, if any, into the Image Bitmap->
+		/// Reads the image data bytes from the file and loads them into the Image Bitmap object.
+		/// Also loads the color map, if any, into the Image Bitmap.
 		/// </summary>
-		/// <param name="binReader">A BinaryReader that points the loaded file byte stream-></param>
+		/// <param name="binReader">A BinaryReader that points the loaded file byte stream.</param>
 		void LoadTGAImage(BinaryReader^ binReader)
 		{
 			//**************  NOTE  *******************
-			// The memory allocated for Microsoft Bitmaps must be aligned on a 32bit boundary->
-			// The stride refers to the number of bytes allocated for one scanline of the bitmap->
+			// The memory allocated for Microsoft Bitmaps must be aligned on a 32bit boundary.
+			// The stride refers to the number of bytes allocated for one scanline of the bitmap.
 			// In your loop, you copy the pixels one scanline at a time and take into
-			// consideration the amount of padding that occurs due to memory alignment->
+			// consideration the amount of padding that occurs due to memory alignment.
 			// calculate the stride, in bytes, of the image (32bit aligned width of each image row)
 			this->intStride = (((int)this->objTargaHeader->Width * (int)this->objTargaHeader->PixelDepth + 31) & ~31) >> 3; // width in bytes
 
@@ -2116,12 +2116,12 @@ namespace Paloma
 			this->intPadding = this->intStride - ((((int)this->objTargaHeader->Width * (int)this->objTargaHeader->PixelDepth) + 7) / 8);
 
 			// get the image data bytes
-			array<byte>^ bimagedata = this->LoadImageBytes(binReader);
+			array<Byte>^ bimagedata = this->LoadImageBytes(binReader);
 
 			// since the Bitmap constructor requires a poiter to an array of image bytes
 			// we have to pin down the memory used by the byte array and use the pointer 
-			// of this pinned memory to create the Bitmap->
-			// This tells the Garbage Collector to leave the memory alone and DO NOT touch it->
+			// of this pinned memory to create the Bitmap.
+			// This tells the Garbage Collector to leave the memory alone and DO NOT touch it.
 			this->ImageByteHandle = GCHandle::Alloc(bimagedata, GCHandleType::Pinned);
 
 			// make sure we don't have a phantom Bitmap
@@ -2144,7 +2144,7 @@ namespace Paloma
 			LodNative::Logger::LogText("TGA LOADER: creating texture with " + pf.ToString());
 
 			// create a Bitmap object using the image Width, Height,
-			// Stride, PixelFormat and the pointer to the pinned byte array->
+			// Stride, PixelFormat and the pointer to the pinned byte array.
 			this->bmpTargaImage = gcnew Bitmap((int)this->objTargaHeader->Width,
 				(int)this->objTargaHeader->Height,
 				this->intStride,
@@ -2290,7 +2290,7 @@ namespace Paloma
 				}
 				else
 				{
-					pfTargaPixelFormat = PixelFormat::Format32bppRgb;
+					pfTargaPixelFormat = PixelFormat::Format32bppArgb;
 					break;
 				}
 
@@ -2306,10 +2306,10 @@ namespace Paloma
 
 
 		/// <summary>
-		/// Loads the thumbnail of the loaded image file, if any->
+		/// Loads the thumbnail of the loaded image file, if any.
 		/// </summary>
-		/// <param name="binReader">A BinaryReader that points the loaded file byte stream-></param>
-		/// <param name="pfPixelFormat">A PixelFormat value indicating what pixel format to use when loading the thumbnail-></param>
+		/// <param name="binReader">A BinaryReader that points the loaded file byte stream.</param>
+		/// <param name="pfPixelFormat">A PixelFormat value indicating what pixel format to use when loading the thumbnail.</param>
 		void LoadThumbnail(BinaryReader^ binReader, PixelFormat pfPixelFormat)
 		{
 
@@ -2317,7 +2317,7 @@ namespace Paloma
 			// take into account stride has to be a multiple of 4
 			// use padding to make sure multiple of 4    
 
-			array<byte>^ data = nullptr;
+			array<Byte>^ data = nullptr;
 			if (binReader != nullptr && binReader->BaseStream != nullptr && binReader->BaseStream->Length > 0 && binReader->BaseStream->CanSeek == true)
 			{
 				if (this->ExtensionArea->PostageStampOffset > 0)
@@ -2332,13 +2332,13 @@ namespace Paloma
 					int iStride = ((iWidth * (int)this->objTargaHeader->PixelDepth + 31) & ~31) >> 3; // width in bytes
 					int iPadding = iStride - (((iWidth * (int)this->objTargaHeader->PixelDepth) + 7) / 8);
 
-					List<List<byte>^>^ objRows = gcnew List<List<byte>^>();
-					List<byte>^ objRow = gcnew List<byte>();
+					List<List<Byte>^>^ objRows = gcnew List<List<Byte>^>();
+					List<Byte>^ objRow = gcnew List<Byte>();
 
 
 
 
-					array<byte>^ padding = gcnew array<byte>(iPadding);
+					array<Byte>^ padding = gcnew array<Byte>(iPadding);
 					MemoryStream^ msData = nullptr;
 					bool blnEachRowReverse = false;
 					bool blnRowsReverse = false;
@@ -2359,7 +2359,7 @@ namespace Paloma
 								objRow->Add(binReader->ReadByte());
 							}
 							objRows->Add(objRow);
-							objRow = gcnew List<byte>();
+							objRow = gcnew List<Byte>();
 						}
 
 						switch (this->objTargaHeader->FirstPixelDestinationProperty)
@@ -2391,7 +2391,7 @@ namespace Paloma
 							if (blnEachRowReverse == true)
 								objRows[i]->Reverse();
 
-							array<byte>^ brow = objRows[i]->ToArray();
+							array<Byte>^ brow = objRows[i]->ToArray();
 							msData->Write(brow, 0, brow->Length);
 							msData->Write(padding, 0, padding->Length);
 						}
@@ -2433,7 +2433,7 @@ namespace Paloma
 		}
 
 		/// <summary>
-		/// Clears out all objects and resources->
+		/// Clears out all objects and resources.
 		/// </summary>
 		void ClearAll()
 		{
@@ -2460,12 +2460,12 @@ namespace Paloma
 
 		}
 
+	public:
 		/// <summary>
-		/// Loads a Targa image file into a Bitmap object->
+		/// Loads a Targa image file into a Bitmap object.
 		/// </summary>
 		/// <param name="sFileName">The Targa image filename</param>
-		/// <returns>A Bitmap object with the Targa image loaded into it-></returns>
-	public:
+		/// <returns>A Bitmap object with the Targa image loaded into it.</returns>
 		static Bitmap^ LoadTargaImage(String^ sFileName)
 		{
 			TargaImage^ ti = nullptr;
@@ -2473,17 +2473,17 @@ namespace Paloma
 				ti = gcnew TargaImage(sFileName);
 
 				return gcnew Bitmap(ti->Image);
-				
-				
+
+
 				/* Keep format? Use this instead:
 				auto b = gcnew Drawing::Bitmap(ti->Image->Width, ti->Image->Height, ti->Image->PixelFormat);
 				auto g = Graphics::FromImage(b);
 				try{
-					g->DrawImage(ti->Image, 0, 0, Drawing::Rectangle(0, 0, b->Width, b->Height), GraphicsUnit::Pixel);
-					return b;
+				g->DrawImage(ti->Image, 0, 0, Drawing::Rectangle(0, 0, b->Width, b->Height), GraphicsUnit::Pixel);
+				return b;
 				}
 				finally{
-					delete g;
+				delete g;
 				}*/
 			}
 			finally{
@@ -2497,20 +2497,20 @@ namespace Paloma
 
 
 		/// <summary>
-		/// Dispose(bool disposing) executes in two distinct scenarios->
+		/// Dispose(bool disposing) executes in two distinct scenarios.
 		/// If disposing equals true, the method has been called directly
-		/// or indirectly by a user's code-> Managed and unmanaged resources
-		/// can be disposed->
+		/// or indirectly by a user's code. Managed and unmanaged resources
+		/// can be disposed.
 		/// If disposing equals false, the method has been called by the 
 		/// runtime from inside the finalizer and you should not reference 
-		/// other objects-> Only unmanaged resources can be disposed->
+		/// other objects. Only unmanaged resources can be disposed.
 		/// </summary>
-		/// <param name="disposing">If true dispose all resources, else dispose only release unmanaged resources-></param>
+		/// <param name="disposing">If true dispose all resources, else dispose only release unmanaged resources.</param>
 		!TargaImage()
 		{
 			// If disposing equals true, dispose all managed 
-			// and unmanaged resources->
-			// Dispose managed resources->
+			// and unmanaged resources.
+			// Dispose managed resources.
 			if (this->bmpTargaImage != nullptr)
 			{
 				delete this->bmpTargaImage;
@@ -2530,16 +2530,16 @@ namespace Paloma
 			{
 				this->ThumbnailByteHandle.Free();
 			}
-			// Release unmanaged resources-> If disposing is false, 
-			// only the following code is executed->
+			// Release unmanaged resources. If disposing is false, 
+			// only the following code is executed.
 			// ** release unmanged resources here **
 
-			// Note that this is not thread safe->
+			// Note that this is not thread safe.
 			// Another thread could start disposing the object
 			// after the managed resources are disposed,
-			// but before the disposed flag is set to true->
+			// but before the disposed flag is set to true.
 			// If thread safety is necessary, it must be
-			// implemented by the client->
+			// implemented by the client.
 
 		}
 

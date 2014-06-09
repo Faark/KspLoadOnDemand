@@ -261,9 +261,14 @@ namespace LoadOnDemand.Managers
                 {
                     if (NativeBridge.CancelTextureLoad(data.NativeId))
                     {
+                        ("Texture reference " + data.NativeId + " dropped! (not loaded anyway & load canceled)").Log();
                         Logic.ActivityGUI.HighResCanceled();
+                        data.Requested = false;
                     }
-                    ("Texture reference " + data.NativeId + " dropped! (not loaded anyway, doing nothing)").Log();
+                    else
+                    {
+                        ("Texture reference " + data.NativeId + " dropped! (not loaded anyway, doing nothing)").Log();
+                    }
                 }
                 else
                 {
@@ -335,6 +340,7 @@ namespace LoadOnDemand.Managers
             textureData.Requested = false;
             if ((textureData.LoadedTextureResource != null) && textureData.LoadedTextureResource.IsAlive && (((TextureResource)textureData.LoadedTextureResource.Target).RefCount > 0))
             {
+                ("Texture " + nativeId + " loaded, assigning.").Log();
                 //NativeBridge.DumpTextureNative(textureData.Info.texture, "TexEx_" + DateTime.Now.Ticks + "_" + nativeId + "_ORIGINAL.png");
                 //textureData.Info.texture.UpdateExternalTexture(textureData.Info.texture.GetNativeTexturePtr());
                 textureData.Info.texture.UpdateExternalTexture(loadedTexturePtr);
@@ -342,6 +348,7 @@ namespace LoadOnDemand.Managers
             }
             else
             {
+                ("Texture " + nativeId + " loaded but not of use anymore, unloading.").Log();
                 NativeBridge.RequestTextureUnload(nativeId);
             }
         }
@@ -447,6 +454,9 @@ namespace LoadOnDemand.Managers
             var h = Config.Current.ThumbnailHeight;
             var tex = new Texture2D(w, h, TextureFormat.RGBA32, false);
             var startsBlack = true;
+            var b = Color.black;
+            var m = Color.magenta;
+            b.a = m.a = 0.5f;
             for (var x = 0; x < w; x++)
             {
                 var isBlack = (startsBlack = !startsBlack);

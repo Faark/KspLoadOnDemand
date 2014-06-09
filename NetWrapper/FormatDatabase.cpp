@@ -8,7 +8,7 @@
 
 using namespace LodNative;
 
-BitmapFormat^ FormatDatabase::RecognizeTGA(FileInfo^ file, BufferMemory::ISegment^ data){
+BitmapFormat^ FormatDatabase::RecognizeTGA(FileInfo^ file, BufferMemory::ISegment^ data, int textureId){
 	if (file->Extension->ToUpper() == ".TGA"){
 		Paloma::TargaImage^ img = nullptr;
 		System::IO::MemoryStream^ ms = nullptr;
@@ -17,7 +17,7 @@ BitmapFormat^ FormatDatabase::RecognizeTGA(FileInfo^ file, BufferMemory::ISegmen
 			ms = data->CreateStream();
 			auto img = gcnew Paloma::TargaImage();
 			img->LoadTGAFromMemory(ms);
-			auto bmp = (gcnew BitmapFormat(gcnew Bitmap(img->Image), false, gcnew TextureDebugInfo(file->FullName)))->MayToNormal(BitmapFormat::FileNameIndicatesTextureShouldBeNormal(file));
+			auto bmp = (gcnew BitmapFormat(gcnew Bitmap(img->Image), false, gcnew TextureDebugInfo(file->FullName, textureId)))->MayToNormal(BitmapFormat::FileNameIndicatesTextureShouldBeNormal(file));
 			delete img;
 			delete ms;
 			data->Free();
@@ -40,8 +40,8 @@ BitmapFormat^ FormatDatabase::RecognizeTGA(FileInfo^ file, BufferMemory::ISegmen
 	return nullptr;
 }
 static FormatDatabase::FormatDatabase(){
-	AddRecognition(gcnew Func<FileInfo^, BufferMemory::ISegment^, MBMTexture^>(&MBMTexture::Recignizer));
-	AddRecognition(gcnew Func<FileInfo^, BufferMemory::ISegment^, BitmapFormat^>(&FormatDatabase::RecognizeTGA));
+	AddRecognition(gcnew Func<FileInfo^, BufferMemory::ISegment^, int, MBMTexture^>(&MBMTexture::Recignizer));
+	AddRecognition(gcnew Func<FileInfo^, BufferMemory::ISegment^, int, BitmapFormat^>(&FormatDatabase::RecognizeTGA));
 	AddConversion(gcnew Func<ThumbnailTexture^, BitmapFormat^>(&ThumbnailTexture::ConvertToBitmap));
 	AddConversion(gcnew Func<MBMTexture^, BitmapFormat^>(&MBMTexture::ConvertToBitmap));
 

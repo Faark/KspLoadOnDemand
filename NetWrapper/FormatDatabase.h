@@ -13,21 +13,21 @@ using namespace System::Collections::Generic;
 namespace LodNative{
 	ref class FormatDatabase{
 	public:
-		static List<Func<FileInfo^, BufferMemory::ISegment^, ITextureBase^>^>^ FormatDetectors = gcnew List<Func<FileInfo^, BufferMemory::ISegment^, ITextureBase^>^>();
+		static List<Func<FileInfo^, BufferMemory::ISegment^, int, ITextureBase^>^>^ FormatDetectors = gcnew List<Func<FileInfo^, BufferMemory::ISegment^, int, ITextureBase^>^>();
 		static Dictionary<Type^, Dictionary<Type^, Func<ITextureBase^, ITextureBase^>^>^>^ FromToConverters = gcnew Dictionary<Type^, Dictionary<Type^, Func<ITextureBase^, ITextureBase^>^>^>();
 
 
 		// buffer segment will be consumed, unless there is an exception!
-		static ITextureBase^ Recognize(String^ file, BufferMemory::ISegment^ data){
+		static ITextureBase^ Recognize(String^ file, BufferMemory::ISegment^ data, int textureId){
 			try{
 				FileInfo^ fi = gcnew FileInfo(file);
-				for each(Func<FileInfo^, BufferMemory::ISegment^, ITextureBase^>^ func in FormatDetectors){
-					ITextureBase^ texture = func(fi, data);
+				for each(Func<FileInfo^, BufferMemory::ISegment^, int, ITextureBase^>^ func in FormatDetectors){
+					ITextureBase^ texture = func(fi, data, textureId);
 					if (texture != nullptr){
 						return texture;
 					}
 				}
-				return BitmapFormat::LoadUnknownFile(fi, data);
+				return BitmapFormat::LoadUnknownFile(fi, data, textureId);
 			}
 			catch (Exception^ err){
 				throw gcnew Exception("Failed to Recognize Texture [" + file + "]", err);
@@ -121,29 +121,29 @@ namespace LodNative{
 	private:
 		generic<class TTexture> where TTexture : ITextureBase
 		ref class AddRecognitionScope{
-			Func<System::IO::FileInfo^, BufferMemory::ISegment^, TTexture>^ Recognizer;
+			Func<System::IO::FileInfo^, BufferMemory::ISegment^, int, TTexture>^ Recognizer;
 		public:
-			AddRecognitionScope(Func<System::IO::FileInfo^, BufferMemory::ISegment^, TTexture>^ recognizer){
+			AddRecognitionScope(Func<System::IO::FileInfo^, BufferMemory::ISegment^, int, TTexture>^ recognizer){
 				Recognizer = recognizer;
 			}
-			ITextureBase^ Recognize(System::IO::FileInfo^ file, BufferMemory::ISegment^ bytes){
-				return Recognizer(file, bytes);
+			ITextureBase^ Recognize(System::IO::FileInfo^ file, BufferMemory::ISegment^ bytes, int textureId){
+				return Recognizer(file, bytes, textureId);
 			}
 		};
 
 	public:
 		generic<class TTexture> where TTexture : ITextureBase
-			static void AddRecognition(Func<FileInfo^, BufferMemory::ISegment^, TTexture>^ recognizer)
+			static void AddRecognition(Func<FileInfo^, BufferMemory::ISegment^, int, TTexture>^ recognizer)
 		{
 				if ((TTexture::typeid)->IsAbstract || (TTexture::typeid)->IsInterface)
 				{
 					throw gcnew ArgumentException("Type has to be the actually used class. Nothing abstract or even interfaces!");
 				}
-				FormatDetectors->Add(gcnew Func<System::IO::FileInfo^, BufferMemory::ISegment^, ITextureBase^>(gcnew AddRecognitionScope<TTexture>(recognizer), &AddRecognitionScope<TTexture>::Recognize));
+				FormatDetectors->Add(gcnew Func<System::IO::FileInfo^, BufferMemory::ISegment^, int, ITextureBase^>(gcnew AddRecognitionScope<TTexture>(recognizer), &AddRecognitionScope<TTexture>::Recognize));
 		}
 
 	private:
-		static BitmapFormat^ RecognizeTGA(FileInfo^ file, BufferMemory::ISegment^ data);
+		static BitmapFormat^ RecognizeTGA(FileInfo^ file, BufferMemory::ISegment^ data, int textureId);
 		static FormatDatabase();
 	};
 }

@@ -35,3 +35,9 @@ LoadOnDemand/EmbededResources/NetWrapper.pdb
 LoadOnDemand/EmbededResources/NetWrapper.exp
 LoadOnDemand/EmbededResources/NetWrapper.dll.metagen
 LoadOnDemand/EmbededResources/NetWrapper.dll.metagen
+NetWrapper/x64/Release/NetWrapper.pch
+NetWrapper/x64/Release/NetWrapper64.pch
+x64/Release/NetWrapper64.lib
+x64/Release/NetWrapper64.dll.metagen
+x64/Release/NetWrapper.dll
+NetWrapper/x64/Release/app.res

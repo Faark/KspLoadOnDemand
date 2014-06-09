@@ -1,0 +1,145 @@
+ImageRuntimeVersion: v4.0.30319
+Assembly NetWrapper64, Version=1.0.*, Culture=Invariant Language (Invariant Country): 
+	hash=SHA1, flags=PublicKey
+Assembly mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089: 
+	hash=None, flags=None
+Assembly System.Core, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089: 
+	hash=None, flags=None
+Assembly System.Data, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089: 
+	hash=None, flags=None
+Assembly System, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089: 
+	hash=None, flags=None
+Assembly System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a: 
+	hash=None, flags=None
+Assembly System.Xml, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089: 
+	hash=None, flags=None
+Class Paloma.TargaHeader: AutoLayout, AnsiClass, Class, Public, BeforeFieldInit
+    Void .ctor(): PrivateScope, Public, HideBySig, SpecialName, RTSpecialName
+  Properties:
+    Int32 BytesPerPixel 'get ' : 
+    Int32 ImageDataOffset 'get ' : 
+    System.Collections.Generic.List`1[System.Drawing.Color] ColorMap 'get ' : 
+    System.String ImageIDValue 'get ' : 
+    Byte AttributeBits 'get ' : 
+    Paloma.HorizontalTransferOrder HorizontalTransferOrderProperty 'get ' : 
+    Paloma.VerticalTransferOrder VerticalTransferOrderProperty 'get ' : 
+    Paloma.FirstPixelDestination FirstPixelDestinationProperty 'get ' : 
+    Byte PixelDepth 'get ' : 
+    Int16 Height 'get ' : 
+    Int16 Width 'get ' : 
+    Int16 YOrigin 'get ' : 
+    Int16 XOrigin 'get ' : 
+    Byte ColorMapEntrySize 'get ' : 
+    Int16 ColorMapLength 'get ' : 
+    Int16 ColorMapFirstEntryIndex 'get ' : 
+    Paloma.ImageType ImageTypeProperty 'get ' : 
+    Paloma.ColorMapType ColorMapTypeProperty 'get ' : 
+    Byte ImageIDLength 'get ' : 
+  Methods:
+    get_ImageIDLength(): PrivateScope, Public, HideBySig, SpecialName
+    get_ColorMapTypeProperty(): PrivateScope, Public, HideBySig, SpecialName
+    get_ImageTypeProperty(): PrivateScope, Public, HideBySig, SpecialName
+    get_ColorMapFirstEntryIndex(): PrivateScope, Public, HideBySig, SpecialName
+    get_ColorMapLength(): PrivateScope, Public, HideBySig, SpecialName
+    get_ColorMapEntrySize(): PrivateScope, Public, HideBySig, SpecialName
+    get_XOrigin(): PrivateScope, Public, HideBySig, SpecialName
+    get_YOrigin(): PrivateScope, Public, HideBySig, SpecialName
+    get_Width(): PrivateScope, Public, HideBySig, SpecialName
+    get_Height(): PrivateScope, Public, HideBySig, SpecialName
+    get_PixelDepth(): PrivateScope, Public, HideBySig, SpecialName
+    get_FirstPixelDestinationProperty(): PrivateScope, Public, HideBySig, SpecialName
+    get_VerticalTransferOrderProperty(): PrivateScope, Public, HideBySig, SpecialName
+    get_HorizontalTransferOrderProperty(): PrivateScope, Public, HideBySig, SpecialName
+    get_AttributeBits(): PrivateScope, Public, HideBySig, SpecialName
+    get_ImageIDValue(): PrivateScope, Public, HideBySig, SpecialName
+    get_ColorMap(): PrivateScope, Public, HideBySig, SpecialName
+    get_ImageDataOffset(): PrivateScope, Public, HideBySig, SpecialName
+    get_BytesPerPixel(): PrivateScope, Public, HideBySig, SpecialName
+Class Paloma.TargaExtensionArea: AutoLayout, AnsiClass, Class, Public, BeforeFieldInit
+    Void .ctor(): PrivateScope, Public, HideBySig, SpecialName, RTSpecialName
+  Properties:
+    System.Collections.Generic.List`1[System.Drawing.Color] ColorCorrectionTable 'get ' : 
+    System.Collections.Generic.List`1[System.Int32] ScanLineTable 'get ' : 
+    Int32 AttributesType 'get ' : 
+    Int32 ScanLineOffset 'get ' : 
+    Int32 PostageStampOffset 'get ' : 
+    Int32 ColorCorrectionOffset 'get ' : 
+    Single GammaRatio 'get ' : 
+    Int32 GammaDenominator 'get ' : 
+    Int32 GammaNumerator 'get ' : 
+    Single PixelAspectRatio 'get ' : 
+    Int32 PixelAspectRatioDenominator 'get ' : 
+    Int32 PixelAspectRatioNumerator 'get ' : 
+    System.Drawing.Color KeyColor 'get ' : 
+    System.String SoftwareVersion 'get ' : 
+    System.String SoftwareID 'get ' : 
+    System.TimeSpan JobTime 'get ' : 
+    System.String JobName 'get ' : 
+    System.DateTime DateTimeStamp 'get ' : 
+    System.String AuthorComments 'get ' : 
+    System.String AuthorName 'get ' : 
+    Int32 ExtensionSize 'get ' : 
+  Methods:
+    get_ExtensionSize(): PrivateScope, Public, HideBySig, SpecialName
+    get_AuthorName(): PrivateScope, Public, HideBySig, SpecialName
+    get_AuthorComments(): PrivateScope, Public, HideBySig, SpecialName
+    get_DateTimeStamp(): PrivateScope, Public, HideBySig, SpecialName
+    get_JobName(): PrivateScope, Public, HideBySig, SpecialName
+    get_JobTime(): PrivateScope, Public, HideBySig, SpecialName
+    get_SoftwareID(): PrivateScope, Public, HideBySig, SpecialName
+    get_SoftwareVersion(): PrivateScope, Public, HideBySig, SpecialName
+    get_KeyColor(): PrivateScope, Public, HideBySig, SpecialName
+    get_PixelAspectRatioNumerator(): PrivateScope, Public, HideBySig, SpecialName
+    get_PixelAspectRatioDenominator(): PrivateScope, Public, HideBySig, SpecialName
+    get_PixelAspectRatio(): PrivateScope, Public, HideBySig, SpecialName
+    get_GammaNumerator(): PrivateScope, Public, HideBySig, SpecialName
+    get_GammaDenominator(): PrivateScope, Public, HideBySig, SpecialName
+    get_GammaRatio(): PrivateScope, Public, HideBySig, SpecialName
+    get_ColorCorrectionOffset(): PrivateScope, Public, HideBySig, SpecialName
+    get_PostageStampOffset(): PrivateScope, Public, HideBySig, SpecialName
+    get_ScanLineOffset(): PrivateScope, Public, HideBySig, SpecialName
+    get_AttributesType(): PrivateScope, Public, HideBySig, SpecialName
+    get_ScanLineTable(): PrivateScope, Public, HideBySig, SpecialName
+    get_ColorCorrectionTable(): PrivateScope, Public, HideBySig, SpecialName
+Class Paloma.TargaFooter: AutoLayout, AnsiClass, Class, Public, BeforeFieldInit
+    Void .ctor(): PrivateScope, Public, HideBySig, SpecialName, RTSpecialName
+  Properties:
+    System.String ReservedCharacter 'get ' : 
+    System.String Signature 'get ' : 
+    Int32 DeveloperDirectoryOffset 'get ' : 
+    Int32 ExtensionAreaOffset 'get ' : 
+  Methods:
+    get_ExtensionAreaOffset(): PrivateScope, Public, HideBySig, SpecialName
+    get_DeveloperDirectoryOffset(): PrivateScope, Public, HideBySig, SpecialName
+    get_Signature(): PrivateScope, Public, HideBySig, SpecialName
+    get_ReservedCharacter(): PrivateScope, Public, HideBySig, SpecialName
+Class Paloma.TargaImage: AutoLayout, AnsiClass, Class, Public, BeforeFieldInit
+    Void .ctor(System.String): PrivateScope, Public, HideBySig, SpecialName, RTSpecialName
+    Void .ctor(): PrivateScope, Public, HideBySig, SpecialName, RTSpecialName
+  Interfaces:
+    System.IDisposable
+  Properties:
+    Int32 Padding 'get ' : 
+    Int32 Stride 'get ' : 
+    System.String FileName 'get ' : 
+    System.Drawing.Bitmap Thumbnail 'get ' : 
+    System.Drawing.Bitmap Image 'get ' : 
+    Paloma.TGAFormat Format 'get ' : 
+    Paloma.TargaFooter Footer 'get ' : 
+    Paloma.TargaExtensionArea ExtensionArea 'get ' : 
+    Paloma.TargaHeader Header 'get ' : 
+  Methods:
+    get_Header(): PrivateScope, Public, HideBySig, SpecialName
+    get_ExtensionArea(): PrivateScope, Public, HideBySig, SpecialName
+    get_Footer(): PrivateScope, Public, HideBySig, SpecialName
+    get_Format(): PrivateScope, Public, HideBySig, SpecialName
+    get_Image(): PrivateScope, Public, HideBySig, SpecialName
+    get_Thumbnail(): PrivateScope, Public, HideBySig, SpecialName
+    get_FileName(): PrivateScope, Public, HideBySig, SpecialName
+    get_Stride(): PrivateScope, Public, HideBySig, SpecialName
+    get_Padding(): PrivateScope, Public, HideBySig, SpecialName
+    LoadTGAFromMemory(Byte[]): PrivateScope, Public, HideBySig
+    LoadTGAFromMemory(MemoryStream): PrivateScope, Public, HideBySig
+    LoadTGAFromFile(String): PrivateScope, Public, HideBySig
+    LoadTargaImage(String): PrivateScope, Public, Static, HideBySig
+    Dispose(): PrivateScope, Public, Final, Virtual, HideBySig

@@ -31,7 +31,7 @@ namespace LodNative{
 		BitmapFormat^ ConvertTo(D3DFORMAT format);
 		BitmapFormat^ SetAlpha(Byte new_alpha);
 
-		static BitmapFormat^ LoadUnknownFile(FileInfo^ file, BufferMemory::ISegment^ data);
+		static BitmapFormat^ LoadUnknownFile(FileInfo^ file, BufferMemory::ISegment^ data, int textureId);
 		static bool FileNameIndicatesTextureShouldBeNormal(FileInfo^ file){
 			return Path::GetFileNameWithoutExtension(file->FullName)->ToUpper()->EndsWith("NRM");
 		}

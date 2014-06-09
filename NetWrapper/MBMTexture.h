@@ -133,11 +133,11 @@ namespace LodNative{
 		static BitmapFormat^ ConvertToBitmap(MBMTexture^ from){
 			return from->ToBitmap();
 		}
-		static MBMTexture^ Recignizer(System::IO::FileInfo^ file, BufferMemory::ISegment^ data)
+		static MBMTexture^ Recignizer(System::IO::FileInfo^ file, BufferMemory::ISegment^ data, int textureId)
 		{
 			if (file->Extension->ToUpper() == ".MBM")
 			{
-				return gcnew MBMTexture(data, gcnew TextureDebugInfo(file->FullName));
+				return gcnew MBMTexture(data, gcnew TextureDebugInfo(file->FullName, textureId));
 			}
 			return nullptr;
 		}

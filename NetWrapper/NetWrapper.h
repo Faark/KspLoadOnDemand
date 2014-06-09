@@ -82,7 +82,7 @@ namespace LodNative{
 			}
 			int r = TextureManager::RegisterTexture(f, ck, (IDirect3DTexture9*)thumbTexturePtr, isNormalMap);
 			Logger::LogTrace("Leave RegisterTexture: " +r);
-			return;
+			return r;
 		}
 		catch (Exception^err){
 			Logger::LogException(err);

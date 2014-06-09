@@ -70,7 +70,7 @@ namespace LodNative{
 				if (ms != nullptr)
 					delete ms;
 			}
-			Logger::LogText("FromMem/ Creating thumb " + width + "x" + height + "@" + DirectXStuff::StringFromD3DFormat(format) + (isNormal ? " (NORMAL)" : " (NO NORMAL)") + ", path: " + DebugInfo->File + DebugInfo->Modifiers);
+			Logger::LogText("FromMem/ Creating thumb " + width + "x" + height + "@" + DirectXStuff::StringFromD3DFormat(format) + (isNormal ? " (NORMAL)" : " (NO NORMAL)") + ", path: " + DebugInfo->ToString());
 			if (has_to_be_normal && !IsNormal) // Todo: Is has_to_be != isNormal reason enough?
 			{
 				throw gcnew Exception("Thumb has to be a normal but isn't!");
@@ -90,7 +90,7 @@ namespace LodNative{
 		}
 	private:
 		ThumbnailTexture(int thumb_width, int thumb_height, D3DFORMAT thumb_format, bool is_normal, TextureDebugInfo^ debug_info) : IAssignableTexture(debug_info){
-			auto logText = "FromScratch/ Creating thumb " + thumb_height + "x" + thumb_height + "@" + DirectXStuff::StringFromD3DFormat(thumb_format) + (is_normal ? " (NORMAL)" : " (NO NORMAL)") + ", path: " + DebugInfo->File + DebugInfo->Modifiers;
+			auto logText = "FromScratch/ Creating thumb " + thumb_height + "x" + thumb_height + "@" + DirectXStuff::StringFromD3DFormat(thumb_format) + (is_normal ? " (NORMAL)" : " (NO NORMAL)") + ", path: " + DebugInfo->ToString();
 			Logger::LogText(logText);
 			if (thumb_format != D3DFORMAT::D3DFMT_A8R8G8B8){
 				throw gcnew NotSupportedException("Thumbnails currently have to be in ARGB32 format.");

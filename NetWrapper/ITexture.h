@@ -14,9 +14,10 @@ namespace LodNative{
 		TextureDebugInfo(){}
 	public:
 		String^ LogFileBaseName;
-		String^ File;
+		String^ TexFile;
 		String^ Modifiers;
 		String^ LastChange;
+		int TextureId;
 
 		static String^ ToFileName(String^ text){
 			for each(auto illegal in System::IO::Path::GetInvalidFileNameChars()){
@@ -25,23 +26,23 @@ namespace LodNative{
 			return text;
 		}
 
-		TextureDebugInfo(String^ f){
+		TextureDebugInfo(String^ f, int textureId){
 
 			LogFileBaseName = ToFileName("LodDebug_" + DateTime::Now.ToString()) + "_" + System::Threading::Interlocked::Increment(ActiveIndex);
 			LastChange = "";
-			File = f;
+			TexFile = f;
 			Modifiers = "";
 		}
 		TextureDebugInfo^ Modify(String^ text){
 			auto newInfo = gcnew TextureDebugInfo();
-			newInfo->File = File;
+			newInfo->TexFile = TexFile;
 			newInfo->LastChange = text;
 			newInfo->Modifiers = Modifiers + "-" + text;
 			newInfo->LogFileBaseName = LogFileBaseName;
 			return newInfo;
 		}
 		virtual String^ ToString() override{
-			return File + Modifiers;
+			return TextureId + "/" + TexFile + Modifiers;
 		}
 	};
 	ref class ITextureBase abstract{

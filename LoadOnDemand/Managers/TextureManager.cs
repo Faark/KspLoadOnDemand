@@ -209,6 +209,10 @@ namespace LoadOnDemand.Managers
             TextureData textureData;
             if (iManagedTextures.TryGetValue(textureObject, out textureData))
             {
+                if (textureData.NativeId == -1)
+                {
+                    return new Resources.ResourceDummy();
+                }
                 TextureResource textureResource;
                 if (textureData.LoadedTextureResource == null || !textureData.LoadedTextureResource.IsAlive)
                 {
@@ -283,7 +287,7 @@ namespace LoadOnDemand.Managers
         {
             return iManagedTextures.ContainsKey(textureObject);
         }
-        public static bool IsSupported(UrlDir.UrlFile file)
+        public static bool IsSupported(UrlDir.UrlFile file, Boolean logUnsupported = true)
         {
             switch (file.fileExtension.ToUpper())
             {
@@ -312,7 +316,10 @@ namespace LoadOnDemand.Managers
                 case "WMF":
                     return true;
                 default:
-                    ("LOD Unsupported Texture: " + file.fullPath).Log();
+                    if (logUnsupported)
+                    {
+                        ("LOD Unsupported Texture: " + file.fullPath).Log();
+                    }
                     return false;
             }
         }
@@ -369,8 +376,35 @@ namespace LoadOnDemand.Managers
                 (texture.Info.texture.format.ToString()).Log();
                 texture.Info.texture.width.ToString().Log();
             }*/
-            Logic.ActivityGUI.ThumbStarting();
             texture.UnloadedTexture = texture.Info.texture.GetNativeTexturePtr();
+            /*bool isNormal = false;
+            var tex = Legacy.LegacyLoader.LoadImage(new System.IO.FileInfo(texture.File.fullPath), ref isNormal, texture.Info.isNormalMap);
+            System.IO.File.WriteAllBytes(
+                texture.File.fullPath + ".png.stock",
+                tex.EncodeToPNG());
+
+            //using (var text = System.IO.File.CreateText(texture.File.fullPath + ".stock.txt"))
+            using (var text2 = System.IO.File.CreateText(texture.File.fullPath + ".stockbyte.txt"))
+            {
+                for (int y = tex.height - 1; y >= 0; y--) // Unity textures are upside down.
+                {
+                    for (int x = 0; x < tex.width; x++)
+                    {
+                        var c = tex.GetPixel(x, y);
+                        Color32 c2 = c;
+                        //text.Write("{" + c.a + "|" + c.r + "|" + c.g + "|" + c.b + "}");
+                        text2.Write("{" + c2.a + "|" + c2.r + "|" + c2.g + "|" + c2.b + "}");
+                    }
+                    //text.WriteLine();
+                    text2.WriteLine();
+                }
+            }*/
+            /*
+            var oldUnloadedPtr = texture.Info.texture.GetNativeTexturePtr();
+            texture.Info.texture.UpdateExternalTexture(tex.GetNativeTexturePtr());
+            tex.UpdateExternalTexture(oldUnloadedPtr);
+            return;*/
+            Logic.ActivityGUI.ThumbStarting();
             texture.NativeId = NativeBridge.RegisterTextureAndRequestThumbLoad(
                 new System.IO.FileInfo(texture.File.fullPath).FullName,
                 Config.Current.GetImageConfig(texture.File).CacheKey,
@@ -411,6 +445,7 @@ namespace LoadOnDemand.Managers
                     nativeIdToDataLookup[data.NativeId] = data;*/
                     // Todo14: This doesn't update nativeIdDataLookup and users has to call FinalizeSetup manually. While fine, we might be able to improve that API without killink lots of Setup(...)-perf on lots of textures. Suggestion: "Bulk" call option
                 }
+                "Setup adding texture".Log();
                 iManagedTextures.Add(data.Info, data);
                 return data.Info;
             }
@@ -419,6 +454,7 @@ namespace LoadOnDemand.Managers
         {
             List<Exception> failedLoads = null;
             ("FinSetup: " + DelayLoading).Log();
+            var loaded = 0;
             if (DelayLoading)
             {
                 "Sending Texture Info to net4".Log();
@@ -427,6 +463,7 @@ namespace LoadOnDemand.Managers
                     try
                     {
                         SetupNative(tex.Value);
+                        loaded++;
                     }
                     catch (Exception err)
                     {
@@ -435,7 +472,7 @@ namespace LoadOnDemand.Managers
                 }
                 DelayLoading = false;
             }
-            nativeIdToDataLookup = new TextureData[iManagedTextures.Max(tex => tex.Value.NativeId) + 1];
+            nativeIdToDataLookup = new TextureData[iManagedTextures.Count > 0 ? iManagedTextures.Max(tex => tex.Value.NativeId) + 1 : 0];
             foreach (var tex in iManagedTextures)
             {
                 if (tex.Value.NativeId >= 0)
@@ -445,7 +482,7 @@ namespace LoadOnDemand.Managers
             }
             if (failedLoads != null)
             {
-                throw new AggregateException("Failed to load some textures!", failedLoads);
+                throw new AggregateException("Failed to load " + failedLoads.Count + " of " + (loaded + failedLoads.Count) + " textures!", failedLoads);
             }
         }
         static Texture2D CreateEmptyThumbnailTexture()
@@ -500,6 +537,7 @@ namespace LoadOnDemand.Managers
                 SetupNative(data);
                 // Todo14: See above
             }
+            "ForceManage, Adding texture".Log();
             iManagedTextures.Add(data.Info, data);
         }
 

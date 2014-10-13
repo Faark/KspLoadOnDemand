@@ -147,7 +147,7 @@ namespace LodNative{
 			DirectXStuff::Texture_LockRectOrThrow(texture, 0, &lockedRect, NULL, 0);
 			try{
 				assignableData->AssignTo(gcnew AssignableTarget(format, &lockedRect, true /*Unity textures seem to be upside down...*/));
-				Logger::LogText("Assigned texture " + assignableData->Debug->ToString());
+				Logger::LogText("Assigned texture " + assignableData->Debug);
 			}
 			finally{
 				DirectXStuff::Texture_UnlockRectOrThrow(texture, 0);
@@ -194,6 +194,23 @@ namespace LodNative{
 			}
 			void Run(IntPtr devicePtr){
 				auto device = (IDirect3DDevice9*)devicePtr.ToPointer();
+				/*auto bmpFmt = dynamic_cast<BitmapFormat^>(assignableTexture);
+				if (bmpFmt != nullptr){
+					bmpFmt->Bitmap->Save(bmpFmt->DebugInfo->TexFile + ".png.assign", Imaging::ImageFormat::Png);
+					auto tw = System::IO::File::CreateText(bmpFmt->DebugInfo->TexFile + ".assign.txt");
+
+					for (int y = 0; y < bmpFmt->Bitmap->Height; y++)
+					{
+						for (int x = 0; x < bmpFmt->Bitmap->Width; x++)
+						{
+							auto c = bmpFmt->Bitmap->GetPixel(x, y);
+							tw->Write("{" + c.A + "|" + c.R + "|" + c.G + "|" + c.B + "}");
+						}
+						tw->WriteLine();
+					}
+					tw->Close();
+					delete tw;
+				}*/
 				auto format = assignableTexture->GetAssignableFormat();
 				UINT width = format->Width, height = format->Height;
 				D3DFORMAT texFormat = format->Format;

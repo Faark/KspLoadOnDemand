@@ -2471,9 +2471,8 @@ namespace Paloma
 			TargaImage^ ti = nullptr;
 			try{
 				ti = gcnew TargaImage(sFileName);
-
 				return gcnew Bitmap(ti->Image);
-
+				
 
 				/* Keep format? Use this instead:
 				auto b = gcnew Drawing::Bitmap(ti->Image->Width, ti->Image->Height, ti->Image->PixelFormat);

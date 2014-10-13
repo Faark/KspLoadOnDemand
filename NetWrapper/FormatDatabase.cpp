@@ -17,7 +17,13 @@ BitmapFormat^ FormatDatabase::RecognizeTGA(FileInfo^ file, BufferMemory::ISegmen
 			ms = data->CreateStream();
 			auto img = gcnew Paloma::TargaImage();
 			img->LoadTGAFromMemory(ms);
+
+
+			//img->Image->Save(file->FullName + ".png", System::Drawing::Imaging::ImageFormat::Png);
+
+
 			auto bmp = (gcnew BitmapFormat(gcnew Bitmap(img->Image), false, gcnew TextureDebugInfo(file->FullName, textureId)))->MayToNormal(BitmapFormat::FileNameIndicatesTextureShouldBeNormal(file));
+			//bmp->Bitmap->Save(sFileName + "2.png", System::Drawing::Imaging::ImageFormat::Png);
 			delete img;
 			delete ms;
 			data->Free();

@@ -15,6 +15,16 @@ namespace LoadOnDemand.Logic
         HashSet<UrlDir.UrlFile> createdTextures = new HashSet<UrlDir.UrlFile>();
         HashSet<string> createdInternals = new HashSet<string>();
 
+        /// <summary>
+        /// They broke UrlFile.fileType, so this is a custom replacement... we can only handle a few known file types anyway
+        /// </summary>
+        /// <returns></returns>
+        static bool isFileATexture(UrlDir.UrlFile file)
+        {
+            // old: return file.fileType == UrlDir.FileType.Texture
+            return Managers.TextureManager.IsSupported(file, false);
+        }
+
         IEnumerable<GameDatabase.TextureInfo> FakeTextures(IEnumerable<UrlDir.UrlFile> files)
         {
             foreach (var file in files)
@@ -27,7 +37,7 @@ namespace LoadOnDemand.Logic
                     }
                     else
                     {
-                        ("Registering texture: " + file.url).Log();
+                        ("Registering texture: " + file.url + ", Dated: " + file.fileTime).Log();
                         var tex = Managers.TextureManager.Setup(file);
                         createdTextures.Add(file);
                         yield return tex;
@@ -51,7 +61,7 @@ namespace LoadOnDemand.Logic
                     yield return new Managers.InternalManager.InternalData()
                     {
                         Name = internalCfg.config.GetValue("name"),
-                        Textures = FakeTextures(dir.files.Where(f => f.fileType == UrlDir.FileType.Texture)).ToArray()
+                        Textures = FakeTextures(dir.files.Where(isFileATexture)).ToArray()
                     };
                 }
             }
@@ -71,7 +81,7 @@ namespace LoadOnDemand.Logic
             //("Debug: Should be GameData: " + current.name + ", " + current.path + ", " + current.url).Log();
             return current;
         }
-        static UrlDir.UrlFile GetFileByRelativeSegments(UrlDir gameData, string[] pathSegments, UrlDir.FileType? fileType)
+        static UrlDir.UrlFile GetFileByRelativeSegments(UrlDir gameData, string[] pathSegments, Func<UrlDir.UrlFile, bool> fileVery = null)
         {
             var current = gameData;
             int i = 0;
@@ -91,7 +101,7 @@ namespace LoadOnDemand.Logic
             var fname = pathSegments[i];
             try
             {
-                return current.files.First(file => file.name == fname && (!fileType.HasValue || file.fileType == fileType));
+                return (fileVery != null ? current.files.Where(fileVery) : current.files).First(file => file.name == fname);
             }
             catch (Exception err)
             {
@@ -100,9 +110,9 @@ namespace LoadOnDemand.Logic
             }
             // todo: better error handling or get UrlDir.GetDirectory working?!
         }
-        static UrlDir.UrlFile GetFileByRelativePath(UrlDir gameData, string pathSegments, UrlDir.FileType? fileType = null)
+        static UrlDir.UrlFile GetFileByRelativePath(UrlDir gameData, string pathSegments, Func<UrlDir.UrlFile, bool> fileVery = null)
         {
-            return GetFileByRelativeSegments(gameData, pathSegments.Trim().Split('/'), fileType);
+            return GetFileByRelativeSegments(gameData, pathSegments.Trim().Split('/'), fileVery);
         }
         IEnumerable<Managers.PartManager.PartData> processAndGetParts()
         {
@@ -133,7 +143,7 @@ namespace LoadOnDemand.Logic
                             var newModelFile = GetFileByRelativePath(gameDataDir, modelNode.GetValue("model"));
                             var newModelDir = newModelFile.parent;
 
-                            var modelTextures = new List<UrlDir.UrlFile>(newModelDir.files.Where(f => f.fileType == UrlDir.FileType.Texture));
+                            var modelTextures = new List<UrlDir.UrlFile>(newModelDir.files.Where(isFileATexture));
 
                             foreach (var textureReplacement in modelNode.GetValues("texture"))
                             {
@@ -151,7 +161,7 @@ namespace LoadOnDemand.Logic
                                             {
                                                 if (replacementData[1].Contains("/"))
                                                 {
-                                                    modelTextures[i] = GetFileByRelativePath(gameDataDir, replacementData[1], UrlDir.FileType.Texture);
+                                                    modelTextures[i] = GetFileByRelativePath(gameDataDir, replacementData[1], isFileATexture);
                                                 }
                                                 else
                                                 {
@@ -187,7 +197,7 @@ namespace LoadOnDemand.Logic
                 }
                 else
                 {
-                    partData.Textures = FakeTextures(dir.files.Where(f => f.fileType == UrlDir.FileType.Texture)).ToArray();
+                    partData.Textures = FakeTextures(dir.files.Where(isFileATexture)).ToArray();
                 }
                 yield return partData;
             }
@@ -201,13 +211,18 @@ namespace LoadOnDemand.Logic
                 printPathRecursive(sub);
             }
         }
+
+        static int didRun = 0;
         public void Awake()
         {
             try
             {
+                // Makes LOD ignore GameDatabase's "force reload all", especially since tihs kinda breaks the KspAddon(..., true)
+                if (System.Threading.Interlocked.Exchange(ref didRun, 1) != 0)
+                {
+                    return;
+                }
                 //printPathRecursive(GameDatabase.Instance.root);
-
-
 
                 NativeBridge.Setup(Config.Current.GetCacheDirectory());
 #if DISABLED_DEBUG
@@ -232,6 +247,18 @@ namespace LoadOnDemand.Logic
                 }
                 ("LoadOnDemand.Startup done.").Log();
 
+
+                /*
+                 * - The following updates GameDatabase's "last loaded at" to "Now", to prevent files changed before that to be force-reloaded.
+                 * - KSP should do that anyway, since there isn't any drawback & any file has to be loaded initially, but this allows us to do it for them.
+                 * - ATM hasn't found a way without using reflection as well, and this one is way less invasiv.
+                 * - Todo: ForceReload (eg changing file and using Debug-UI's "reload all") will break LOD, since it can't handle refs becoming invalid. Fixable, though and rearely matters anyway.
+                 */
+                typeof(GameDatabase)
+                    .GetFields(System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
+                    .Single(field => field.FieldType == typeof(DateTime))
+                    .SetValue(GameDatabase.Instance, DateTime.Now);
+
                 foreach (var el in GameDatabase.Instance.databaseTexture)
                 {
                     if (el.texture == null)
@@ -239,7 +266,7 @@ namespace LoadOnDemand.Logic
                         ("NULLTEX FOUND: " + el.name).Log();
                     }
                 }
-                foreach (var imgs in GameDatabase.Instance.root.AllFiles.Where(f => f.fileType == UrlDir.FileType.Texture))
+                foreach (var imgs in GameDatabase.Instance.root.AllFiles.Where(isFileATexture))
                 {
                     ("REM_IMG: " + imgs.fullPath).Log();
                     // Todo: Details about them incl their meta-data & size would be nice...

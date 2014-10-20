@@ -25,7 +25,8 @@ namespace LoadOnDemand.Legacy
             void* textureLoadedCallback,
             void* statusUpdatedCallback,
             void* requestUpdateFromKspThreadCallback,
-            void* onSignalThreadIdlleCallback
+            void* onSignalThreadIdlleCallback,
+            void* texturePreparedCallback
             )
         {
             Stuff.SetDelegateForFunctionPointer(ref OnRequestKspUpdate, requestUpdateFromKspThreadCallback);
@@ -33,16 +34,17 @@ namespace LoadOnDemand.Legacy
             Stuff.SetDelegateForFunctionPointer(ref OnStatusUpdated, statusUpdatedCallback);
             Stuff.SetDelegateForFunctionPointer(ref OnTextureLoaded, textureLoadedCallback);
             Stuff.SetDelegateForFunctionPointer(ref OnThumbnailUpdated, thumbUpdateCallback);
-
+            throw new NotImplementedException("tex prep");
             LegacyInterface.CacheDirectory = cacheDirectory;
         }
-        internal static unsafe int RegisterTexture(string file, string key, void* thumbTexturePtr, bool isNormalMap)
+        internal static unsafe int RegisterTexture(string file, string key, /*void* thumbTexturePtr,*/ bool isNormalMap, ref NativeBridge.PInvokeDelegates.ImageConfig imageConfig)
         {
-            var internalId = LegacyInterface.Textures.Count;
+            throw new NotImplementedException();
+            /*var internalId = LegacyInterface.Textures.Count;
             var tex = new LegacyInterface.InternalTexture(){ CacheKey = key, SourceFile = file, IsNormal = isNormalMap, ThumbTexturePtr = new IntPtr(thumbTexturePtr)};
             LegacyInterface.Textures.Add(tex);
             LegacyInterface.TexturesToPrepare.Enqueue(tex);
-            return internalId;
+            return internalId;*/
         }
         internal static void RequestTextureLoad(int nativeId)
         {

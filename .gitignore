@@ -41,3 +41,4 @@ x64/Release/NetWrapper64.lib
 x64/Release/NetWrapper64.dll.metagen
 x64/Release/NetWrapper.dll
 NetWrapper/x64/Release/app.res
+*.sbr

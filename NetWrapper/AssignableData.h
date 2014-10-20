@@ -6,6 +6,7 @@ using namespace System;
 #include "ITexture.h"
 
 namespace LodNative{
+	/*
 	ref class ByteArrayAssignableData : AssignableData{
 	public:
 		array<Byte>^ data;
@@ -23,4 +24,5 @@ namespace LodNative{
 			GPU::CopyRawBytesTo(target, src_ptr, pitch, Format->BytesPerPixel*Format->Width, Format->Height, IsUpsideDown, Debug);
 		}
 	};
+	*/
 }

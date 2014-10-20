@@ -21,6 +21,7 @@ namespace LodNative{
 			bool IsRequested = false;// Todo: This flag shouldn't be required anymore. See usage for details | UPDATE: Its at least used to prevent load until prepared. This has to be reworked anyway.
 			IDirect3DTexture9* HighResTexture = NULL;
 			String^ HighResFile;
+			String^ SourceFile;
 		};
 		ref class StartLoadHighResTextureScope{
 			int textureId;
@@ -83,12 +84,20 @@ namespace LodNative{
 		}
 
 		static void Setup(String^ cache_directory);
-		static int RegisterTexture(String^ file, String^ cache, IDirect3DTexture9* thumb, bool normal);
+		static int RegisterTexture(String^ file, String^ cache, /*IDirect3DTexture9* thumb,*/ bool normal, ImageSettings^ imageSettings);
 		static void RequestTextureLoad(int id);
 		static bool CancelTextureLoad(int id);
 		static void RequestTextureUnload(int id);
 
-	internal:
+	private:
+		ref class TextureLoadedCallbackScope{
+		public:
+			int textureId;
+			TextureLoadedCallbackScope(int texture_id) :textureId(texture_id){}
+			void Run(IntPtr texturePtr){
+				OnTextureLoadedToGPU((IDirect3DTexture9*)texturePtr.ToPointer(), textureId);
+			}
+		};
 		static void OnTextureLoadedToGPU(IDirect3DTexture9* texture, int textureId){
 			auto textureData = textures[textureId];
 			if (textureData->IsRequested && (textureData->HighResTexture == nullptr)){

@@ -37,10 +37,53 @@ namespace LoadOnDemand.Logic
                     }
                     else
                     {
+                        /*
+                        var cached = System.IO.Path.Combine( Config.Current.GetCacheDirectory(), Config.Current.GetImageConfig(file).CacheKey + ".CACHE");
+                        if (System.IO.File.Exists(cached))
+                        {
+                            using (var ms = System.IO.File.OpenRead(cached))
+                            using (var bs = new System.IO.BinaryReader(ms))
+                            {
+                                ("Faking " + file.fullPath).Log();
+                                if (bs.ReadString() != "LODC")
+                                {
+                                    throw new FormatException("Given file is not a valid CacheTexture (Signature doesn't match)");
+                                }
+                                var width = bs.ReadInt32();
+                                var height = bs.ReadInt32();
+                                TextureFormat tf;   
+                                var fmtInt = bs.ReadInt32();
+                                switch (fmtInt)
+                                {
+                                    case 21:
+                                        tf = TextureFormat.ARGB32;
+                                        break;
+                                    case 827611204:
+                                        tf = TextureFormat.DXT1;
+                                        break;
+                                    case 894720068:
+                                        tf = TextureFormat.DXT5;
+                                        break;
+                                    default:
+                                        throw new FormatException("New or unsupported format: " + fmtInt);
+                                }
+                                var isNormal = bs.ReadByte() != 0;
+                                var dataOffset = (int)ms.Position;
+                                var tex = new Texture2D(width, height, tf, false);
+                                var data = new byte[ms.Length - dataOffset];
+                                ms.Read(data, 0, data.Length);
+                                tex.LoadRawTextureData(data);
+                                var info = new GameDatabase.TextureInfo(tex, isNormal, false, true);
+                                info.texture.name = info.name = file.url;
+                                GameDatabase.Instance.databaseTexture.Add(info);
+                            }
+                        }
+                        continue;*/
+
                         ("Registering texture: " + file.url + ", Dated: " + file.fileTime).Log();
-                        var tex = Managers.TextureManager.Setup(file);
+                        var texInfo = Managers.TextureManager.Setup(file);
                         createdTextures.Add(file);
-                        yield return tex;
+                        yield return texInfo;
                     }
                 }
                 else

@@ -13,6 +13,80 @@ namespace LoadOnDemand
             return self.HasValue(name) ? converter(self.GetValue(name)) : defaultValue;
         }
     }
+    class ImageSettings
+    {
+
+        public bool? ThumbnailEnabled { get; private set; }
+        public int? ThumbnailWidth { get; private set; }
+        public int? ThumbnailHeight { get; private set; }
+        //public TextureFormat ThumbnailFormat { get; private set; }
+        public bool? ThumbnailCompress { get; private set; }
+
+        public bool? HighResEnabled { get; private set; }
+        public bool? HighResCompress { get; private set; }
+
+
+        public static ImageSettings CreateDefaults()
+        {
+            return new ImageSettings()
+            {
+                ThumbnailEnabled = true,
+                ThumbnailWidth = 32,
+                ThumbnailHeight = 32,
+                ThumbnailCompress = false,
+                HighResEnabled = true,
+                HighResCompress = false
+            };
+        }
+
+        public void WriteToConfigNode(ConfigNode node)
+        {
+            if(ThumbnailEnabled.HasValue)
+                node.AddValue("ThumbnailEnabled", ThumbnailEnabled.Value.ToString());
+            if(ThumbnailWidth.HasValue)
+                node.AddValue("ThumbnailWidth", ThumbnailWidth.Value.ToString());
+            if(ThumbnailHeight.HasValue)
+                node.AddValue("ThumbnailHeight", ThumbnailHeight.Value.ToString());
+            if(ThumbnailCompress.HasValue)
+                node.AddValue("ThumbnailCompress", ThumbnailCompress.Value.ToString());
+            if (HighResEnabled.HasValue)
+                node.AddValue("HighResEnabled", HighResEnabled.Value.ToString());
+            if (HighResCompress.HasValue)
+                node.AddValue("HighResCompress", HighResCompress.Value.ToString());
+        }
+        public static ImageSettings FromConfigNode(ConfigNode node)
+        {
+            return new ImageSettings()
+            {
+                ThumbnailEnabled = node.GetValue<bool?>("ThumbnailEnabled", s => bool.Parse(s), null),
+                ThumbnailWidth = node.GetValue<int?>("ThumbnailWidth", s => int.Parse(s), null),
+                ThumbnailHeight = node.GetValue<int?>("ThumbnailHeight", s => int.Parse(s), null),
+                ThumbnailCompress = node.GetValue<bool?>("ThumbnailCompress", s => bool.Parse(s), null),
+                HighResEnabled = node.GetValue<bool?>("HighResEnabled", s => bool.Parse(s), null),
+                HighResCompress = node.GetValue<bool?>("HighResCompress", s => bool.Parse(s), null)
+            };
+        }
+        public static ImageSettings Combine(ImageSettings first, ImageSettings second)
+        {
+            var result = new ImageSettings()
+            {
+                ThumbnailEnabled = first.ThumbnailEnabled.HasValue ? first.ThumbnailEnabled : second.ThumbnailEnabled,
+                ThumbnailWidth = first.ThumbnailWidth.HasValue ? first.ThumbnailWidth : second.ThumbnailWidth,
+                ThumbnailHeight = first.ThumbnailHeight.HasValue ? first.ThumbnailHeight : second.ThumbnailHeight,
+                ThumbnailCompress = first.ThumbnailCompress.HasValue ? first.ThumbnailCompress : second.ThumbnailCompress,
+                HighResEnabled = first.HighResEnabled.HasValue ? first.HighResEnabled : second.HighResEnabled,
+                HighResCompress = first.HighResCompress.HasValue ? first.HighResCompress : second.HighResCompress
+            };
+            /*("Combining: {"
+                + Environment.NewLine + "  ThumbnailEnabled: " + first.ThumbnailEnabled + "#" + second.ThumbnailEnabled + "=>" + result.ThumbnailEnabled + ","
+                + Environment.NewLine + "  ThumbnailWidth: " + first.ThumbnailWidth + "#" + second.ThumbnailWidth + "=>" + result.ThumbnailWidth + ","
+                + Environment.NewLine + "  ThumbnailHeight: " + first.ThumbnailHeight + "#" + second.ThumbnailHeight + "=>" + result.ThumbnailHeight + ","
+                + Environment.NewLine + "  ThumbnailCompress: " + first.ThumbnailCompress + "#" + second.ThumbnailCompress + "=>" + result.ThumbnailCompress + ","
+                + Environment.NewLine + "  HighResCompress: " + first.HighResCompress + "#" + second.HighResCompress + "=>" + result.HighResCompress 
+                + Environment.NewLine + "}").Log();*/
+            return result;
+        }
+    }
     class ImageConfigItem
     {
         private static string escapeIdsSpaces(string idWithSpaces)
@@ -31,6 +105,8 @@ namespace LoadOnDemand
         public long FileSize { get; private set; }
         public DateTime LastChanged { get; private set; }
         public bool SkipImage { get; private set; }
+        public ImageSettings ImageSettings { get; private set; }
+
         public bool isCacheValid(UrlDir.UrlFile file)
         {
             if ((file.fileTime - LastChanged).TotalMinutes > 1)
@@ -61,9 +137,13 @@ namespace LoadOnDemand
                 oldFile.Delete();
             }
         }
-        public ImageConfigItem() { }
+        public ImageConfigItem()
+        {
+            ImageSettings = new ImageSettings();
+        }
         public ImageConfigItem(string cacheKey, UrlDir.UrlFile fromFile)
         {
+            ImageSettings = new ImageSettings();
             CacheKey = cacheKey;
             FileUrl = fromFile.url + "."+ fromFile.fileExtension;
             updateVerificationData(fromFile);
@@ -94,7 +174,8 @@ namespace LoadOnDemand
                 CacheKey = node.GetValue("Key"),
                 //Url = node.GetValue("Url"),
                 FileSize = long.Parse(node.GetValue("Size")),
-                LastChanged = DateTime.Parse(node.GetValue("Date"))
+                LastChanged = DateTime.Parse(node.GetValue("Date")),
+                ImageSettings = ImageSettings.FromConfigNode(node)
             };
         }
         public ConfigNode ToConfigNode()
@@ -122,11 +203,8 @@ namespace LoadOnDemand
         System.IO.FileInfo cfgFileLocation;
         private Config() {
             // defaults:
-            
-            ThumbnailEnabled = true;
-            ThumbnailWidth = 32;
-            ThumbnailHeight = 32;
-            ThumbnailFormat = TextureFormat.ARGB32;
+
+            DefaultImageSettings = ImageSettings.CreateDefaults();
 
             UI_DelayBeforeHidingActivityUI = TimeSpan.FromSeconds(3);
             UI_DelayBeforeShowingActivityUI = TimeSpan.FromSeconds(3);
@@ -135,7 +213,6 @@ namespace LoadOnDemand
             UI_DisplayDebugUI = false;
             Debug_DontLoadEditorCatalogThumbnailParts = false; // notimplementedexception, debug, todo: default to false once we got DXT!
 
-            CompressTextures = true;
         }
         /*
         * 
@@ -179,6 +256,7 @@ namespace LoadOnDemand
             else
             {
                 Current.Load(ConfigNode.Load(Current.cfgFileLocation.FullName));
+                ("Default config loaded. Default high res settings: " + Current.DefaultImageSettings.HighResCompress).Log();
             }
 
 
@@ -188,12 +266,6 @@ namespace LoadOnDemand
         {
             var cfg = new ConfigNode("LOD_CONFIG");
 
-            var thumb = cfg.AddNode("Thumbnail");
-            thumb.AddValue("Enabled", ThumbnailEnabled.ToString());
-            thumb.AddValue("Width", ThumbnailWidth.ToString());
-            thumb.AddValue("Height", ThumbnailHeight.ToString());
-            thumb.AddValue("Format", ThumbnailFormat.ToString());
-
             var ui = cfg.AddNode("ActivityInterface");
             ui.AddValue("SecondsBeforeShowing", UI_DelayBeforeShowingActivityUI.TotalSeconds.ToInt().ToString());
             ui.AddValue("SecondsBeforeHiding", UI_DelayBeforeHidingActivityUI.TotalSeconds.ToInt().ToString());
@@ -202,8 +274,7 @@ namespace LoadOnDemand
             cfg.AddValue("ShowDebugUI", UI_DisplayDebugUI.ToString());
             cfg.AddValue("DontLoadEditorCatalogParts", Debug_DontLoadEditorCatalogThumbnailParts.ToString());
 
-            cfg.AddValue("CompressTextures", CompressTextures.ToString());
-
+            DefaultImageSettings.WriteToConfigNode(cfg.AddNode("DefaultImageConfig"));
 
             var cache = cfg.AddNode("Cache");
 
@@ -218,24 +289,9 @@ namespace LoadOnDemand
         void Load(ConfigNode cfgNode)
         {
 
-            if (cfgNode.HasNode("Thumbnail"))
+            if (cfgNode.HasNode("DefaultImageConfig"))
             {
-                var thumbNode = cfgNode.GetNode("Thumbnail");
-                Current.ThumbnailEnabled = thumbNode.GetValue("Enabled", s => bool.Parse(s), Current.ThumbnailEnabled);
-                Current.ThumbnailWidth = thumbNode.GetValue("Width", s => int.Parse(s), Current.ThumbnailWidth);
-                Current.ThumbnailHeight = thumbNode.GetValue("Height", s => int.Parse(s), Current.ThumbnailHeight);
-                Current.ThumbnailFormat = thumbNode.GetValue("Format", s =>
-                {
-                    switch (s)
-                    {
-                        case "DXT5":
-                            return TextureFormat.DXT5;
-                        case "ARGB32":
-                        default:
-                            return TextureFormat.ARGB32;
-                    }
-                }, Current.ThumbnailFormat);
-
+                DefaultImageSettings = ImageSettings.Combine(ImageSettings.FromConfigNode(cfgNode.GetNode("DefaultImageConfig")), DefaultImageSettings);
             }
             if (cfgNode.HasNode("ActivityInterface"))
             {
@@ -248,8 +304,6 @@ namespace LoadOnDemand
             UI_TryUseToolbarForDebugUI = cfgNode.GetValue("TryUseToolbarForDebugUI", text => bool.Parse(text), UI_TryUseToolbarForDebugUI);
             UI_DisplayDebugUI = cfgNode.GetValue("ShowDebugUI", text => bool.Parse(text), UI_DisplayDebugUI);
             Debug_DontLoadEditorCatalogThumbnailParts = cfgNode.GetValue("DontLoadEditorCatalogParts", text => bool.Parse(text), Debug_DontLoadEditorCatalogThumbnailParts);
-
-            Current.CompressTextures = cfgNode.GetValue("CompressTextures", s => bool.Parse(s), Current.CompressTextures);
 
             if (cfgNode.HasNode("Cache"))
             {
@@ -272,12 +326,8 @@ namespace LoadOnDemand
         public bool UI_TryUseToolbarForDebugUI { get; private set; }
         public bool UI_DisplayDebugUI { get; private set; }
         public bool Debug_DontLoadEditorCatalogThumbnailParts { get; private set; }
-        public bool ThumbnailEnabled { get; private set; } // implement this!
-        public int ThumbnailWidth { get; private set; }
-        public int ThumbnailHeight { get; private set; }
-        public TextureFormat ThumbnailFormat { get; private set; }
 
-        public bool CompressTextures { get; private set; } // implement this!
+        public ImageSettings DefaultImageSettings { get; private set; }
 
         public bool IsDirty { get; private set; }
 

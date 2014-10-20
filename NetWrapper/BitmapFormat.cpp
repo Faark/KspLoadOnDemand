@@ -3,6 +3,7 @@
 #include "GPU.h"
 #include "BufferMemory.h"
 
+
 using namespace LodNative;
 
 
@@ -22,7 +23,6 @@ BitmapFormat^ BitmapFormat::ToNormal(){
 		for (int y = 0; y < h; y++){
 			unsigned char * pixelPos = lineStart;
 			for (int x = 0; x < w; x++){
-				//throw gcnew NotImplementedException("New locked...");
 				//Color c = Bitmap->GetPixel(x, y);
 				char r = *(pixelPos + 1);
 				char g = *(pixelPos + 2);
@@ -119,6 +119,20 @@ BitmapFormat^ BitmapFormat::Resize(int new_width, int new_height){
 			delete gr;
 	}
 }
+BitmapFormat^ BitmapFormat::ResizeWithAlphaFix(int new_width, int new_height){
+	/*
+	Todo: I skipped this "recommendation" check for now and just ignore the format... it would make sense, though, to create them in the designed format!
+	if (format != D3DFORMAT::D3DFMT_A8R8G8B8){
+	throw gcnew NotSupportedException("TextureFormat has to be ARGB32 atm. Requested format is:" + AssignableFormat::StringFomD3DFormat(format));
+	}*/
+	// Todo: First thing we do is venting the alpha channel, since parts seem to ignore it anyway even with junk in it but it makes colors go lost on processing... Find out what this breaks and how to prevent it from breaking/ any better solution
+
+	if (!IsNormal){
+		SetAlpha(255);
+	}
+	//todo: lets not push this with these release as well... throw gcnew NotImplementedException("this is crap! Either replace Trans+-1 temporary or find a better solution");
+	return Resize(new_width, new_height);
+}
 BitmapFormat^ BitmapFormat::ConvertTo(PixelFormat format){
 	auto newImg = Bitmap->Clone(Drawing::Rectangle(0, 0, Bitmap->Width, Bitmap->Height), format);
 	auto isN = IsNormal;
@@ -129,7 +143,10 @@ BitmapFormat^ BitmapFormat::ConvertTo(PixelFormat format){
 BitmapFormat^ BitmapFormat::ConvertTo(D3DFORMAT format){
 	return ConvertTo(DirectXStuff::PixelFormatFromD3DFormat(format));
 }
-BitmapFormat^ BitmapFormat::SetAlpha(Byte new_alpha){
+BitmapFormat^ BitmapFormat::Clone(){
+	return gcnew BitmapFormat(gcnew System::Drawing::Bitmap(Bitmap), isNormal, DebugInfo->Modify("Clone"));
+}
+void BitmapFormat::SetAlpha(Byte new_alpha){
 	//from http://stackoverflow.com/questions/6809442/how-to-load-transparent-png-to-bitmap-and-ignore-alpha-channel (kinda)
 
 	int w = Bitmap->Width;
@@ -161,8 +178,33 @@ BitmapFormat^ BitmapFormat::SetAlpha(Byte new_alpha){
 	Bitmap->UnlockBits(srcData);
 	DebugInfo = DebugInfo->Modify("SetAlpha" + new_alpha);
 	//return gcnew BitmapFormat(trgBmp, IsNormal, DebugInfo->Modify("SetAlpha" + new_alpha));
-	return this;
 }
+void BitmapFormat::FlipVertical(){
+	Bitmap->RotateFlip(RotateFlipType::RotateNoneFlipY); // if locked already we might just do this manually instead of unlcking/relocking, once proper lock-mgnt?
+}
+
+bool BitmapFormat::CheckForAlphaChannelData(BitmapData^ bmpData){
+	auto ptrAlpha = ((byte*)bmpData->Scan0.ToPointer()) + 3;
+	for (int i = bmpData->Width * bmpData->Height; i > 0; --i)
+	{
+		if (*ptrAlpha < 255)
+			return true;
+
+		ptrAlpha += 4;
+	}
+	return false;
+}
+bool BitmapFormat::CheckForAlphaChannelData(){
+	auto data = Bitmap->LockBits(Drawing::Rectangle(0, 0, Bitmap->Width, Bitmap->Height), ImageLockMode::ReadOnly, PixelFormat::Format32bppArgb);
+	try{
+		return CheckForAlphaChannelData(data);
+	}
+	finally{
+		Bitmap->UnlockBits(data);
+	}
+
+}
+
 
 BitmapFormat^ BitmapFormat::LoadUnknownFile(FileInfo^ file, BufferMemory::ISegment^ data, int textureId)
 {
@@ -171,6 +213,7 @@ BitmapFormat^ BitmapFormat::LoadUnknownFile(FileInfo^ file, BufferMemory::ISegme
 	{
 		ms = data->CreateStream();
 		BitmapFormat^ bmp = gcnew BitmapFormat(gcnew Drawing::Bitmap(Image::FromStream(ms)), false, gcnew TextureDebugInfo(file->FullName, textureId));
+		bmp->FlipVertical();
 		if (FileNameIndicatesTextureShouldBeNormal(file))
 			return bmp->ToNormal();
 		return bmp;
@@ -185,7 +228,28 @@ BitmapFormat^ BitmapFormat::LoadUnknownFile(FileInfo^ file, BufferMemory::ISegme
 	}
 }
 
+AssignableFormat BitmapFormat::GetAssignableFormat(){
+	return AssignableFormat(Bitmap->Width, Bitmap->Height, 0, DirectXStuff::D3DFormatFromPixelFormat(PixelFormat::Format32bppArgb));
+}
+void BitmapFormat::AssignToTarget(D3DLOCKED_RECT* trg){
+	// GPU thread!
+	auto h = Bitmap->Height;
+	auto data = Bitmap->LockBits(Drawing::Rectangle(0, 0, Bitmap->Width, h), ImageLockMode::ReadOnly, PixelFormat::Format32bppArgb);
+	try{
+		auto srcPitch = Math::Abs(data->Stride);
+		Stuff::CopyLineBuffer((unsigned char*)data->Scan0.ToPointer(), srcPitch, (unsigned char*)trg->pBits, trg->Pitch, srcPitch, h);
+	}
+	finally{
+		Bitmap->UnlockBits(data);
+	}
+}
+IAssignableTexture^ BitmapFormat::ConvertToAssignableFormat(AssignableFormat fmt){
+	// Work thread!
+	throw gcnew NotSupportedException("Not supported in this Version. Interesting that its actually needed. Please do report this!");
+}
 
+
+/*
 AssignableFormat^ BitmapFormat::GetAssignableFormat(){
 	return gcnew AssignableFormat(Bitmap->Width, Bitmap->Height, DirectXStuff::D3DFormatFromPixelFormat(Bitmap->PixelFormat));
 }
@@ -201,6 +265,6 @@ AssignableData^ BitmapFormat::GetAssignableData(AssignableFormat^ assignableForm
 		throw gcnew NotImplementedException();
 	}
 	return gcnew BitmapAssignableData(GetAssignableFormat(), Bitmap, DebugInfo);
-}
+}*/
 
 

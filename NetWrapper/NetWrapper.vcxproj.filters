@@ -62,10 +62,13 @@
     <ClInclude Include="ThreadPriority.h">
       <Filter>Stuff</Filter>
     </ClInclude>
-    <ClInclude Include="ThumbnailTexture.h">
+    <ClInclude Include="DirectXStuff.h">
+      <Filter>Stuff</Filter>
+    </ClInclude>
+    <ClInclude Include="CachedTexture.h">
       <Filter>ImageFormats</Filter>
     </ClInclude>
-    <ClInclude Include="DirectXStuff.h">
+    <ClInclude Include="Stuff.h">
       <Filter>Stuff</Filter>
     </ClInclude>
   </ItemGroup>

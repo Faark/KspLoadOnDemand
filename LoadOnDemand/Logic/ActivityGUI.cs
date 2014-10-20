@@ -173,14 +173,14 @@ namespace LoadOnDemand.Logic
             }
         }
 
-        public static void ThumbStarting()
+        public static void PrepareStarting()
         {
-            "ThumbStart".Log();
+            "PrepStart".Log();
             MayStartTimer(Interlocked.Increment(ref ActiveThumbnailRequests));
         }
-        public static void ThumbFinished()
+        public static void PrepareFinished()
         {
-            "ThumbStop".Log();
+            "PrepStop".Log();
             Interlocked.Increment(ref FinishedThumbnailRequests);
         }
         public static void HighResStarting()

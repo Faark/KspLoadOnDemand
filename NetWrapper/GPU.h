@@ -12,6 +12,106 @@ using namespace System::Runtime::InteropServices;
 
 namespace LodNative{
 	// helper class for GPU related stuff
+
+
+	/*
+		Texture creation process:
+		- Go to GPU thread
+		- ask Assignable for texture format
+		- try to create this texture, though with adjustments made by D3DX_CheckTextureRequirementsToThrow
+		- Where there any adjustments?
+		  - Inform 
+
+	*/
+	ref class GPU{
+	private:
+		ref class CreateTextureForAssignableAsyncScope{
+		private:
+			AssignableFormat format;
+			IAssignableTexture^ assignable;
+			Action<IntPtr>^ callback;
+		public:
+			CreateTextureForAssignableAsyncScope(IAssignableTexture^ assignableTexture, Action<IntPtr>^ onSuccessCallback): 
+				format(assignableTexture->GetAssignableFormat()), 
+				assignable(assignableTexture), 
+				callback(onSuccessCallback){
+			}
+			void RunWithFormat(IDirect3DDevice9* device){
+				auto texture = DirectXStuff::Device_CreateTextureOrThrow(device, format.Width, format.Height, format.Levels, format.Levels == 0 ? D3DUSAGE_AUTOGENMIPMAP : 0, format.Format, D3DPOOL::D3DPOOL_MANAGED);
+				try{
+
+
+					D3DLOCKED_RECT lockedRect;
+					DirectXStuff::Texture_LockRectOrThrow(texture, 0, &lockedRect, NULL, 0);
+					try{
+						assignable->AssignToTarget(&lockedRect);
+						//old: assignableData->AssignTo(gcnew AssignableTarget(format, &lockedRect, true /*Unity textures seem to be upside down...*/));
+						Logger::LogText("Assigned texture " + assignable->DebugInfo->ToString());
+					}
+					finally{
+						DirectXStuff::Texture_UnlockRectOrThrow(texture, 0);
+					}
+					// Todo25: Check whether PreLoad has any (positive) effect
+					texture->PreLoad();
+
+
+					callback(IntPtr(texture));
+					delete assignable;
+					texture = NULL;
+				}
+				finally{
+					if (texture != NULL){
+						texture->Release();
+					}
+				}
+
+			}
+			void RunAfterConversion(IntPtr devicePtr){
+				Logger::LogText("Retrying GpuCopy post-convert of " + assignable->DebugInfo);
+				RunWithFormat((IDirect3DDevice9*)devicePtr.ToPointer());
+			}
+			void RunAssignableConversion(){
+				Logger::LogText("PreGpuCopy-converting Texture " + assignable->DebugInfo + " to " + format.ToString());
+				assignable = assignable->ConvertToAssignableFormat(format);
+			}
+			bool CheckTextureRequirementsForFormat(IDirect3DDevice9* device, AssignableFormat% fmt){
+				UINT w = fmt.Width,
+					h = fmt.Height,
+					l = fmt.Levels;
+				D3DFORMAT f = fmt.Format;
+				DirectXStuff::D3DX_CheckTextureRequirementsToThrow(device, &w, &h, &l, 0, &f, D3DPOOL::D3DPOOL_MANAGED);
+				if (w == fmt.Width && h == fmt.Height && f == fmt.Format){
+					if ((l == fmt.Levels) || (fmt.Levels == 0)){
+						return true;
+					}
+				}
+				Logger::LogText("DX Forces format change! " + fmt.ToString() + " to " + AssignableFormat(w, h, l, f).ToString());
+				fmt.Width = w;
+				fmt.Height = h;
+				fmt.Levels = l;
+				fmt.Format = f;
+				return false;
+			}
+			void Run(IntPtr devicePtr){
+				Logger::LogText("Trying GpuCopy of " + assignable->DebugInfo);
+				auto device = (IDirect3DDevice9*)devicePtr.ToPointer();
+				if (CheckTextureRequirementsForFormat(device, format)){
+					RunWithFormat(device);
+				}
+				else{
+					Work::SchedulePriority(gcnew Action(this, &CreateTextureForAssignableAsyncScope::RunAssignableConversion));
+				}
+			}
+		};
+	public:
+
+		static void CreateTextureForAssignable(IAssignableTexture^ assignableTexture, Action<IntPtr>^ onSuccessCallback){
+			KSPThread::EnqueueJob(gcnew Action<IntPtr>(gcnew CreateTextureForAssignableAsyncScope(assignableTexture, onSuccessCallback), &CreateTextureForAssignableAsyncScope::Run));
+		}
+	};
+
+	// An old and "more complex" version...
+#if old
 	ref class GPU{
 	public:
 		static void CopyBuffer(unsigned char* src_buffer, int src_pitch, unsigned char* trg_buffer, int trg_pitch, int line_size_in_bytes, int height){
@@ -155,7 +255,7 @@ namespace LodNative{
 			// Todo25: Check whether PreLoad has a (positive) effect
 			texture->PreLoad();
 		}
-		ref class CreateHighResTextureAsyncScope{
+		ref class CreateForDataTextureAsyncScope{
 		private:
 			Func<AssignableFormat^, AssignableData^>^ delayedCallbackToRun;
 			AssignableFormat^ acceptedFormat;
@@ -163,7 +263,7 @@ namespace LodNative{
 		public:
 			IAssignableTexture^ assignableTexture;
 			int textureId;
-			CreateHighResTextureAsyncScope(IAssignableTexture^ assignable_texture, int texture_id){
+			CreateForDataTextureAsyncScope(IAssignableTexture^ assignable_texture, int texture_id){
 				assignableTexture = assignable_texture;
 				textureId = texture_id;
 			}
@@ -188,7 +288,7 @@ namespace LodNative{
 					throw gcnew InvalidOperationException("Texture did not return assignable data.");
 				}
 				else{
-					KSPThread::EnqueueJob(gcnew Action<IntPtr>(this, &CreateHighResTextureAsyncScope::RunDelayedSuccessful));
+					KSPThread::EnqueueJob(gcnew Action<IntPtr>(this, &CreateForDataTextureAsyncScope::RunDelayedSuccessful));
 				}
 
 			}
@@ -235,16 +335,16 @@ namespace LodNative{
 			}
 		};
 	public:
-		static void CreateHighResTextureAsync(IAssignableTexture^ self, int texture_id){
-			KSPThread::EnqueueJob(gcnew Action<IntPtr>(gcnew CreateHighResTextureAsyncScope(self, texture_id), &CreateHighResTextureAsyncScope::Run));
+		static void CreateForDataTextureAsync(IAssignableTexture^ self, int texture_id){
+			KSPThread::EnqueueJob(gcnew Action<IntPtr>(gcnew CreateForDataTextureAsyncScope(self, texture_id), &CreateForDataTextureAsyncScope::Run));
 		}
 	private:
-		ref class AssignDataToThumbnailAsyncScope{
+		ref class AssignDataToExistingTextureAsyncScope{
 		public:
 			int textureId;
 			IAssignableTexture^ assignableTexture;
 			IDirect3DTexture9* targetTexture;
-			AssignDataToThumbnailAsyncScope(IAssignableTexture^ assignable, IDirect3DTexture9* target, int textureId){
+			AssignDataToExistingTextureAsyncScope(IAssignableTexture^ assignable, IDirect3DTexture9* target, int textureId){
 				assignableTexture = assignable;
 				targetTexture = target;
 				this->textureId = textureId;
@@ -271,13 +371,13 @@ namespace LodNative{
 					ManagedBridge::ThumbnailUpdated(textureId);
 					//Logger::LogText("success reporting?");
 				}
-
 			}
 		};
 	public:
-		static void AssignDataToThumbnailAsync(IAssignableTexture^ self, IDirect3DTexture9* texture, int textureId){
-			KSPThread::EnqueueJob(gcnew Action<IntPtr>(gcnew AssignDataToThumbnailAsyncScope(self, texture, textureId), &AssignDataToThumbnailAsyncScope::Run));
+		static void AssignDataToExistingTextureAsync(IAssignableTexture^ self, IDirect3DTexture9* texture, Action^ callback/* int textureId */){
+			KSPThread::EnqueueJob(gcnew Action<IntPtr>(gcnew AssignDataToExistingTextureAsyncScope(self, texture, textureId), &AssignDataToExistingTextureAsyncScope::Run));
 		}
 
 	};
+#endif
 }

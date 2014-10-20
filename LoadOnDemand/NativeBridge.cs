@@ -16,6 +16,16 @@ namespace LoadOnDemand
 
         public static class PInvokeDelegates
         {
+            [StructLayout(LayoutKind.Sequential)]
+            public struct ImageConfig
+            {
+                public byte ThumbnailEnabled;
+                public int ThumbnailWidth;
+                public int ThumbnailHeight;
+                public byte ThumbnailCompress;
+                public byte CompressHighRes;
+            };
+
             [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
             public delegate void DumpTexture(IntPtr texturePtr, [MarshalAs(UnmanagedType.LPStr)]string file_name);
 
@@ -24,18 +34,21 @@ namespace LoadOnDemand
             [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
             public unsafe delegate void Setup(
                 [MarshalAs(UnmanagedType.LPStr)] string cacheDirectory,
+                //ImageConfig* defaultImageConfig,
                 void* thumbUpdateCallback,
                 void* textureLoadedCallback,
                 void* statusUpdatedCallback,
                 void* requestUpdateFromKspThreadCallback,
-                void* onSignalThreadIdlleCallback
+                void* onSignalThreadIdlleCallback,
+                void* texturePreparedCallback
                 );
             [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
             public unsafe delegate int RegisterTexture(
                 [MarshalAs(UnmanagedType.LPStr)] string file,
                 [MarshalAs(UnmanagedType.LPStr)] string key,
-                void* thumbTexturePtr,
-                bool isNormalMap
+                //void* thumbTexturePtr,
+                bool isNormalMap,
+                ref ImageConfig imageConfig
                 );
             [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
             public delegate void RequestTextureLoad(int nativeId);
@@ -53,7 +66,7 @@ namespace LoadOnDemand
         {
             
             [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-            public delegate void OnThumbnailUpdatedDelegate(int textureId);
+            public delegate void OnThumbnailUpdatedDelegate(int textureId, IntPtr nativePtr);
             [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
             public delegate void OnTextureLoadedDelegate(int textureId, IntPtr nativePtr);
             [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
@@ -62,6 +75,8 @@ namespace LoadOnDemand
             public delegate void OnRequestKspUpdateDelegate();
             [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
             public delegate void OnSignalThreadIdleDelegate();
+            [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+            public delegate void OnTexturePrepared();
         }
 
        
@@ -82,6 +97,7 @@ namespace LoadOnDemand
         static Callbacks.OnStatusUpdatedDelegate osu;
         static Callbacks.OnRequestKspUpdateDelegate orku;
         static Callbacks.OnSignalThreadIdleDelegate osti;
+        static Callbacks.OnTexturePrepared otp;
 
         static string CopyEmbededNativeDllAndGetPath()
         {
@@ -194,13 +210,16 @@ namespace LoadOnDemand
             osu = OnStatusUpdated_Callback;
             orku = OnCallbackFromKspThreadRequested;
             osti = OnSignalThreadIdle_Callback;
+            otp = OnTexturePrepared_Callback;
             NlodSetup(
                 cache_directory,
+                
                 Marshal.GetFunctionPointerForDelegate(otu).ToPointer(),
                 Marshal.GetFunctionPointerForDelegate(otl).ToPointer(),
                 Marshal.GetFunctionPointerForDelegate(osu).ToPointer(),
                 Marshal.GetFunctionPointerForDelegate(orku).ToPointer(),
-                Marshal.GetFunctionPointerForDelegate(osti).ToPointer()
+                Marshal.GetFunctionPointerForDelegate(osti).ToPointer(),
+                Marshal.GetFunctionPointerForDelegate(otp).ToPointer()
                 );
             var t = new System.Threading.Thread(() =>
             {
@@ -218,12 +237,19 @@ namespace LoadOnDemand
             //Logic.DevStuff.Status = i.ToString();
             // regular reverse pinvoke is required so mono can kill this thread if required.
         }
-        static void OnThumbnailLoaded_Callback(int textureId)
+        static void OnThumbnailLoaded_Callback(int textureId, IntPtr nativePtr)
         {
             Logic.WorkQueue.AddJob(() =>
             {
-                OnThumbnailLoaded.TryCall(textureId);
+                OnThumbnailLoaded.TryCall(textureId, nativePtr);
             });
+        }
+        static void OnTexturePrepared_Callback()
+        {
+            if (OnTexturePrepared != null)
+            {
+                Logic.WorkQueue.AddJob(OnTexturePrepared);
+            }
         }
         static void OnTextureUpdated_Callback(int textureId, IntPtr nativePtr)
         {
@@ -249,14 +275,32 @@ namespace LoadOnDemand
                 }
             });
         }
-        public unsafe static int RegisterTextureAndRequestThumbLoad(string source_file, string cacheId, IntPtr thumbTextureTarget, bool isNormalMap)
+        public unsafe static int RegisterTextureAndRequestThumbLoad(string source_file, string cacheId, /*IntPtr thumbTextureTarget,*/ bool isNormalMap, ImageSettings imageSettings)
         {
-            return NlodRegisterTexture(
-                source_file,
-                cacheId,
-                thumbTextureTarget.ToPointer(),
-                isNormalMap
-                );
+            PInvokeDelegates.ImageConfig ic = new PInvokeDelegates.ImageConfig()
+            {
+                ThumbnailCompress = imageSettings.ThumbnailCompress.Value ? (byte)1 : (byte)0,
+                ThumbnailEnabled = imageSettings.ThumbnailEnabled.Value ? (byte)1 : (byte)0,
+                ThumbnailHeight = imageSettings.ThumbnailHeight.Value,
+                ThumbnailWidth = imageSettings.ThumbnailWidth.Value,
+                CompressHighRes = imageSettings.HighResCompress.Value ? (byte)1 : (byte)0
+            };
+            //fixed(PInvokeDelegates.ImageConfig* fic = ic){
+            try
+            {
+                // Todo: this looks crap, find out a better way, probably proper mashalling with ref types here!
+                return NlodRegisterTexture(
+                    source_file,
+                    cacheId,
+                    //thumbTextureTarget.ToPointer(),
+                    isNormalMap,
+                    ref ic
+                    );
+            }
+            finally
+            {
+                GC.KeepAlive(ic);
+            }
         }
         public static void RequestTextureLoad(int id)
         {
@@ -276,7 +320,8 @@ namespace LoadOnDemand
         }
 
         public static event Action<int, IntPtr> OnTextureLoaded;
-        public static event Action<int> OnThumbnailLoaded;
+        public static event Action<int, IntPtr> OnThumbnailLoaded;
+        public static event Action OnTexturePrepared;
         
         public static void Debug_DumpTextureNative(Texture2D texture, String fileName)
         {

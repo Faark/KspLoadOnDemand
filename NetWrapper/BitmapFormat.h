@@ -10,7 +10,9 @@ using namespace System::IO;
 
 #include "ITexture.h"
 #include "BufferMemory.h"
+#include "Stuff.h"
 
+// Todo: We might be able to improve this class quite a bit by not locking and releasing the BitmapData over and over again. Why don't we let BitmapFormat handle this more intelligently?
 namespace LodNative{
 	ref class BitmapFormat : IAssignableTexture{
 		Bitmap^ imgData;
@@ -21,21 +23,34 @@ namespace LodNative{
 			isNormal = is_normal;
 			Log(this);
 		}
-		property bool IsNormal{bool get(){ return isNormal; } }
+
+		property UINT Width {UINT get() override { return Bitmap->Width; }}
+		property UINT Height {UINT get() override { return Bitmap->Height; }}
+		property bool IsNormal{bool get() override { return isNormal; } }
 		property Bitmap^ Bitmap{Drawing::Bitmap^ get(){ return imgData; } }
 
 		BitmapFormat^ ToNormal();
 		BitmapFormat^ MayToNormal(bool toNormal);
 		BitmapFormat^ Resize(int new_width, int new_height);
+		BitmapFormat^ ResizeWithAlphaFix(int new_width, int new_height);
 		BitmapFormat^ ConvertTo(PixelFormat format);
 		BitmapFormat^ ConvertTo(D3DFORMAT format);
-		BitmapFormat^ SetAlpha(Byte new_alpha);
+		BitmapFormat^ Clone();
+		void SetAlpha(Byte new_alpha);
+		void FlipVertical();
+		bool CheckForAlphaChannelData(BitmapData^ bmpData);
+		bool CheckForAlphaChannelData();
+		
 
 		static BitmapFormat^ LoadUnknownFile(FileInfo^ file, BufferMemory::ISegment^ data, int textureId);
 		static bool FileNameIndicatesTextureShouldBeNormal(FileInfo^ file){
 			return Path::GetFileNameWithoutExtension(file->FullName)->ToUpper()->EndsWith("NRM");
 		}
+		virtual AssignableFormat GetAssignableFormat() override;
+		virtual void AssignToTarget(D3DLOCKED_RECT* trg) override;
+		virtual IAssignableTexture^ ConvertToAssignableFormat(AssignableFormat fmt) override;
 
+		/*
 		virtual  AssignableFormat^ GetAssignableFormat() override;
 	private:
 		ref class BitmapAssignableData : AssignableData{
@@ -51,7 +66,7 @@ namespace LodNative{
 		~BitmapFormat(){
 			delete imgData;
 			imgData = nullptr;
-		}
+		}*/
 	};
 
 }

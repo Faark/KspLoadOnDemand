@@ -65,6 +65,13 @@ namespace LoadOnDemand
                 self(t1);
             }
         }
+        public static void TryCall(this Action self)
+        {
+            if (self != null)
+            {
+                self();
+            }
+        }
         public static int ToInt(this Double self)
         {
             return (int)self;

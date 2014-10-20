@@ -2,6 +2,7 @@
 
 using namespace System;
 
+#include "Stuff.h"
 #include "ITexture.h"
 #include "BitmapFormat.h"
 #include "AssignableData.h"
@@ -10,10 +11,13 @@ namespace LodNative{
 	ref class MBMTexture : IAssignableTexture{
 
 		array<Byte>^ RawData;
+		bool isNormal;
+		UINT width;
+		UINT height;
 	public:
-		property int Width;
-		property int Height;
-		property bool IsNormal;
+		property UINT Width { UINT get() override { return width; } }
+		property UINT Height { UINT get() override { return height; } }
+		property bool IsNormal{ bool get() override { return isNormal; } }
 
 		MBMTexture(BufferMemory::ISegment^ data, TextureDebugInfo^ tdi) :IAssignableTexture(tdi) {
 			System::IO::MemoryStream^ ms = nullptr;
@@ -24,9 +28,9 @@ namespace LodNative{
 				ms = data->CreateStream();
 				bs = gcnew System::IO::BinaryReader(ms);
 				bs->ReadString();
-				Width = bs->ReadInt32();
-				Height = bs->ReadInt32();
-				IsNormal = bs->ReadInt32() == 1;
+				width = bs->ReadInt32();
+				height = bs->ReadInt32();
+				isNormal = bs->ReadInt32() == 1;
 				int bitPerPixel = bs->ReadInt32();
 				switch (bitPerPixel){
 				case 32:
@@ -101,7 +105,22 @@ namespace LodNative{
 			data->Free();
 		}
 
+		virtual AssignableFormat GetAssignableFormat() override{
+			return AssignableFormat(Width, Height, 0, DirectXStuff::D3DFormatFromPixelFormat(PixelFormat::Format32bppArgb));
+		}
+		virtual void AssignToTarget(D3DLOCKED_RECT* trg) override{
+			// GPU thread!
+			pin_ptr<unsigned char> src_ptr = &RawData[0];
+			auto pitch = 4 * Width;
+			Stuff::CopyLineBuffer(src_ptr, pitch, (unsigned char*)trg->pBits, trg->Pitch, pitch, Height);
+		}
+		virtual IAssignableTexture^ ConvertToAssignableFormat(AssignableFormat fmt) override{
+			// Work thread!
+			throw gcnew NotSupportedException("Not supported in this Version. Interesting that its actually needed. Please do report this!");
+		}
 
+
+		/*
 		virtual AssignableFormat^ GetAssignableFormat() override{
 			return gcnew AssignableFormat(Width, Height, D3DFORMAT::D3DFMT_A8R8G8B8);
 		}
@@ -113,6 +132,7 @@ namespace LodNative{
 			tmp->IsUpsideDown = true;
 			return tmp;
 		}
+		*/
 
 		BitmapFormat^ ToBitmap(){
 			auto w = Width;
@@ -123,7 +143,10 @@ namespace LodNative{
 			pin_ptr<unsigned char> srcPinPtr = &RawData[0];
 
 			int lineSize = Width * 4;
-			GPU::CopyBufferInverted(srcPinPtr, lineSize, (unsigned char*)bmpData->Scan0.ToPointer(), bmpData->Stride, lineSize, h);
+			// inverted?! Guess that means MBMs are already upside down? Lets just copy it for now...
+			// GPU::CopyBufferInverted(srcPinPtr, lineSize, (unsigned char*)bmpData->Scan0.ToPointer(), bmpData->Stride, lineSize, h);
+			Stuff::CopyLineBuffer(srcPinPtr, lineSize, (unsigned char*)bmpData->Scan0.ToPointer(), bmpData->Stride, lineSize, h);
+
 			bmp->UnlockBits(bmpData);
 			auto isN = IsNormal;
 			auto di = DebugInfo;
@@ -133,7 +156,7 @@ namespace LodNative{
 		static BitmapFormat^ ConvertToBitmap(MBMTexture^ from){
 			return from->ToBitmap();
 		}
-		static MBMTexture^ Recignizer(System::IO::FileInfo^ file, BufferMemory::ISegment^ data, int textureId)
+		static MBMTexture^ TryRecognizeFile(System::IO::FileInfo^ file, BufferMemory::ISegment^ data, int textureId)
 		{
 			if (file->Extension->ToUpper() == ".MBM")
 			{

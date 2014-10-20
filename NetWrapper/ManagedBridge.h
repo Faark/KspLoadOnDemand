@@ -11,7 +11,7 @@ namespace LodNative{
 	ref class ManagedBridge{
 	private:
 		[UnmanagedFunctionPointer(CallingConvention::Cdecl)]
-		delegate void OnThumbnailUpdatedDelegate(int textureId);
+		delegate void OnThumbnailUpdatedDelegate(int textureId, IntPtr nativePtr);
 		[UnmanagedFunctionPointer(CallingConvention::Cdecl)]
 		delegate void OnTextureLoadedDelegate(int textureId, IntPtr nativePtr);
 		[UnmanagedFunctionPointer(CallingConvention::Cdecl)]
@@ -20,20 +20,24 @@ namespace LodNative{
 		delegate void OnRequestKspUpdateDelegate();
 		[UnmanagedFunctionPointer(CallingConvention::Cdecl)]
 		delegate void OnSignalThreadIdleDelegate();
+		[UnmanagedFunctionPointer(CallingConvention::Cdecl)]
+		delegate void OnTexturePreparedDelegate();
 
 		static OnThumbnailUpdatedDelegate^ OnThumbnailUpdated;
 		static OnTextureLoadedDelegate^ OnTextureLoaded;
 		static OnStatusUpdatedDelegate^ OnStatusUpdated;
 		static OnRequestKspUpdateDelegate^ OnRequestKspUpdate;
 		static OnSignalThreadIdleDelegate^ OnSignalThreadIdle;
+		static OnTexturePreparedDelegate^ OnTexturePrepared;
 
 		static BlockingCollection<Action^>^ Messages = gcnew BlockingCollection<Action^>();
 		ref class ThumbnailUpdatedScope{
 		public:
 			int TextureId;
-			ThumbnailUpdatedScope(int textureId) :TextureId(textureId){}
+			IDirect3DTexture9* ThumbTexturePtr;
+			ThumbnailUpdatedScope(int textureId, IDirect3DTexture9* thumbTexturePtr) :TextureId(textureId), ThumbTexturePtr(thumbTexturePtr){}
 			void Do(){
-				OnThumbnailUpdated(TextureId);
+				OnThumbnailUpdated(TextureId, IntPtr(ThumbTexturePtr));
 			}
 		};
 		ref class TextureLoadedScope{
@@ -54,15 +58,21 @@ namespace LodNative{
 			}
 		};
 		static void Do_RequestUpdate(){
-			OnRequestKspUpdate();
+			OnRequestKspUpdate();//those could probably be on the msg-queue itself...
+		}
+		static void Do_TexturePrepared(){
+			OnTexturePrepared();//those could probably be on the msg-queue itself...
 		}
 	public:
-		static void ThumbnailUpdated(int textureId){
+		static void ThumbnailUpdated(int textureId, IDirect3DTexture9* thumbTexturePtr){
 			Logger::LogText("ThumbUpdated: " + textureId);
-			Messages->Add(gcnew Action(gcnew ThumbnailUpdatedScope(textureId), &ThumbnailUpdatedScope::Do));
+			Messages->Add(gcnew Action(gcnew ThumbnailUpdatedScope(textureId, thumbTexturePtr), &ThumbnailUpdatedScope::Do));
 		}
 		static void TextureLoaded(int textureId, IDirect3DTexture9* highResTexturePtr){
 			Messages->Add(gcnew Action(gcnew TextureLoadedScope(textureId, highResTexturePtr), &TextureLoadedScope::Do));
+		}
+		static void TexturePrepared(int textureId){
+			Messages->Add(gcnew Action(Do_TexturePrepared));
 		}
 		static void StatusUpdate(String^ text){
 			Messages->Add(gcnew Action(gcnew StatusUpdateScope(text), &StatusUpdateScope::Do));
@@ -89,7 +99,7 @@ namespace LodNative{
 				}
 			}
 		}
-		static void Setup(void* thumbUpdateCallback, void*textureLoadedCallback, void* statusUpdatedCallback, void* requestKspUpdateCallback, void* onSignalThreadIdlleCallback){
+		static void Setup(void* thumbUpdateCallback, void*textureLoadedCallback, void* statusUpdatedCallback, void* requestKspUpdateCallback, void* onSignalThreadIdlleCallback, void* texturePreparedCallback){
 			/*
 			OnThumbnailUpdated = Marshal::GetDelegateForFunctionPointer<OnThumbnailUpdatedDelegate^>(IntPtr(thumbUpdateCallback));
 			OnTextureLoaded = Marshal::GetDelegateForFunctionPointer<OnTextureLoadedDelegate^>(IntPtr(textureLoadedCallback));
@@ -102,6 +112,7 @@ namespace LodNative{
 			OnStatusUpdated = (OnStatusUpdatedDelegate^)Marshal::GetDelegateForFunctionPointer(IntPtr(statusUpdatedCallback), OnStatusUpdatedDelegate::typeid);
 			OnRequestKspUpdate = (OnRequestKspUpdateDelegate^)Marshal::GetDelegateForFunctionPointer(IntPtr(requestKspUpdateCallback), OnRequestKspUpdateDelegate::typeid);
 			OnSignalThreadIdle = (OnSignalThreadIdleDelegate^)Marshal::GetDelegateForFunctionPointer(IntPtr(onSignalThreadIdlleCallback), OnSignalThreadIdleDelegate::typeid);
+			OnTexturePrepared = (OnTexturePreparedDelegate^)Marshal::GetDelegateForFunctionPointer(IntPtr(texturePreparedCallback), OnTexturePreparedDelegate::typeid);
 
 
 			System::AppDomain::CurrentDomain->UnhandledException += gcnew System::UnhandledExceptionEventHandler(&ManagedBridge::OnUnhandledException);

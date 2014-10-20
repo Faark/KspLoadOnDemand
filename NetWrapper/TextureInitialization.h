@@ -2,6 +2,7 @@
 
 #include "ITexture.h"
 #include "BufferMemory.h"
+#include "ManagedBridge.h"
 
 
 using namespace System;
@@ -9,6 +10,14 @@ using namespace System::IO;
 
 
 namespace LodNative{
+	ref class ImageSettings{
+	public:
+		bool ThumbnailEnabled;
+		int ThumbnailWidth;
+		int ThumbnailHeight;
+		bool ThumbnailCompress;
+		bool CompressHighRes;
+	};
 	/**
 		Work of a texture init:
 		- try load thumb from cache.
@@ -30,11 +39,14 @@ namespace LodNative{
 		bool isNormal;
 		String^ sourceFile; // source file to init from
 		String^ thumbFile;
-		IDirect3DTexture9* thumbTexture;
-		int thumbWidth;
-		int thumbHeight;
-		D3DFORMAT thumbFormat;
+		String^ cacheDir;
+		String^ cacheId;
+		//IDirect3DTexture9* thumbTexture;
+		//int thumbWidth;
+		//int thumbHeight;
+		//D3DFORMAT thumbFormat;
 		String^ ingameDetailedFile; // texture to be loaded in use...
+		ImageSettings^ imageProcessingSettings;
 		Action<TextureInitialization^>^ onDoneCallback;
 
 		bool hasToGenerateThumb = false;
@@ -49,6 +61,9 @@ namespace LodNative{
 		property String^ HighResolutionTextureFile {
 			String^ get(){ return ingameDetailedFile; }
 		}
+		property String^ SourceFile{
+			String^ get(){ return sourceFile; }
+		}
 
 	private:
 		void TryVerifyThumb();
@@ -60,7 +75,21 @@ namespace LodNative{
 		void GenerateHighRes(ITextureBase^ source_texture);
 		void InitializationComplete();
 		TextureInitialization() { }
+
+		ref class ThumbnailLoadedCallbackScope{
+		private:
+			int textureId;
+		public:
+			ThumbnailLoadedCallbackScope(int texture_id) : textureId(texture_id){}
+			void Run(IntPtr texturePtr){
+				ManagedBridge::ThumbnailUpdated(textureId, (IDirect3DTexture9*)texturePtr.ToPointer());
+			}
+			static Action<IntPtr>^ Create(int texture_id){
+				return gcnew Action<IntPtr>(gcnew ThumbnailLoadedCallbackScope(texture_id), &Run);
+			}
+		};
+
 	public:
-		static void Start(int texture_id, String^ source_file, String^ cache_id, String^ cache_dir, IDirect3DTexture9* thumbnail_texture, bool is_normal, Action<TextureInitialization^>^ on_done_callback);
+		static void Start(int texture_id, String^ source_file, String^ cache_id, String^ cache_dir, /*IDirect3DTexture9* thumbnail_texture, */bool is_normal, ImageSettings^ imageSettings,  Action<TextureInitialization^>^ on_done_callback);
 	};
 }

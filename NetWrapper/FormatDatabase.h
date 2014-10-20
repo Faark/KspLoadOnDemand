@@ -30,7 +30,7 @@ namespace LodNative{
 				return BitmapFormat::LoadUnknownFile(fi, data, textureId);
 			}
 			catch (Exception^ err){
-				throw gcnew Exception("Failed to Recognize Texture [" + file + "]", err);
+				throw gcnew FormatException("Failed to Recognize Texture [" + file + "]", err);
 			}
 		}
 		static IAssignableTexture^ ConvertToAssignable(ITextureBase^ self){
@@ -69,10 +69,8 @@ namespace LodNative{
 		generic<class TTexture> where TTexture: ITextureBase{
 			static TTexture 
 		}*/
-		static ITextureBase^ Clone(ITextureBase^ texture){
-			throw gcnew NotImplementedException("this mehod shouldn't be required until	we implement texture compression");
-		}
 	private:
+#if unused
 		ref class GetConverterJobScope{
 		public:
 			ITextureBase^ texture;
@@ -93,6 +91,7 @@ namespace LodNative{
 		static Func<AssignableFormat ^, AssignableData ^> ^ GetConverterJob(ITextureBase^ texture){
 			return gcnew Func<AssignableFormat^, AssignableData^>(gcnew GetConverterJobScope(texture), &GetConverterJobScope::RunConvertion);
 		}
+#endif
 	private:
 		generic<class TFromTexture, class TToTexture> where TFromTexture : ITextureBase where TToTexture : ITextureBase
 		ref class AddConversionScope{
@@ -142,8 +141,12 @@ namespace LodNative{
 				FormatDetectors->Add(gcnew Func<System::IO::FileInfo^, BufferMemory::ISegment^, int, ITextureBase^>(gcnew AddRecognitionScope<TTexture>(recognizer), &AddRecognitionScope<TTexture>::Recognize));
 		}
 
+		static bool CouldDXTCompressionMakesAnySense(ITextureBase^ texture){
+			return !texture->IsNormal && (texture->Width >= 16) && (texture->Height >= 16);
+		}
+
 	private:
-		static BitmapFormat^ RecognizeTGA(FileInfo^ file, BufferMemory::ISegment^ data, int textureId);
+		static BitmapFormat^ TryRecognizeTGA(FileInfo^ file, BufferMemory::ISegment^ data, int textureId);
 		static FormatDatabase();
 	};
 }

@@ -3,7 +3,7 @@
 #include "Lock.h"
 #include "Disk.h"
 #include "GPU.h"
-#include "ThumbnailTexture.h"
+//#include "CachedTexture.h"
 
 using namespace LodNative;
 
@@ -32,11 +32,34 @@ void TextureManager::Setup(String^ cache_directory)
 
 void TextureManager::StartLoadHighResTextureScope::ProcessLoadedData(BufferMemory::ISegment^ loaded_data){
 	//this->textureData->IsNormal
+	//throw gcnew NotImplementedException("this call can 'fail', since its texture wasn't properly pre-preocessed / verified. Re-create cache in this case?!");
 	try{
-		auto img = FormatDatabase::Recognize(textureData->HighResFile, loaded_data, textureId);
+		ITextureBase^ loadedTexture;
+		try{
+			loadedTexture = FormatDatabase::Recognize(textureData->HighResFile, loaded_data, textureId);
+		}
+		catch (FormatException^ fe){
+			if (textureData->HighResFile != textureData->SourceFile){
+				Logger::LogText("WARNING: Deleting old cache file (" + textureData->HighResFile + ") and revert back to the source (" + textureData->SourceFile + "). Cache schould be rebuilt on next startup. Cause:");
+				Logger::LogException(fe);
+				File::Delete(textureData->HighResFile);
+				textureData->HighResFile = textureData->SourceFile;
+				Disk::RequestFile(textureData->SourceFile, gcnew Action<BufferMemory::ISegment^>(this, &StartLoadHighResTextureScope::ProcessLoadedData));
+				// Todo: Implement a more advanced algorithm that actually re-generates the cache
+				Logger::LogText("Todo: Implement a more advanced algorithm that actually re-generates the cache");
+				return;
+			}
+			throw;
+		}
 		loaded_data = nullptr;
-		auto bmp = FormatDatabase::ConvertTo<BitmapFormat^>(img)->MayToNormal(textureData->IsNormal);
-		GPU::CreateHighResTextureAsync(bmp, textureId);
+		if (textureData->IsNormal && !loadedTexture->IsNormal){
+			loadedTexture = loadedTexture->ConvertTo<BitmapFormat^>()->ToNormal();
+		}
+		GPU::CreateTextureForAssignable(
+			FormatDatabase::ConvertToAssignable(loadedTexture), 
+			gcnew Action<IntPtr>(gcnew TextureLoadedCallbackScope(textureId), &TextureLoadedCallbackScope::Run)
+			//ManagedBridge::CreateTextureLoadedCallback(textureId)
+			);
 	}
 	finally{
 		if (loaded_data != nullptr){
@@ -64,6 +87,7 @@ void TextureManager::OnTexturePreperationCompleted(TextureInitialization^ tex_in
 
 		TextureData^ texData = textures[tex_init->TextureId];
 		texData->HighResFile = tex_init->HighResolutionTextureFile;
+		texData->SourceFile = tex_init->SourceFile;
 		if (texData->IsRequested){
 			mLoadQueue->RequestLoad(tex_init->TextureId, texData);
 		}
@@ -73,7 +97,7 @@ void TextureManager::OnTexturePreperationCompleted(TextureInitialization^ tex_in
 	}
 }
 
-int TextureManager::RegisterTexture(String^ file, String^ cache, IDirect3DTexture9* thumb, bool normal)
+int TextureManager::RegisterTexture(String^ file, String^ cache, /*IDirect3DTexture9* thumb, */bool normal, ImageSettings^ imageSettings)
 {
 	/*
 	//throw gcnew NotImplementedException("Debug: Load via DX and save few bytes...");
@@ -159,8 +183,9 @@ int TextureManager::RegisterTexture(String^ file, String^ cache, IDirect3DTextur
 			file, 
 			cache, 
 			CacheDir,
-			thumb,
+			//thumb,
 			normal,
+			imageSettings,
 			gcnew Action<TextureInitialization^>(&TextureManager::OnTexturePreperationCompleted)
 			);
 
@@ -176,7 +201,7 @@ void TextureManager::RequestTextureLoad(int textureId){
 	if (texData->IsRequested){
 		// Cant happen anymore since we have Requested at other level. IsRequested here shouldn't be necessary anymore...
 		//return; // this can happen in case of Get[Texture]->RequestLoad, Release, Get->RequestLoad (Still loading). Atm not caught on KSP runtime, thus ignoring it for now.
-		throw gcnew NotImplementedException("Was already requested. Todo: Do we actually want to support this? Kinda same as HighResTexture check, btw");
+		throw gcnew NotSupportedException("Was already requested. Todo: Do we actually want to support this? Kinda same as HighResTexture check, btw");
 	}
 	texData->IsRequested = true;// Todo: Possible race condition with OnTexturePreperationCompleted, though i don't just want to lock this method.
 	if (texData->HighResTexture != NULL){
@@ -184,7 +209,7 @@ void TextureManager::RequestTextureLoad(int textureId){
 		* Todo: Think about this. Requesting an already loaded texture might indicate a bug (especially since it might request an unload while still used)
 		* But we also want some local caching to not reload all textures on sceene load. (guess unloading x mb for a new y mb texture?!)
 		*/
-		throw gcnew NotImplementedException("Texture seems already loaded. Todo: As we don't have caching yet, its probably a bug...");
+		throw gcnew NotSupportedException("Texture seems already loaded. Todo: As we don't have caching yet, its probably a bug...");
 	}
 	if (texData->HighResFile != nullptr){
 		mLoadQueue->RequestLoad(textureId, texData);

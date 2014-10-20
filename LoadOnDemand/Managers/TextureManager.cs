@@ -209,7 +209,7 @@ namespace LoadOnDemand.Managers
             TextureData textureData;
             if (iManagedTextures.TryGetValue(textureObject, out textureData))
             {
-                if (textureData.NativeId == -1)
+                if ((textureData.NativeId == -1) || (textureData.File == null))
                 {
                     return new Resources.ResourceDummy();
                 }
@@ -325,10 +325,14 @@ namespace LoadOnDemand.Managers
         }
         static TextureManager()
         {
-            if (Config.Current.ThumbnailFormat != TextureFormat.ARGB32)
-                throw new NotSupportedException("Currnet thumbnails have to be ARGB32!");
             NativeBridge.OnTextureLoaded += NativeBridge_OnTextureLoaded;
             NativeBridge.OnThumbnailLoaded += NativeBridge_OnThumbnailLoaded;
+            NativeBridge.OnTexturePrepared += NativeBridge_OnTexturePrepared;
+        }
+
+        static void NativeBridge_OnTexturePrepared()
+        {
+            Logic.ActivityGUI.PrepareFinished();
         }
         /*
         static void NativeBridge_OnThumbnailLoaded(int nativeId, IntPtr loadedTexturePtr)
@@ -336,9 +340,22 @@ namespace LoadOnDemand.Managers
             // Todo: setPtr? Or do we assign it from native to the actual tmp texture?
             // nativeIdToDataLookup[nativeId].ThumbLoaded = true;
         }*/
-        static void NativeBridge_OnThumbnailLoaded(int nativeId)
+        static void NativeBridge_OnThumbnailLoaded(int nativeId, IntPtr loadedThumbPtr)
         {
-            Logic.ActivityGUI.ThumbFinished();
+            if (loadedThumbPtr == IntPtr.Zero)
+            {
+
+            }
+            else
+            {
+                var textureData = nativeIdToDataLookup[nativeId];
+                if (textureData.Info.texture.GetNativeTexturePtr() == textureData.UnloadedTexture)
+                {
+                    textureData.Info.texture.UpdateExternalTexture(loadedThumbPtr);
+                }
+                UnloadEmptyThumbnailTexture(textureData.UnloadedTexture);
+                textureData.UnloadedTexture = loadedThumbPtr;
+            }
         }
         static void NativeBridge_OnTextureLoaded(int nativeId, IntPtr loadedTexturePtr)
         {
@@ -404,12 +421,21 @@ namespace LoadOnDemand.Managers
             texture.Info.texture.UpdateExternalTexture(tex.GetNativeTexturePtr());
             tex.UpdateExternalTexture(oldUnloadedPtr);
             return;*/
-            Logic.ActivityGUI.ThumbStarting();
+            var imgConfig = Config.Current.GetImageConfig(texture.File);
+            var imgSettings = ImageSettings.Combine(imgConfig.ImageSettings, Config.Current.DefaultImageSettings);
+            Logic.ActivityGUI.PrepareStarting();
+            ("Sending img settings for texture: {HRC=" + imgSettings.HighResCompress + ", TC=" + imgSettings.ThumbnailCompress + ", TE=" + imgSettings.ThumbnailEnabled + ",TW=" + imgSettings.ThumbnailWidth + ",TH=" + imgSettings.ThumbnailHeight + "}").Log();
             texture.NativeId = NativeBridge.RegisterTextureAndRequestThumbLoad(
                 new System.IO.FileInfo(texture.File.fullPath).FullName,
-                Config.Current.GetImageConfig(texture.File).CacheKey,
-                texture.UnloadedTexture,
-                texture.Info.isNormalMap);
+                imgConfig.CacheKey,
+                //texture.UnloadedTexture,
+                texture.Info.isNormalMap,
+                imgSettings
+                );
+            if (!imgSettings.HighResEnabled.Value)
+            {
+                texture.File = null;
+            }
             texture.Info.isReadable = false;
             ("Native ID received: " + texture.NativeId + " for " + texture.Info.name).Log();
         }
@@ -487,8 +513,8 @@ namespace LoadOnDemand.Managers
         }
         static Texture2D CreateEmptyThumbnailTexture()
         {
-            var w = Config.Current.ThumbnailWidth;
-            var h = Config.Current.ThumbnailHeight;
+            var w = Config.Current.DefaultImageSettings.ThumbnailWidth.Value;
+            var h = Config.Current.DefaultImageSettings.ThumbnailHeight.Value;
             var tex = new Texture2D(w, h, TextureFormat.RGBA32, false);
             var startsBlack = true;
             var b = Color.black;
@@ -506,6 +532,12 @@ namespace LoadOnDemand.Managers
             tex.Apply(true, false);
             return tex;
         }
+        static void UnloadEmptyThumbnailTexture(IntPtr texture)
+        {
+            // Todo: Find out whether this is actually a good way to unload textures.
+            var t = Texture2D.CreateExternalTexture(Config.Current.DefaultImageSettings.ThumbnailWidth.Value, Config.Current.DefaultImageSettings.ThumbnailHeight.Value, TextureFormat.RGBA32, false, false, texture);
+            UnityEngine.Object.Destroy(t);
+       }
 
         // Makes lod taking over control over an already loaded texture.
         public static void ForceManage(GameDatabase.TextureInfo info)

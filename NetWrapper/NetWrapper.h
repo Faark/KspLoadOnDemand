@@ -15,6 +15,13 @@ Think about letting them travel anyway, though for now crashing is kinda nice.
 */
 
 namespace LodNative{
+	struct ImageConfig{
+		unsigned char ThumbnailEnabled;
+		int ThumbnailWidth;
+		int ThumbnailHeight;
+		unsigned char ThumbnailCompress;
+		unsigned char CompressHighRes;
+	};
 	extern "C" __declspec(dllexport) void NlodDebug_DumpTexture(void* texturePtr, const char* file_name){
 		ManagedBridge::MayCrash();
 		try{
@@ -42,7 +49,7 @@ namespace LodNative{
 			throw;
 		}
 	}
-	extern "C" __declspec(dllexport) void NlodSetup(const char* cache_directory, void* thumbUpdateCallback, void*textureLoadedCallback, void* statusUpdatedCallback, void* requestUpdateFromKspThreadCallback, void* onSignalThreadIdlleCallback){
+	extern "C" __declspec(dllexport) void NlodSetup(const char* cache_directory, /*const ImageConfig* defaultImageConfig,*/ void* thumbUpdateCallback, void*textureLoadedCallback, void* statusUpdatedCallback, void* requestUpdateFromKspThreadCallback, void* onSignalThreadIdlleCallback, void* texturePreparedCallback){
 		/*array<String^, 1> ^ names = System::Reflection::Assembly::GetExecutingAssembly()->GetManifestResourceNames();
 		for (int i = 0; i < names->Length; i++){
 		System::IO::File::AppendAllText("C:\\ksp_rtLodNew\\bridgeNet.txt", names[i]);
@@ -55,7 +62,7 @@ namespace LodNative{
 			// This will hopefully add enough pressure to our GC to make it occure frequently...
 			System::GC::AddMemoryPressure(0x7FFFFFFF /*Int32::MaxValue, 2gb*/);
 			System::GC::AddMemoryPressure((long long)1024 * (long long)1024 * (long long)1800 /*1.2/1.35/1.5gb/1.8gb*/);
-			ManagedBridge::Setup(thumbUpdateCallback, textureLoadedCallback, statusUpdatedCallback, requestUpdateFromKspThreadCallback, onSignalThreadIdlleCallback);
+			ManagedBridge::Setup(thumbUpdateCallback, textureLoadedCallback, statusUpdatedCallback, requestUpdateFromKspThreadCallback, onSignalThreadIdlleCallback, texturePreparedCallback);
 			TextureManager::Setup(cacheDirectory);
 		}
 		catch (Exception^ err){
@@ -71,16 +78,29 @@ namespace LodNative{
 			throw;
 		}
 	}
-	extern "C" __declspec(dllexport) int NlodRegisterTexture(const char* file, const char* cacheKey, void* thumbTexturePtr, bool isNormalMap){
+	extern "C" __declspec(dllexport) int NlodRegisterTexture(const char* file, const char* cacheKey, /*void* thumbTexturePtr,*/ bool isNormalMap, const ImageConfig* imageConfig){
 		ManagedBridge::MayCrash();
 		try{
 			String^ f = gcnew String(file);
 			String^ ck = gcnew String(cacheKey);
-			Logger::LogTrace(String::Format("Enter RegisterTexture({0}, {1}, {2}, " + isNormalMap + ")", f, ck, IntPtr(thumbTexturePtr).ToInt32()));
-			if (thumbTexturePtr == NULL){
+			/*if (thumbTexturePtr == NULL){
 				throw gcnew ArgumentException("Thumb texture ptr is null!");
-			}
-			int r = TextureManager::RegisterTexture(f, ck, (IDirect3DTexture9*)thumbTexturePtr, isNormalMap);
+			}*/
+			auto iSettings = gcnew ImageSettings();
+			iSettings->CompressHighRes = imageConfig->CompressHighRes != 0;
+			iSettings->ThumbnailCompress = imageConfig->ThumbnailCompress != 0;
+			iSettings->ThumbnailEnabled = imageConfig->ThumbnailEnabled != 0;
+			iSettings->ThumbnailWidth = imageConfig->ThumbnailWidth;
+			iSettings->ThumbnailHeight = imageConfig->ThumbnailHeight;
+			Logger::LogTrace("Enter RegisterTexture(file=" + f + ", cKey=" + ck + ", isNormal=" + isNormalMap
+				+ ", imgCfg={CHR=" + iSettings->CompressHighRes
+				+ ", TC=" + iSettings->ThumbnailCompress
+				+ ", TE=" + iSettings->ThumbnailEnabled
+				+ ", TW=" + iSettings->ThumbnailWidth
+				+ ", TH=" + iSettings->ThumbnailHeight
+				+ "})");
+
+			int r = TextureManager::RegisterTexture(f, ck, /*(IDirect3DTexture9*)thumbTexturePtr, */isNormalMap, iSettings);
 			Logger::LogTrace("Leave RegisterTexture: " +r);
 			return r;
 		}

@@ -11,6 +11,8 @@ ITextureBase::ITextureBase(TextureDebugInfo^ debug_info){
 generic <class T> where T: ITextureBase
 T ITextureBase::Log(T texture){
 	return texture;
+
+	// todo: what the hell is this?! advanced auto-logging?
 	if (!dontLogConverts){
 		try{
 			auto debug_info = texture->DebugInfo;
@@ -29,7 +31,7 @@ T ITextureBase::Log(T texture){
 }
 
 
-generic <class T> where T: ITextureBase 
+generic <class T> where T: ITextureBase
 T ITextureBase::ConvertTo()
 {
 	return FormatDatabase::ConvertTo<T>(this);

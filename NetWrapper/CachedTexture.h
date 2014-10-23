@@ -214,6 +214,21 @@ namespace LodNative{
 				throw gcnew NotSupportedException("Width & Height must be divisible by 4 for DXT, no automatic adjustment exists so far.");
 			}
 			auto srcData = bmp->LockBits(Drawing::Rectangle(0, 0, w, h), ImageLockMode::ReadOnly, PixelFormat::Format32bppArgb);
+
+
+			// DXT textures came out wrongly colored, hope this does correct it. (What should have been yellow was blue)
+			unsigned char* line = (unsigned char*)srcData->Scan0.ToPointer();
+			for (int y = 0; y < h; y++){
+				unsigned char* pos = line;
+				for (int x = 0; x < w; x++){
+					unsigned char tmp = *(pos + 0);
+					*(pos + 0) = *(pos + 2);
+					*(pos + 2) = tmp;
+					pos += 4;
+				}
+				line += srcData->Stride;
+			}
+
 			
 			auto useDxt5 = source->CheckForAlphaChannelData(srcData);
 
@@ -272,7 +287,6 @@ namespace LodNative{
 			return format;
 		}
 
-		[Obsolete("CONTAINS DEBUG STUFF")]
 		virtual void AssignToTarget(D3DLOCKED_RECT* trg) override{
 			// GPU thread!
 			//Stuff::CopyLineBuffer
@@ -280,10 +294,12 @@ namespace LodNative{
 			pin_ptr<unsigned char> src_ptr = &byteData[ByteDataOffset];
 			if (format.Format == D3DFORMAT::D3DFMT_DXT1){
 				auto pitch = (Width >> 2) /*blocks per "line"*/ * 8 /*block size*/;
-				Stuff::CopyLineBuffer(src_ptr, pitch, (unsigned char*)trg->pBits, trg->Pitch, pitch, Height % 4);
+				//Logger::LogText("DXT1:CopyLineBuffer(" + IntPtr(src_ptr) + ", " + pitch + ", " + IntPtr((unsigned char*)trg->pBits) + ", " + trg->Pitch + ", " + pitch + ", " + Height / 4 + ")");
+				Stuff::CopyLineBuffer(src_ptr, pitch, (unsigned char*)trg->pBits, trg->Pitch, pitch, Height / 4);
 			}else if (format.Format == D3DFORMAT::D3DFMT_DXT5){
 				auto pitch = (Width >> 2) /*blocks per "line"*/ * 16 /*block size*/;
-				Stuff::CopyLineBuffer(src_ptr, pitch, (unsigned char*)trg->pBits, trg->Pitch, pitch, Height % 4);
+				//Logger::LogText("DXT5:CopyLineBuffer(" + IntPtr(src_ptr) + ", " + pitch + ", " + IntPtr((unsigned char*)trg->pBits) + ", " + trg->Pitch + ", " + pitch + ", " + Height / 4 + ")");
+				Stuff::CopyLineBuffer(src_ptr, pitch, (unsigned char*)trg->pBits, trg->Pitch, pitch, Height / 4);
 			}
 			else{
 

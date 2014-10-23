@@ -26,6 +26,7 @@ BitmapFormat^ FormatDatabase::TryRecognizeTGA(FileInfo^ file, BufferMemory::ISeg
 			delete img;
 			delete ms;
 			data->Free();
+			bmp->FlipVertical();
 			return bmp;
 			// todo: find out whether this has any effect (on KSP/pinvoke aswell!)
 			System::GC::Collect();

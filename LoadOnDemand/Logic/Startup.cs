@@ -38,7 +38,7 @@ namespace LoadOnDemand.Logic
                     else
                     {
                         /*
-                        var cached = System.IO.Path.Combine( Config.Current.GetCacheDirectory(), Config.Current.GetImageConfig(file).CacheKey + ".CACHE");
+                        var cached = System.IO.Path.Combine(Config.Current.GetCacheDirectory(), Config.Current.GetImageConfig(file).CacheKey + ".CACHE");
                         if (System.IO.File.Exists(cached))
                         {
                             using (var ms = System.IO.File.OpenRead(cached))
@@ -51,11 +51,12 @@ namespace LoadOnDemand.Logic
                                 }
                                 var width = bs.ReadInt32();
                                 var height = bs.ReadInt32();
-                                TextureFormat tf;   
+                                TextureFormat tf;
                                 var fmtInt = bs.ReadInt32();
                                 switch (fmtInt)
                                 {
                                     case 21:
+                                        continue;
                                         tf = TextureFormat.ARGB32;
                                         break;
                                     case 827611204:
@@ -69,16 +70,55 @@ namespace LoadOnDemand.Logic
                                 }
                                 var isNormal = bs.ReadByte() != 0;
                                 var dataOffset = (int)ms.Position;
-                                var tex = new Texture2D(width, height, tf, false);
-                                var data = new byte[ms.Length - dataOffset];
-                                ms.Read(data, 0, data.Length);
-                                tex.LoadRawTextureData(data);
+
+
+                                #region From CreateEmptyThumbnailTexture
+                                var w = Config.Current.DefaultImageSettings.ThumbnailWidth.Value;
+                                var h = Config.Current.DefaultImageSettings.ThumbnailHeight.Value;
+                                var tex = new Texture2D(w, h, TextureFormat.RGBA32, false);
+                                var startsBlack = true;
+                                var b = Color.black;
+                                var m = Color.magenta;
+                                b.a = m.a = 0.5f;
+                                for (var x = 0; x < w; x++)
+                                {
+                                    var isBlack = (startsBlack = !startsBlack);
+                                    for (var y = 0; y < h; y++)
+                                    {
+                                        tex.SetPixel(x, y, isBlack ? Color.black : Color.magenta);
+                                        isBlack = !isBlack;
+                                    }
+                                }
+                                tex.Apply(true, false);
+                                #endregion
+
                                 var info = new GameDatabase.TextureInfo(tex, isNormal, false, true);
                                 info.texture.name = info.name = file.url;
                                 GameDatabase.Instance.databaseTexture.Add(info);
+
+
+
+                                var ctex = new Texture2D(width, height, tf, false);
+                                var data = new byte[ms.Length - dataOffset];
+                                ms.Read(data, 0, data.Length);
+                                ctex.LoadRawTextureData(data);
+                                ctex.Apply(false, true);
+
+                                var ctexPtr = ctex.GetNativeTexturePtr();
+                                var texPtr = tex.GetNativeTexturePtr();
+
+                                tex.UpdateExternalTexture(ctexPtr);
+                                ctex.UpdateExternalTexture(texPtr);
+
+                                UnityEngine.Object.Destroy(ctex);
+
+
+
+
                             }
                         }
-                        continue;*/
+                        continue;
+                         */
 
                         ("Registering texture: " + file.url + ", Dated: " + file.fileTime).Log();
                         var texInfo = Managers.TextureManager.Setup(file);

@@ -102,7 +102,7 @@ namespace LodNative{
 			auto textureData = textures[textureId];
 			if (textureData->IsRequested && (textureData->HighResTexture == nullptr)){
 				textureData->HighResTexture = texture;
-				Logger::LogText("Loaded Texture " + textureId + ", informing KSP runtme");
+				Logger::LogText("Loaded Texture " + textureId + ", informing KSP runtime");
 				ManagedBridge::TextureLoaded(textureId, texture);
 			}
 			else{

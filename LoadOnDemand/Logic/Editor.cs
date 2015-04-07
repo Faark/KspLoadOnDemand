@@ -31,9 +31,9 @@ namespace LoadOnDemand.Logic
                 {
                     RefAllFrom(EditorLogic.SelectedPart, usedParts);
                 }
-                if (EditorLogic.startPod != null)
+                if (EditorLogic.RootPart != null)
                 {
-                    RefAllFrom(EditorLogic.startPod, usedParts);
+                    RefAllFrom(EditorLogic.RootPart, usedParts);
                 }
                 HashSet<AvailablePart> unusedParts = new HashSet<AvailablePart>(referencedResources.Keys);
                 foreach (var part in usedParts)
@@ -76,7 +76,7 @@ namespace LoadOnDemand.Logic
         Dictionary<AvailablePart, Resources.IResource> referencedResources = new Dictionary<AvailablePart, Resources.IResource>();
         HashSet<AvailablePart> PartQueueToProcess = new HashSet<AvailablePart>();
         bool addPartsHasRunOnce = false;
-        EditorPartListFilter myPseudoFilter;
+        EditorPartListFilter<AvailablePart> myPseudoFilter;
 
         bool AddPartToList(AvailablePart part)
         {
@@ -86,8 +86,8 @@ namespace LoadOnDemand.Logic
         }
         void SetupNew()
         {
-            myPseudoFilter = new EditorPartListFilter("LodPseudoFilter", AddPartToList);
-            var list = new List<EditorPartListFilter>();
+            myPseudoFilter = new EditorPartListFilter<AvailablePart>("LodPseudoFilter", AddPartToList);
+            var list = new List<EditorPartListFilter<AvailablePart>>();
 
             foreach (var current in EditorPartList.Instance.GreyoutFilters)
             {
